@@ -11,6 +11,7 @@ import PrivateRoute from './components/PrivateRoute';
 function App() {
   return (
     <Router>
+     
       <Routes>
         <Route path="/adminlogin" element={<Login />} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />

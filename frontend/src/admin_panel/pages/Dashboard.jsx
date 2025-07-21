@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Header from '../../components/header/Header';
 import { Typography, Card, CardContent, Grid, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import LeftMenu from '../../components/menu/left_menu/LeftMenu';
+import MainContainer from '../../components/container/MainContainer';
 
 
 const Dashboard = () => {
@@ -41,37 +44,43 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div>
-      <Typography variant="h4" gutterBottom>Admin Dashboard</Typography>
+    <div className='flex ' style={{ flexDirection: 'column', height: '100vh', width: '100vw' }}>
+      <Header />
+      <div className=' flex flex-row  ' style={{ flex: 1, overflowY: 'auto' }}>
+        <LeftMenu />
+        <MainContainer>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6">Total Products</Typography>
-              <Typography variant="h4">{stats.totalProducts}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+        <Grid container spacing={3} style={{ marginTop: '2rem' }}>
+          <Grid item xs={12} sm={4}>
+            <Card sx={{ minWidth: 275, backgroundColor: '#f5f5f5' }}>
+              <CardContent>
+                <Typography variant="h6">Total Products</Typography>
+                <Typography variant="h4">{stats.totalProducts}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6">Total Sold</Typography>
-              <Typography variant="h4">{stats.totalSold}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+          <Grid item xs={12} sm={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6">Total Sold</Typography>
+                <Typography variant="h4">{stats.totalSold}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6">Total Searches</Typography>
-              <Typography variant="h4">{stats.totalSearches}</Typography>
-            </CardContent>
-          </Card>
+          <Grid item xs={12} sm={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6">Total Searches</Typography>
+                <Typography variant="h4">{stats.totalSearches}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
         </Grid>
-      </Grid>
+        </MainContainer>
+      </div>
+
       <Button variant="contained" color="secondary" onClick={handleLogout}>
         Logout
       </Button>
