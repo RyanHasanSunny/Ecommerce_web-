@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
+  productId: {  // New field to store the generated product ID
+    type: String,
+    required: true,
+    unique: true  // Ensures each product has a unique productId
+  },
   title: {
     type: String,
     required: true,

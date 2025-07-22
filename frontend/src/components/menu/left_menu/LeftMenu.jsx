@@ -1,5 +1,5 @@
-import React from "react";
-import { FaBoxOpen, FaClipboardList, FaTags, FaUsers, FaChartBar } from "react-icons/fa";
+import React from 'react';
+import { FaBoxOpen, FaClipboardList, FaTags, FaUsers, FaChartBar } from 'react-icons/fa';
 
 const menuItems = [
   { name: "Orders", icon: <FaClipboardList />, path: "/admin/orders" },
@@ -9,15 +9,15 @@ const menuItems = [
   { name: "Reports", icon: <FaChartBar />, path: "/admin/reports" },
 ];
 
-const LeftMenu = () => {
+const LeftMenu = ({ onMenuItemClick }) => {
   return (
-    <aside className=" w-64 text-white flex flex-col shadow-lg" style={{ backgroundColor: "#1a202c", height: "100%" }}>
+    <aside className="w-64 text-white flex flex-col shadow-lg" style={{ backgroundColor: "#1a202c", height: "100%" }}>
       <nav className="flex-1 py-4">
         <ul>
           {menuItems.map((item) => (
             <li key={item.name}>
               <a
-                href={item.path}
+                onClick={() => onMenuItemClick(item.name)} // Call the function passed as prop
                 className="flex items-center gap-3 px-6 py-3 hover:bg-gray-800 transition-colors rounded-md cursor-pointer"
               >
                 <span className="text-lg">{item.icon}</span>

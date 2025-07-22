@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+// pages/dashboard/Dashboard.jsx
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Header from '../../components/header/Header';
-import { Typography, Card, CardContent, Grid, Button } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import LeftMenu from '../../components/menu/left_menu/LeftMenu';
 import MainContainer from '../../components/container/MainContainer';
-
+import ContentDisplay from '../../components/ContentDisplay';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -13,13 +12,7 @@ const Dashboard = () => {
     totalSold: 0,
     totalSearches: 0,
   });
-
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.removeItem('adminToken');  // Remove the admin token from localStorage
-    navigate('/adminlogin');  // Redirect to the login page
-  };
+  const [selectedMenu, setSelectedMenu] = useState('Dashboard');
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -43,47 +36,19 @@ const Dashboard = () => {
     fetchStats();
   }, []);
 
+  const handleMenuItemClick = (menuItem) => {
+    setSelectedMenu(menuItem); // Set the selected menu item
+  };
+
   return (
-    <div className='flex ' style={{ flexDirection: 'column', height: '100vh', width: '100vw' }}>
+    <div className="flex" style={{ flexDirection: 'column', height: '100vh', width: '100vw' }}>
       <Header />
-      <div className=' flex flex-row  ' style={{ flex: 1, overflowY: 'auto' }}>
-        <LeftMenu />
-        <MainContainer>
-
-        <Grid container spacing={3} style={{ marginTop: '2rem' }}>
-          <Grid item xs={12} sm={4}>
-            <Card sx={{ minWidth: 275, backgroundColor: '#f5f5f5' }}>
-              <CardContent>
-                <Typography variant="h6">Total Products</Typography>
-                <Typography variant="h4">{stats.totalProducts}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Total Sold</Typography>
-                <Typography variant="h4">{stats.totalSold}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} sm={4}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">Total Searches</Typography>
-                <Typography variant="h4">{stats.totalSearches}</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+      <div className="flex flex-row" style={{ flex: 1, overflowY: 'auto' }}>
+        <LeftMenu onMenuItemClick={handleMenuItemClick} />
+        <MainContainer title={selectedMenu}>
+          <ContentDisplay selectedMenu={selectedMenu} stats={stats} />
         </MainContainer>
       </div>
-
-      <Button variant="contained" color="secondary" onClick={handleLogout}>
-        Logout
-      </Button>
     </div>
   );
 };

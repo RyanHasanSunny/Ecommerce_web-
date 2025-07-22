@@ -25,7 +25,7 @@ exports.addCategory = async (req, res) => {
       isParent,
       parentCategory: isParent ? null : parentCategory  // If parent, set null for parentCategory
     });
-
+    
     await newCategory.save();
     res.status(201).json(newCategory);
   } catch (err) {

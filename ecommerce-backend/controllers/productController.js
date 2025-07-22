@@ -3,25 +3,35 @@ const Category = require('../models/categoryModel');
 const mongoose = require('mongoose');  // Import mongoose
 
 
-/// Add new product (Admin only)
+// Helper function to generate product ID
+const generateProductId = async () => {
+  const year = new Date().getFullYear().toString().slice(-2);  // Get last 2 digits of the year
+  const month = (new Date().getMonth() + 1).toString().padStart(2, '0');  // Get month (2 digits)
+
+  // Get the highest product ID for the current year and month
+  const lastProduct = await Product.findOne({ productId: new RegExp(`^${year}${month}`) })
+                                    .sort({ productId: -1 })
+                                    .limit(1);
+
+  const lastNumber = lastProduct ? parseInt(lastProduct.productId.slice(-3)) : 0;
+  const newNumber = (lastNumber + 1).toString().padStart(3, '0');  // Increment and pad to 3 digits
+
+  return `${year}${month}${newNumber}`;
+};
+
+// Add product (Admin only)
 exports.addProduct = async (req, res) => {
   const { title, companyName, description, specifications, price, stock, categoryId, image } = req.body;
-
-  // Validate categoryId to ensure it's a valid ObjectId
-  if (!mongoose.Types.ObjectId.isValid(categoryId)) {
-    return res.status(400).json({ msg: 'Invalid category ID' });
-  }
 
   try {
     const category = await Category.findById(categoryId);
     if (!category) return res.status(400).json({ msg: 'Category not found' });
 
-    // Validation for specifications: Ensure it is an array
-    if (specifications && !Array.isArray(specifications)) {
-      return res.status(400).json({ msg: 'Specifications should be an array of objects' });
-    }
+    // Generate product ID
+    const productId = await generateProductId();
 
     const newProduct = new Product({
+      productId,  // Add generated productId
       title,
       companyName,
       description,
@@ -39,7 +49,6 @@ exports.addProduct = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
-
 // Get all products (For user display)
 exports.getProducts = async (req, res) => {
   try {
