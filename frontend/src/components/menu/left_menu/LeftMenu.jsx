@@ -11,7 +11,7 @@ const menuItems = [
 
 const LeftMenu = ({ onMenuItemClick }) => {
   return (
-    <aside className="w-64 text-white flex flex-col shadow-lg" style={{ backgroundColor: "#1a202c", height: "100%" }}>
+    <aside className="w-64 text-white flex flex-col shadow-lg" style={{ backgroundColor: "#061a3fff", height: "100%" }}>
       <nav className="flex-1 py-4">
         <ul>
           {menuItems.map((item) => (

@@ -17,13 +17,11 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
 // Routes
 const authRoutes = require('./routes/authRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
-const subCategoryRoutes = require('./routes/subCategoryRoutes');
 const productRoutes = require('./routes/productRoutes');
 const statsRoutes = require('./routes/statsRoutes'); // Import your stats route
 
 app.use('/api/auth', authRoutes);
 app.use('/api', categoryRoutes);
-app.use('/api', subCategoryRoutes);
 app.use('/api', productRoutes);  // Product routes
 app.use('/api', statsRoutes);  // Stats routes
 

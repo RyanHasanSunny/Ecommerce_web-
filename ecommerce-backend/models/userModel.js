@@ -19,8 +19,32 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    default: "admin"  // This will make this user an admin by default
-  }
+    default: "user"  // Default to user role, can be "admin"
+  },
+  addresses: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Address'
+  }],
+  contacts: [{
+    phone: {
+      type: String,
+      required: true
+    },
+    type: {
+      type: String,  // Home, Work, etc.
+      required: true
+    }
+  }],
+  cart: [{
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'
+    },
+    quantity: {
+      type: Number,
+      required: true
+    }
+  }]
 }, { timestamps: true });
 
 // Encrypt password before saving to database

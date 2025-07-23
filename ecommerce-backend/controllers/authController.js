@@ -2,48 +2,49 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/userModel');
 
-// Register admin
-exports.registerAdmin = async (req, res) => {
-  const { name, email, password } = req.body;
+// Register user (admin or regular)
+exports.registerUser = async (req, res) => {
+  const { name, email, password, role } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ msg: 'Admin already exists' });
+      return res.status(400).json({ msg: 'User already exists' });
     }
 
-    const newAdmin = new User({
-      name,
-      email,
-      password
-    });
-
-    await newAdmin.save();
-    res.status(201).json({ msg: 'Admin registered successfully' });
+    const newUser = new User({ name, email, password, role });
+    await newUser.save();
+    res.status(201).json({ msg: 'User registered successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// Login admin
-exports.loginAdmin = async (req, res) => {
+// Login user (admin or regular)
+exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const admin = await User.findOne({ email });
-    if (!admin) {
-      return res.status(400).json({ msg: 'Admin does not exist' });
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ msg: 'User does not exist' });
     }
 
-    const isMatch = await bcrypt.compare(password, admin.password);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ msg: 'Invalid credentials' });
     }
 
-    const token = jwt.sign({ userId: admin._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    // Create JWT token with the role included in the payload
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },  // Add role to JWT payload
+      process.env.JWT_SECRET, 
+      { expiresIn: '1h' }
+    );
 
-    res.json({ token });
+    // Send the token and role in the response
+    res.json({ token, role: user.role });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });

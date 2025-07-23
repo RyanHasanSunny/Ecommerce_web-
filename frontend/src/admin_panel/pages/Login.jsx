@@ -12,8 +12,14 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
-      localStorage.setItem('adminToken', response.data.token);  // Store token in localStorage
-      navigate('/dashboard');
+      
+      // Check if the user has an admin role
+      if (response.data.role === 'admin') {
+        localStorage.setItem('adminToken', response.data.token);  // Store token in localStorage
+        navigate('/admin-dashboard');  // Navigate to the admin dashboard
+      } else {
+        setError('You do not have admin access');
+      }
     } catch (err) {
       console.error(err);
       setError('Invalid credentials');

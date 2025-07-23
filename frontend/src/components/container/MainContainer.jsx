@@ -2,10 +2,10 @@ import PropTypes from 'prop-types';
 
 const MainContainer = ({ title, breadcrumbs = [], children }) => {
   return (
-    <div className="flex-1 p-8" style={{ backgroundColor: '#f9fafb', minHeight: '100%' }}>
+    <div className="flex-1 p-4" style={{height: '100%' }}>
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-800">{title}</h1>
-        <nav className="mt-2">
+        <h1 className=" font-bold text-gray-800">{title}</h1>
+        <nav >
           <ol className="flex text-sm text-gray-500 space-x-2">
             {breadcrumbs.length > 0 ? (
               breadcrumbs.map((crumb, idx) => (
@@ -21,7 +21,7 @@ const MainContainer = ({ title, breadcrumbs = [], children }) => {
                 </li>
               ))
             ) : (
-              <li className="text-gray-600">{title}</li>
+              <li className="mt-2 text-gray-600">{title}</li>
             )}
           </ol>
         </nav>

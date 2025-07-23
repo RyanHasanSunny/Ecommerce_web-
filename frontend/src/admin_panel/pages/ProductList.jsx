@@ -6,10 +6,10 @@ import {
 } from '@mui/material';
 
 const ProductList = () => {
-  const [products, setProducts]     = useState([]);
+  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  const [searchQuery, setSearchQuery]           = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
 
   // Fetch products (with category populated)
@@ -64,7 +64,7 @@ const ProductList = () => {
 
     // extract parentCategory ID (could be object or string)
     const rawParent = p.category.parentCategory;
-    const parentId  = rawParent && rawParent._id ? rawParent._id : rawParent;
+    const parentId = rawParent && rawParent._id ? rawParent._id : rawParent;
 
     const matchesCategory =
       !selectedCategory ||
@@ -75,7 +75,7 @@ const ProductList = () => {
   });
 
   return (
-    <div className="p-5">
+    <div>
       {/* Search & Category Filter using CSS Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-[#1976d2]">
         <input
@@ -110,47 +110,52 @@ const ProductList = () => {
         </select>
       </div>
 
+      {/* Table Container */}
       <TableContainer
-  component={Paper}
-  sx={{ maxHeight: 500 }}   // or a height you prefer
->
-  <Table stickyHeader>
-    <TableHead>
-      <TableRow>
-        <TableCell>Product ID</TableCell>
-        <TableCell>Name</TableCell>
-        <TableCell>Category</TableCell>
-        <TableCell>Stock</TableCell>
-        <TableCell>Last Modified</TableCell>
-        <TableCell>Actions</TableCell>
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      {filteredProducts.length > 0 ? (
-        filteredProducts.map(p => (
-          <TableRow key={p._id}>
-            <TableCell>{p.productId}</TableCell>
-            <TableCell>{p.title}</TableCell>
-            <TableCell>{p.category.name}</TableCell>
-            <TableCell>{p.stock}</TableCell>
-            <TableCell>{new Date(p.updatedAt).toLocaleDateString()}</TableCell>
-            <TableCell>
-              <Button variant="contained" onClick={() => handleMarkSold(p._id)}>
-                Mark as Sold
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))
-      ) : (
-        <TableRow>
-          <TableCell colSpan={6} align="center">
-            No products found.
-          </TableCell>
-        </TableRow>
-      )}
-    </TableBody>
-  </Table>
-</TableContainer>
+        component={Paper}
+        sx={{
+          maxHeight: 'calc(100vh - 300px)',
+          height: '100%',
+          
+        }}
+      >
+        <Table stickyHeader>
+          <TableHead>
+            <TableRow>
+              <TableCell>Product ID</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Stock</TableCell>
+              <TableCell>Last Modified</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredProducts.length > 0 ? (
+              filteredProducts.map(p => (
+                <TableRow key={p._id}>
+                  <TableCell>{p.productId}</TableCell>
+                  <TableCell>{p.title}</TableCell>
+                  <TableCell>{p.category.name}</TableCell>
+                  <TableCell>{p.stock}</TableCell>
+                  <TableCell>{new Date(p.updatedAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    <Button variant="contained" onClick={() => handleMarkSold(p._id)}>
+                      Mark as Sold
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  No products found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </div>
   );
 };
