@@ -57,7 +57,13 @@ const productSchema = new mongoose.Schema({
   searchCount: {
     type: Number,
     default: 0, // Default value for search count
+  },
+  status: {
+    type: String,
+    enum: ['panding', 'shiped', 'delivered'],
   }
+
+
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

@@ -2,7 +2,9 @@
 import React from 'react';
 import { Grid, Typography } from '@mui/material';
 import StatsCard from './cards/StatsCard';
-import ProductList from '../admin_panel/pages/ProductList';
+import ProductList from '../pages/ProductList';
+import ProductAdd from '../pages/ProductAdd'; // import it
+
 
 const ContentDisplay = ({ selectedMenu, stats }) => {
   switch (selectedMenu) {
@@ -28,6 +30,13 @@ const ContentDisplay = ({ selectedMenu, stats }) => {
             <Typography variant="h5">Category List</Typography>
             {/* Category list content */}
           </Grid>
+        </Grid>
+      );
+
+    case 'AddProduct':
+      return (
+        <Grid container spacing={3} style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column' }}>
+          <ProductAdd />
         </Grid>
       );
     default:

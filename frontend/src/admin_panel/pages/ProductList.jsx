@@ -4,8 +4,10 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Button, Typography, TextField, Grid, Autocomplete
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 const ProductList = () => {
+  const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -40,21 +42,6 @@ const ProductList = () => {
     fetchCategories();
   }, []);
 
-  // Mark as sold
-  const handleMarkSold = async (id) => {
-    try {
-      await axios.put(
-        `http://localhost:5000/api/product/sold/${id}`,
-        {},
-        { headers: { 'x-auth-token': localStorage.getItem('adminToken') } }
-      );
-      fetchProducts();
-      alert('Product marked as sold');
-    } catch {
-      alert('Error marking product as sold');
-    }
-  };
-
   // Filter logic
   const filteredProducts = products.filter(p => {
     const q = searchQuery.trim().toLowerCase();
@@ -76,7 +63,20 @@ const ProductList = () => {
 
   return (
     <div>
-      {/* Search & Category Filter using CSS Grid */}
+      {/* Top section with heading and Add Product button */}
+      <div className="flex justify-between items-center mb-6">
+        <Typography variant="h5" className="text-[#1976d2] font-semibold">Product List</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => navigate('/admin/products/add')}
+          style={{ textTransform: 'none', fontWeight: 'bold' }}
+        >
+          + Add Product
+        </Button>
+      </div>
+
+      {/* Search & Category Filter */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-[#1976d2]">
         <input
           type="text"
@@ -116,7 +116,6 @@ const ProductList = () => {
         sx={{
           maxHeight: 'calc(100vh - 300px)',
           height: '100%',
-          
         }}
       >
         <Table stickyHeader>
@@ -127,7 +126,9 @@ const ProductList = () => {
               <TableCell>Category</TableCell>
               <TableCell>Stock</TableCell>
               <TableCell>Last Modified</TableCell>
-              <TableCell>Actions</TableCell>
+              <TableCell>Price</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Edit</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -139,16 +140,12 @@ const ProductList = () => {
                   <TableCell>{p.category.name}</TableCell>
                   <TableCell>{p.stock}</TableCell>
                   <TableCell>{new Date(p.updatedAt).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <Button variant="contained" onClick={() => handleMarkSold(p._id)}>
-                      Mark as Sold
-                    </Button>
-                  </TableCell>
+                  <TableCell>{p.price}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={8} align="center">
                   No products found.
                 </TableCell>
               </TableRow>

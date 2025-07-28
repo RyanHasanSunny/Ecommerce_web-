@@ -1,10 +1,10 @@
 // pages/dashboard/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Header from '../../components/header/Header';
-import LeftMenu from '../../components/menu/left_menu/LeftMenu';
-import MainContainer from '../../components/container/MainContainer';
-import ContentDisplay from '../../components/ContentDisplay';
+import Header from '../admincomponents/header/Header';
+import LeftMenu from '../admincomponents/menu/left_menu/LeftMenu';
+import MainContainer from '../admincomponents/container/MainContainer';
+import ContentDisplay from '../admincomponents/ContentDisplay';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -39,6 +39,11 @@ const Dashboard = () => {
   const handleMenuItemClick = (menuItem) => {
     setSelectedMenu(menuItem); // Set the selected menu item
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    window.location.reload();
+    };
 
   return (
     <div className="flex" style={{ flexDirection: 'column', height: '100vh', width: '100vw' }}>

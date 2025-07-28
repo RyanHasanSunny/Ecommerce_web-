@@ -5,6 +5,11 @@ const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+   const handleLogout = () => {
+    localStorage.removeItem('adminToken');
+    window.location.reload();
+    };
+
   // Close dropdown if clicked outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -78,7 +83,7 @@ const Header = () => {
                 fontSize: "1rem",
                 color: "red",
               }}
-              onClick={() => alert("Logged out")}
+              onClick={() => handleLogout()}
             >
               Logout
             </button>
