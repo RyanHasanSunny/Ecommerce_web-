@@ -26,8 +26,15 @@ exports.addProduct = async (req, res) => {
 
     const productId = await generateProductId();
 
-    // Correct finalPrice calculation
-    const finalPrice = parseFloat(price) + parseFloat(profit);  // Ensure both price and profit are treated as numbers
+    // Convert to numbers and calculate finalPrice
+    const numericPrice = parseFloat(price) || 0;
+    const numericProfit = parseFloat(profit) || 0;
+    const finalPrice = numericPrice + numericProfit;
+
+    // Validate that price and profit are valid numbers
+    if (isNaN(numericPrice) || isNaN(numericProfit)) {
+      return res.status(400).json({ msg: 'Invalid price or profit value' });
+    }
 
     const newProduct = new Product({
       productId,
@@ -35,12 +42,12 @@ exports.addProduct = async (req, res) => {
       companyName,
       description,
       specifications,
-      price,
-      profit,
-      stock,
+      price: numericPrice,
+      profit: numericProfit,
+      stock: parseInt(stock) || 0,
       category: categoryId,
       image,
-      finalPrice  // Add the calculated final price
+      finalPrice
     });
 
     await newProduct.save();
@@ -83,8 +90,15 @@ exports.updateProduct = async (req, res) => {
     const category = await Category.findById(categoryId);
     if (!category) return res.status(400).json({ msg: 'Category not found' });
 
-    // Correct finalPrice calculation
-    const finalPrice = parseFloat(price) + parseFloat(profit);  // Ensure both price and profit are treated as numbers
+    // Convert to numbers and calculate finalPrice
+    const numericPrice = parseFloat(price) || 0;
+    const numericProfit = parseFloat(profit) || 0;
+    const finalPrice = numericPrice + numericProfit;
+
+    // Validate that price and profit are valid numbers
+    if (isNaN(numericPrice) || isNaN(numericProfit)) {
+      return res.status(400).json({ msg: 'Invalid price or profit value' });
+    }
 
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
@@ -93,12 +107,12 @@ exports.updateProduct = async (req, res) => {
         companyName,
         description,
         specifications,
-        price,
-        profit,
-        stock,
+        price: numericPrice,
+        profit: numericProfit,
+        stock: parseInt(stock) || 0,
         category: categoryId,
         image,
-        finalPrice  // Add the updated final price
+        finalPrice
       },
       { new: true }
     );

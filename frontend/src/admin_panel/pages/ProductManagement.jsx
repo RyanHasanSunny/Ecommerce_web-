@@ -111,10 +111,11 @@ const ProductManagement = () => {
             companyName,  // Include company name
             description,
             specifications,
-            price: finalPrice,
+            price,
             profit,
             categoryId,
-            image: images.filter(img => img)[0] || ''
+            image: images.filter(img => img)[0] || '',
+            finalPrice: finalPrice
           },
           { headers: { 'x-auth-token': localStorage.getItem('adminToken') } }
         );
@@ -128,11 +129,12 @@ const ProductManagement = () => {
             companyName,  // Include company name
             description,
             specifications,
-            price: finalPrice,
+            price,
             profit,
             stock: 0,
             categoryId,
-            image: images.filter(img => img)[0] || ''
+            image: images.filter(img => img)[0] || '',
+            finalPrice: finalPrice
           },
           { headers: { 'x-auth-token': localStorage.getItem('adminToken') } }
         );
@@ -263,7 +265,7 @@ const ProductManagement = () => {
             <Box mt={4}>
               <Typography variant="subtitle1" gutterBottom>Pricing</Typography>
               <TextField
-                label="Product Price"
+                label="Product Buying Price"
                 variant="standard"
                 fullWidth
                 type="number"
@@ -282,7 +284,7 @@ const ProductManagement = () => {
               />
               <Divider sx={{ my: 1 }} />
               <Typography variant="body1">
-                Final Price: <strong>{Number(price) + Number(profit) || 0}</strong>
+                Selling Price: <strong>{Number(price) + Number(profit) || 0}</strong>
               </Typography>
             </Box>
 

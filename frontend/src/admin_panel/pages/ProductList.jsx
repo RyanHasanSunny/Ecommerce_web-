@@ -147,9 +147,9 @@ const ProductList = () => {
               <TableCell>Category</TableCell>
               <TableCell>Stock</TableCell>
               <TableCell>Last Modified</TableCell>
-              <TableCell>Price</TableCell>
+              <TableCell>Buying Price</TableCell>
               <TableCell>Profit</TableCell>
-              <TableCell>Final Price</TableCell>
+              <TableCell>Selling Price</TableCell>
               <TableCell>Action</TableCell> {/* Action column */}
             </TableRow>
           </TableHead>
@@ -157,7 +157,7 @@ const ProductList = () => {
             {filteredProducts.length > 0 ? (
               filteredProducts.map(p => {
                 // Calculate the final price (price + profit)
-                const finalPrice = (parseFloat(p.price) + parseFloat(p.profit)).toFixed(2);
+               // const finalPrice = (parseFloat(p.price) + parseFloat(p.profit)).toFixed(2);
 
                 return (
                   <TableRow key={p._id}>
@@ -166,9 +166,9 @@ const ProductList = () => {
                     <TableCell>{p.category.name}</TableCell>
                     <TableCell>{p.stock}</TableCell>
                     <TableCell>{new Date(p.updatedAt).toLocaleDateString()}</TableCell>
-                    <TableCell>{p.price}</TableCell>
-                    <TableCell>{p.profit}</TableCell>
-                    <TableCell>{finalPrice}</TableCell> {/* Display the calculated final price */}
+                    <TableCell>{p.price} BDT</TableCell>
+                    <TableCell>{p.profit} BDT</TableCell>
+                    <TableCell>{p.finalPrice} BDT</TableCell> {/* Display the calculated final price */}
                     <TableCell>
                       {/* Action buttons */}
                       <IconButton onClick={() => handleEditProduct(p._id)} color="primary" size="small">
