@@ -4,6 +4,7 @@ import {
   Grid, IconButton, Box, Divider, Paper
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -88,6 +89,11 @@ const ProductManagement = () => {
     setSpecTitle(spec.title);
     setSpecDetails(spec.details);
     setEditIndex(index); // Set the index of the specification being edited
+  };
+
+  const handleDeleteSpecification = (index) => {
+    const updatedSpecifications = specifications.filter((_, i) => i !== index); // Remove specification by index
+    setSpecifications(updatedSpecifications);
   };
 
   const handleImageChange = (index, value) => {
@@ -213,7 +219,12 @@ const ProductManagement = () => {
                   <Typography variant="body2" sx={{ mb: 1 }}>
                     • <strong>{spec.title}:</strong> {spec.details}
                   </Typography>
-                  <Button onClick={() => handleEditSpecification(index)} color="primary" size="small">Edit</Button>
+                  <div>
+                    <Button onClick={() => handleEditSpecification(index)} color="primary" size="small">Edit</Button>
+                    <IconButton onClick={() => handleDeleteSpecification(index)} color="secondary" size="small">
+                      <DeleteIcon />
+                    </IconButton>
+                  </div>
                 </Box>
               ))}
 
@@ -265,7 +276,7 @@ const ProductManagement = () => {
             <Box mt={4}>
               <Typography variant="subtitle1" gutterBottom>Pricing</Typography>
               <TextField
-                label="Product Buying Price"
+                label="Product Price"
                 variant="standard"
                 fullWidth
                 type="number"
@@ -284,7 +295,7 @@ const ProductManagement = () => {
               />
               <Divider sx={{ my: 1 }} />
               <Typography variant="body1">
-                Selling Price: <strong>{Number(price) + Number(profit) || 0}</strong>
+                Final Price: <strong>{Number(price) + Number(profit) || 0}</strong>
               </Typography>
             </Box>
 
