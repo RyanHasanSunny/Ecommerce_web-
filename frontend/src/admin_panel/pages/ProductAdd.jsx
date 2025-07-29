@@ -7,7 +7,6 @@ const ProductAdd = () => {
     <MainContainer
       title="Add New Product"
       breadcrumbs={[
-      
         { label: 'Add Product' }
       ]}
     >

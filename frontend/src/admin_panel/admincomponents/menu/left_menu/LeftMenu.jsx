@@ -1,12 +1,14 @@
 import React from 'react';
 import { FaBoxOpen, FaClipboardList, FaTags, FaUsers, FaChartBar } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 const menuItems = [
-  { name: "Orders", icon: <FaClipboardList />, path: "/admin/orders" },
-  { name: "Products", icon: <FaBoxOpen />, path: "/admin/products" },
-  { name: "Categories", icon: <FaTags />, path: "/admin/categories" },
-  { name: "Customers", icon: <FaUsers />, path: "/admin/customers" },
-  { name: "Reports", icon: <FaChartBar />, path: "/admin/reports" },
+  { name: "Orders", icon: <FaClipboardList />, path: "/admin/dashboard/orders" },
+  { name: "Products", icon: <FaBoxOpen />, path: "/admin/dashboard/products" },
+  { name: "Categories", icon: <FaTags />, path: "/admin/dashboard/categories" },
+  { name: "Customers", icon: <FaUsers />, path: "/admin/dashboard/customers" },
+  { name: "Reports", icon: <FaChartBar />, path: "/admin/dashboard/reports" },
+  { name: "Add Product", icon: <FaBoxOpen />, path: "/admin/dashboard/products/add" },
 ];
 
 const LeftMenu = ({ onMenuItemClick }) => {
@@ -16,13 +18,14 @@ const LeftMenu = ({ onMenuItemClick }) => {
         <ul>
           {menuItems.map((item) => (
             <li key={item.name}>
-              <a
+              <Link
+                to={item.path} // Use Link for navigation
                 onClick={() => onMenuItemClick(item.name)} // Call the function passed as prop
                 className="flex items-center gap-3 px-6 py-3 hover:bg-gray-800 transition-colors rounded-md cursor-pointer"
               >
                 <span className="text-lg">{item.icon}</span>
                 <span className="font-medium">{item.name}</span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
