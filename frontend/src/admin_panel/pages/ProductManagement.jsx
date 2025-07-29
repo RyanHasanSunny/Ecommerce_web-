@@ -5,12 +5,12 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const ProductManagement = () => {
-  const { productId } = useParams(); // Get the productId from the URL (if it exists)
+  const { productId } = useParams(); // Get the productId from the URL
   const [title, setTitle] = useState('');
-  const [companyName, setCompanyName] = useState('');
+  const [companyName, setCompanyName] = useState('');  // Added companyName state
   const [description, setDescription] = useState('');
   const [specifications, setSpecifications] = useState([]);
   const [specTitle, setSpecTitle] = useState('');
@@ -21,8 +21,12 @@ const ProductManagement = () => {
   const [categories, setCategories] = useState([]);
   const [images, setImages] = useState(['']); // Multiple image URLs
 
+  const [editIndex, setEditIndex] = useState(null); // To track which specification is being edited
+  const [loading, setLoading] = useState(true); // Loading state for API call
+
+  const navigate = useNavigate();
+
   useEffect(() => {
-    // Fetch categories
     const fetchCategories = async () => {
       try {
         const response = await axios.get('http://localhost:5000/api/categories');
@@ -34,35 +38,56 @@ const ProductManagement = () => {
 
     fetchCategories();
 
-    // If there's a productId, fetch the existing product details
+    // Fetch product details only if there's a productId (for editing)
     if (productId) {
       const fetchProductDetails = async () => {
+        setLoading(true); // Set loading state to true while fetching
         try {
-          const response = await axios.get(`http://localhost:5000/api/products/${productId}`, {
+          const response = await axios.get(`http://localhost:5000/api/product/${productId}`, {
             headers: { 'x-auth-token': localStorage.getItem('adminToken') }
           });
           const product = response.data;
           setTitle(product.title);
-          setCompanyName(product.companyName);
+          setCompanyName(product.companyName);  // Set companyName
           setDescription(product.description);
           setSpecifications(product.specifications);
           setPrice(product.price);
+          setProfit(product.profit);
           setCategoryId(product.categoryId);
           setImages([product.image]);
+          setLoading(false); // Set loading state to false after data is fetched
         } catch (err) {
           console.error('Error fetching product details:', err);
+          setLoading(false); // Set loading state to false in case of error
         }
       };
+
       fetchProductDetails();
+    } else {
+      setLoading(false); // If no productId, stop loading immediately
     }
-  }, [productId]);
+  }, [productId]); // Re-fetch if the productId changes
 
   const handleAddSpecification = () => {
     if (specTitle && specDetails) {
-      setSpecifications([...specifications, { title: specTitle, details: specDetails }]);
+      if (editIndex !== null) {
+        const updatedSpecifications = [...specifications];
+        updatedSpecifications[editIndex] = { title: specTitle, details: specDetails };
+        setSpecifications(updatedSpecifications);
+        setEditIndex(null); // Reset edit mode
+      } else {
+        setSpecifications([...specifications, { title: specTitle, details: specDetails }]);
+      }
       setSpecTitle('');
       setSpecDetails('');
     }
+  };
+
+  const handleEditSpecification = (index) => {
+    const spec = specifications[index];
+    setSpecTitle(spec.title);
+    setSpecDetails(spec.details);
+    setEditIndex(index); // Set the index of the specification being edited
   };
 
   const handleImageChange = (index, value) => {
@@ -79,31 +104,32 @@ const ProductManagement = () => {
     const finalPrice = Number(price) + Number(profit);
     try {
       if (productId) {
-        // Update the existing product
         await axios.put(
           `http://localhost:5000/api/product/${productId}`,
           {
             title,
-            companyName,
+            companyName,  // Include company name
             description,
             specifications,
             price: finalPrice,
+            profit,
             categoryId,
             image: images.filter(img => img)[0] || ''
           },
           { headers: { 'x-auth-token': localStorage.getItem('adminToken') } }
         );
         alert('Product updated successfully');
+        navigate('/admin/products'); // Navigate to product list after updating
       } else {
-        // Add a new product
         await axios.post(
           'http://localhost:5000/api/product',
           {
             title,
-            companyName,
+            companyName,  // Include company name
             description,
             specifications,
             price: finalPrice,
+            profit,
             stock: 0,
             categoryId,
             image: images.filter(img => img)[0] || ''
@@ -111,16 +137,21 @@ const ProductManagement = () => {
           { headers: { 'x-auth-token': localStorage.getItem('adminToken') } }
         );
         alert('Product added successfully');
+        navigate('/admin/products'); // Navigate to product list after adding
       }
     } catch (err) {
       alert(`Error: ${err.message}`);
     }
   };
 
+  if (loading) {
+    return <Typography variant="h6">Loading product details...</Typography>; // Show loading state
+  }
+
   return (
-    <div className="container" >
+    <div className="container" style={{ maxHeight: 'calc(100vh - 140px)', height: '100%', overflowY: 'auto' }}>
       <Paper sx={{ p: 4, mt: 4 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h5" gutterBottom>
           {productId ? 'Edit Product' : 'Add New Product'}
         </Typography>
         <Grid container spacing={4}>
@@ -133,6 +164,17 @@ const ProductManagement = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
+
+            {/* Company Name Field */}
+            <Box mt={3}>
+              <TextField
+                label="Company Name"
+                variant="standard"
+                fullWidth
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+              />
+            </Box>
 
             <Box mt={3}>
               <Typography variant="subtitle1">Product Images</Typography>
@@ -165,9 +207,12 @@ const ProductManagement = () => {
             <Box mt={4}>
               <Typography variant="h6">Specifications</Typography>
               {specifications.map((spec, index) => (
-                <Typography key={index} variant="body2" sx={{ mb: 1 }}>
-                  • <strong>{spec.title}:</strong> {spec.details}
-                </Typography>
+                <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    • <strong>{spec.title}:</strong> {spec.details}
+                  </Typography>
+                  <Button onClick={() => handleEditSpecification(index)} color="primary" size="small">Edit</Button>
+                </Box>
               ))}
 
               <Grid container spacing={2}>

@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema({
-  productId: {  // New field to store the generated product ID
+  productId: {
     type: String,
     required: true,
-    unique: true  // Ensures each product has a unique productId
+    unique: true
   },
   title: {
     type: String,
@@ -37,6 +37,10 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  profit: {
+    type: Number,
+    required: true
+  },
   stock: {
     type: Number,
     required: true,
@@ -52,18 +56,16 @@ const productSchema = new mongoose.Schema({
   },
   soldCount: {
     type: Number,
-    default: 0, // Default value for sold count
+    default: 0
   },
   searchCount: {
     type: Number,
-    default: 0, // Default value for search count
+    default: 0
   },
-  status: {
-    type: String,
-    enum: ['panding', 'shiped', 'delivered'],
+  finalPrice: {
+    type: Number,
+    required: true
   }
-
-
 }, { timestamps: true });
 
 module.exports = mongoose.model('Product', productSchema);

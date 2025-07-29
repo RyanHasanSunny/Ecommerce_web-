@@ -4,14 +4,8 @@ import ProductManagement from '../pages/ProductManagement'; // Adjust the path a
 
 const ProductAdd = () => {
   return (
-    <MainContainer
-      title="Add New Product"
-      breadcrumbs={[
-        { label: 'Add Product' }
-      ]}
-    >
       <ProductManagement />
-    </MainContainer>
+    
   );
 };
 

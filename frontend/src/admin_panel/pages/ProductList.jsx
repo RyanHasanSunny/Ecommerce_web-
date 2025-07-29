@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Button, Typography, TextField, Grid, Autocomplete
+  Paper, Button, Typography, IconButton
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 const ProductList = () => {
   const navigate = useNavigate();
@@ -61,11 +63,30 @@ const ProductList = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const handleEditProduct = (productId) => {
+    navigate(`/admin/products/edit/${productId}`); // Navigate to the Edit page with the productId
+  };
+
+  const handleDeleteProduct = async (productId) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this product?');
+    if (confirmDelete) {
+      try {
+        await axios.delete(`http://localhost:5000/api/products/${productId}`, {
+          headers: { 'x-auth-token': localStorage.getItem('adminToken') }
+        });
+        alert('Product deleted successfully');
+        fetchProducts(); // Refresh the product list after deletion
+      } catch (err) {
+        alert(`Error deleting product: ${err.message}`);
+      }
+    }
+  };
+
   return (
     <div>
       {/* Top section with heading and Add Product button */}
       <div className="flex justify-between items-center mb-6">
-        <Typography variant="h5" className="text-[#1976d2] font-semibold">Product List</Typography>
+        <div></div>
         <Button
           variant="contained"
           color="primary"
@@ -128,7 +149,7 @@ const ProductList = () => {
               <TableCell>Last Modified</TableCell>
               <TableCell>Price</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Edit</TableCell>
+              <TableCell>Action</TableCell> {/* Action column */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -141,6 +162,16 @@ const ProductList = () => {
                   <TableCell>{p.stock}</TableCell>
                   <TableCell>{new Date(p.updatedAt).toLocaleDateString()}</TableCell>
                   <TableCell>{p.price}</TableCell>
+                  <TableCell>{p.status}</TableCell>
+                  <TableCell>
+                    {/* Action buttons */}
+                    <IconButton onClick={() => handleEditProduct(p._id)} color="primary" size="small">
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton onClick={() => handleDeleteProduct(p._id)} color="secondary" size="small">
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (

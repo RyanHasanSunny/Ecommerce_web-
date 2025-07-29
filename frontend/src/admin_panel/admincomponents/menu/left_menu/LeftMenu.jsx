@@ -2,7 +2,7 @@ import React from 'react';
 import { FaBoxOpen, FaClipboardList, FaTags, FaUsers, FaChartBar } from 'react-icons/fa';
 
 const menuItems = [
-  { name: "Orders", icon: <FaClipboardList />, path: "/admin/orders" },
+  { name: "Dashboard", icon: <FaClipboardList />, path: "/admin/dashboard" },
   { name: "Products", icon: <FaBoxOpen />, path: "/admin/products" },
   { name: "Categories", icon: <FaTags />, path: "/admin/categories" },
   { name: "Customers", icon: <FaUsers />, path: "/admin/customers" },
@@ -17,7 +17,7 @@ const LeftMenu = ({ onMenuItemClick }) => {
           {menuItems.map((item) => (
             <li key={item.name}>
               <a
-                onClick={() => onMenuItemClick(item.name)} // Call the function passed as prop
+                onClick={() => onMenuItemClick(item.name, item.path)} // Pass both name and path
                 className="flex items-center gap-3 px-6 py-3 hover:bg-gray-800 transition-colors rounded-md cursor-pointer"
               >
                 <span className="text-lg">{item.icon}</span>
