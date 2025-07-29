@@ -148,32 +148,39 @@ const ProductList = () => {
               <TableCell>Stock</TableCell>
               <TableCell>Last Modified</TableCell>
               <TableCell>Price</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell>Profit</TableCell>
+              <TableCell>Final Price</TableCell>
               <TableCell>Action</TableCell> {/* Action column */}
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredProducts.length > 0 ? (
-              filteredProducts.map(p => (
-                <TableRow key={p._id}>
-                  <TableCell>{p.productId}</TableCell>
-                  <TableCell>{p.title}</TableCell>
-                  <TableCell>{p.category.name}</TableCell>
-                  <TableCell>{p.stock}</TableCell>
-                  <TableCell>{new Date(p.updatedAt).toLocaleDateString()}</TableCell>
-                  <TableCell>{p.price}</TableCell>
-                  <TableCell>{p.status}</TableCell>
-                  <TableCell>
-                    {/* Action buttons */}
-                    <IconButton onClick={() => handleEditProduct(p._id)} color="primary" size="small">
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton onClick={() => handleDeleteProduct(p._id)} color="secondary" size="small">
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))
+              filteredProducts.map(p => {
+                // Calculate the final price (price + profit)
+                const finalPrice = (parseFloat(p.price) + parseFloat(p.profit)).toFixed(2);
+
+                return (
+                  <TableRow key={p._id}>
+                    <TableCell>{p.productId}</TableCell>
+                    <TableCell>{p.title}</TableCell>
+                    <TableCell>{p.category.name}</TableCell>
+                    <TableCell>{p.stock}</TableCell>
+                    <TableCell>{new Date(p.updatedAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{p.price}</TableCell>
+                    <TableCell>{p.profit}</TableCell>
+                    <TableCell>{finalPrice}</TableCell> {/* Display the calculated final price */}
+                    <TableCell>
+                      {/* Action buttons */}
+                      <IconButton onClick={() => handleEditProduct(p._id)} color="primary" size="small">
+                        <EditIcon />
+                      </IconButton>
+                      <IconButton onClick={() => handleDeleteProduct(p._id)} color="secondary" size="small">
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={8} align="center">

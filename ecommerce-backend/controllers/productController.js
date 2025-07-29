@@ -26,7 +26,8 @@ exports.addProduct = async (req, res) => {
 
     const productId = await generateProductId();
 
-    const finalPrice = price + profit;  // Calculate the final price
+    // Correct finalPrice calculation
+    const finalPrice = parseFloat(price) + parseFloat(profit);  // Ensure both price and profit are treated as numbers
 
     const newProduct = new Product({
       productId,
@@ -39,7 +40,7 @@ exports.addProduct = async (req, res) => {
       stock,
       category: categoryId,
       image,
-      finalPrice // Add the calculated final price
+      finalPrice  // Add the calculated final price
     });
 
     await newProduct.save();
@@ -82,7 +83,8 @@ exports.updateProduct = async (req, res) => {
     const category = await Category.findById(categoryId);
     if (!category) return res.status(400).json({ msg: 'Category not found' });
 
-    const finalPrice = price + profit;  // Calculate the final price
+    // Correct finalPrice calculation
+    const finalPrice = parseFloat(price) + parseFloat(profit);  // Ensure both price and profit are treated as numbers
 
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
