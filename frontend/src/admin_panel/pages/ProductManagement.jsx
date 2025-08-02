@@ -30,7 +30,7 @@ const ProductManagement = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/categories');
+        const response = await axios.get('http://18.212.65.1:5000/api/categories');
         setCategories(response.data);
       } catch (err) {
         console.error('Error fetching categories:', err);
@@ -44,7 +44,7 @@ const ProductManagement = () => {
       const fetchProductDetails = async () => {
         setLoading(true); // Set loading state to true while fetching
         try {
-          const response = await axios.get(`http://localhost:5000/api/product/${productId}`, {
+          const response = await axios.get(`http://18.212.65.1:5000/api/product/${productId}`, {
             headers: { 'x-auth-token': localStorage.getItem('adminToken') }
           });
           const product = response.data;
@@ -111,7 +111,7 @@ const ProductManagement = () => {
     try {
       if (productId) {
         await axios.put(
-          `http://localhost:5000/api/product/${productId}`,
+          `http://18.212.65.1:5000/api/product/${productId}`,
           {
             title,
             companyName,  // Include company name
@@ -129,7 +129,7 @@ const ProductManagement = () => {
         navigate('/admin/products'); // Navigate to product list after updating
       } else {
         await axios.post(
-          'http://localhost:5000/api/product',
+          'http://18.212.65.1:5000/api/product',
           {
             title,
             companyName,  // Include company name
@@ -268,8 +268,11 @@ const ProductManagement = () => {
                 {categories.map((cat) => (
                   <MenuItem key={cat._id} value={cat._id}>
                     {cat.name}
+
                   </MenuItem>
+                  
                 ))}
+                
               </Select>
             </Box>
 

@@ -51,9 +51,9 @@ const productSchema = new mongoose.Schema({
     ref: 'Category',
     required: true
   },
-  image: {
+  images: [{        // Changed from single image to array
     type: String
-  },
+  }],
   soldCount: {
     type: Number,
     default: 0

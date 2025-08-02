@@ -71,7 +71,7 @@ const ProductList = () => {
     const confirmDelete = window.confirm('Are you sure you want to delete this product?');
     if (confirmDelete) {
       try {
-        await axios.delete(`http://localhost:5000/api/products/${productId}`, {
+        await axios.delete(`http://localhost:5000/api/product/${productId}`, {
           headers: { 'x-auth-token': localStorage.getItem('adminToken') }
         });
         alert('Product deleted successfully');

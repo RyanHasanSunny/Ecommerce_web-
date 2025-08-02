@@ -1,5 +1,6 @@
 const Product = require('../models/productModel');
 const Category = require('../models/categoryModel');
+const s3 = require('../config/awsConfig');
 
 // Helper function to generate product ID
 const generateProductId = async () => {
@@ -16,22 +17,43 @@ const generateProductId = async () => {
   return `${year}${month}${newNumber}`;
 };
 
-// Add product (Admin only)
-exports.addProduct = async (req, res) => {
-  const { title, companyName, description, specifications, price, profit, stock, categoryId, image } = req.body;
+// Upload multiple files to S3
+const uploadFilesToS3 = async (files) => {
+  const uploadPromises = files.map(file => {
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME,
+      Key: `${Date.now()}-${file.originalname}`,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+      ACL: 'public-read',
+    };
+    return s3.upload(params).promise();
+  });
 
+  return Promise.all(uploadPromises);
+};
+
+// Add product (Admin only)
+const addProduct = async (req, res) => {
   try {
+    const { title, companyName, description, specifications, price, profit, stock, categoryId } = req.body;
+
     const category = await Category.findById(categoryId);
     if (!category) return res.status(400).json({ msg: 'Category not found' });
 
+    // Upload images if any
+    let imageUrls = [];
+    if (req.files && req.files.length > 0) {
+      const uploadResults = await uploadFilesToS3(req.files);
+      imageUrls = uploadResults.map(result => result.Location);
+    }
+
     const productId = await generateProductId();
 
-    // Convert to numbers and calculate finalPrice
     const numericPrice = parseFloat(price) || 0;
     const numericProfit = parseFloat(profit) || 0;
     const finalPrice = numericPrice + numericProfit;
 
-    // Validate that price and profit are valid numbers
     if (isNaN(numericPrice) || isNaN(numericProfit)) {
       return res.status(400).json({ msg: 'Invalid price or profit value' });
     }
@@ -46,8 +68,8 @@ exports.addProduct = async (req, res) => {
       profit: numericProfit,
       stock: parseInt(stock) || 0,
       category: categoryId,
-      image,
-      finalPrice
+      images: imageUrls,
+      finalPrice,
     });
 
     await newProduct.save();
@@ -58,65 +80,47 @@ exports.addProduct = async (req, res) => {
   }
 };
 
-// Get all products (For user display)
-exports.getProducts = async (req, res) => {
-  try {
-    const products = await Product.find().populate('category');
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ msg: 'Server error' });
-  }
-};
-
-// Get product by ID (For individual product update)
-exports.getProductById = async (req, res) => {
-  const { productId } = req.params;
-  try {
-    const product = await Product.findById(productId).populate('category');
-    if (!product) return res.status(404).json({ msg: 'Product not found' });
-    res.json(product);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
-  }
-};
-
 // Update product (Admin only)
-exports.updateProduct = async (req, res) => {
-  const { productId } = req.params;
-  const { title, companyName, description, specifications, price, profit, stock, categoryId, image } = req.body;
-
+const updateProduct = async (req, res) => {
   try {
+    const { productId } = req.params;
+    const { title, companyName, description, specifications, price, profit, stock, categoryId } = req.body;
+
     const category = await Category.findById(categoryId);
     if (!category) return res.status(400).json({ msg: 'Category not found' });
 
-    // Convert to numbers and calculate finalPrice
+    // Upload images if any
+    let imageUrls = [];
+    if (req.files && req.files.length > 0) {
+      const uploadResults = await uploadFilesToS3(req.files);
+      imageUrls = uploadResults.map(result => result.Location);
+    }
+
     const numericPrice = parseFloat(price) || 0;
     const numericProfit = parseFloat(profit) || 0;
     const finalPrice = numericPrice + numericProfit;
 
-    // Validate that price and profit are valid numbers
     if (isNaN(numericPrice) || isNaN(numericProfit)) {
       return res.status(400).json({ msg: 'Invalid price or profit value' });
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-      productId,
-      {
-        title,
-        companyName,
-        description,
-        specifications,
-        price: numericPrice,
-        profit: numericProfit,
-        stock: parseInt(stock) || 0,
-        category: categoryId,
-        image,
-        finalPrice
-      },
-      { new: true }
-    );
+    const updateData = {
+      title,
+      companyName,
+      description,
+      specifications,
+      price: numericPrice,
+      profit: numericProfit,
+      stock: parseInt(stock) || 0,
+      category: categoryId,
+      finalPrice,
+    };
 
+    if (imageUrls.length > 0) {
+      updateData.images = imageUrls;
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(productId, updateData, { new: true });
     if (!updatedProduct) return res.status(404).json({ msg: 'Product not found' });
 
     res.json(updatedProduct);
@@ -126,36 +130,131 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Increment sold count
-exports.incrementSoldCount = async (req, res) => {
-  const { productId } = req.params;
+const getProducts = async (req, res) => {
   try {
-    const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ msg: 'Product not found' });
-
-    product.soldCount += 1;
-    await product.save();
-
-    res.json({ msg: 'Product sold count updated', soldCount: product.soldCount });
+    const products = await Product.find().populate('category', 'name');
+    res.json(products);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: 'Error updating sold count' });
+    res.status(500).json({ msg: 'Server error' });
   }
 };
 
-// Increment search count
-exports.incrementSearchCount = async (req, res) => {
-  const { productId } = req.params;
+const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(productId);
+    const { productId } = req.params;
+    const product = await Product.findById(productId).populate('category', 'name');
     if (!product) return res.status(404).json({ msg: 'Product not found' });
-
-    product.searchCount += 1;
-    await product.save();
-
-    res.json({ msg: 'Product search count updated', searchCount: product.searchCount });
+    res.json(product);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ msg: 'Error updating search count' });
+    res.status(500).json({ msg: 'Server error' });
   }
+};
+
+const incrementSoldCount = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const product = await Product.findByIdAndUpdate(productId, { $inc: { soldCount: 1 } }, { new: true });
+    if (!product) return res.status(404).json({ msg: 'Product not found' });
+    res.json(product);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+const incrementSearchCount = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const product = await Product.findByIdAndUpdate(productId, { $inc: { searchCount: 1 } }, { new: true });
+    if (!product) return res.status(404).json({ msg: 'Product not found' });
+    res.json(product);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+const deleteProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const deletedProduct = await Product.findByIdAndDelete(productId);
+    if (!deletedProduct) return res.status(404).json({ msg: 'Product not found' });
+    res.json({ msg: 'Product deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+const getProductsByCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const products = await Product.find({ category: categoryId }).populate('category', 'name');
+    if (products.length === 0) return res.status(404).json({ msg: 'No products found in this category' });
+    res.json(products); 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+const getTopSellingProducts = async (req, res) => {
+  try {
+    const products = await Product.find().sort({ soldCount: -1 }).limit(10);
+    res.json(products);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+const getMostSearchedProducts = async (req, res) => {
+  try {
+    const products = await Product.find().sort({ searchCount: -1 }).limit(10);
+    res.json(products);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+const getProductCountByCategory = async (req, res) => {
+  try {
+    const categories = await Category.find();
+    const productCounts = await Promise.all(categories.map(async (category) => {
+      const count = await Product.countDocuments({ category: category._id });
+      return { category: category.name, count };
+    }));
+    res.json(productCounts);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+const getProductCount = async (req, res) => {
+  try {
+    const count = await Product.countDocuments();
+    res.json({ count });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+module.exports = {
+  addProduct,
+  getProducts,
+  getProductById,
+  updateProduct,
+  incrementSoldCount,
+  incrementSearchCount,
+  deleteProduct,
+  getProductsByCategory,
+  getTopSellingProducts,
+  getMostSearchedProducts,
+  getProductCount,
+  getProductCountByCategory
 };
