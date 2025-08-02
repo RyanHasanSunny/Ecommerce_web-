@@ -11,7 +11,7 @@ const Login = () => {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const response = await axios.post('http://18.212.65.1:5000/api/auth/login', { email, password });
       
       // Check if the user has an admin role
       if (response.data.role === 'admin') {
