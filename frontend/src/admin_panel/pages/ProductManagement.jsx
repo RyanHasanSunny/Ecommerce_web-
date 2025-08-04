@@ -268,11 +268,16 @@ const ProductManagement = () => {
                 {categories.map((cat) => (
                   <MenuItem key={cat._id} value={cat._id}>
                     {cat.name}
+<<<<<<< HEAD
 
                   </MenuItem>
                   
                 ))}
                 
+=======
+                  </MenuItem>
+                ))}
+>>>>>>> parent of f742eb4 (Refactor product model and UI for new pricing and images)
               </Select>
             </Box>
 

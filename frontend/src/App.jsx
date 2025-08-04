@@ -8,6 +8,10 @@ import ProductManagement from './admin_panel/pages/ProductManagement';
 import ProductList from './admin_panel/pages/ProductList';
 import ProductAdd from './admin_panel/pages/ProductAdd'; 
 import PrivateRoute from './admin_panel/admincomponents/PrivateRoute';
+<<<<<<< HEAD
+=======
+import { HomePage } from './user-panel/pages/home_page';
+>>>>>>> parent of f742eb4 (Refactor product model and UI for new pricing and images)
 
 function App() {
   return (

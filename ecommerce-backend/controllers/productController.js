@@ -17,6 +17,7 @@ const generateProductId = async () => {
   return `${year}${month}${newNumber}`;
 };
 
+<<<<<<< HEAD
 // Upload multiple files to S3
 const uploadFilesToS3 = async (files) => {
   const uploadPromises = files.map(file => {
@@ -29,6 +30,11 @@ const uploadFilesToS3 = async (files) => {
     };
     return s3.upload(params).promise();
   });
+=======
+// Add product (Admin only)
+exports.addProduct = async (req, res) => {
+  const { title, companyName, description, specifications, price, profit, stock, categoryId, image } = req.body;
+>>>>>>> parent of f742eb4 (Refactor product model and UI for new pricing and images)
 
   return Promise.all(uploadPromises);
 };
@@ -50,10 +56,15 @@ const addProduct = async (req, res) => {
 
     const productId = await generateProductId();
 
+    // Convert to numbers and calculate finalPrice
     const numericPrice = parseFloat(price) || 0;
     const numericProfit = parseFloat(profit) || 0;
     const finalPrice = numericPrice + numericProfit;
 
+<<<<<<< HEAD
+=======
+    // Validate that price and profit are valid numbers
+>>>>>>> parent of f742eb4 (Refactor product model and UI for new pricing and images)
     if (isNaN(numericPrice) || isNaN(numericProfit)) {
       return res.status(400).json({ msg: 'Invalid price or profit value' });
     }
@@ -68,8 +79,13 @@ const addProduct = async (req, res) => {
       profit: numericProfit,
       stock: parseInt(stock) || 0,
       category: categoryId,
+<<<<<<< HEAD
       images: imageUrls,
       finalPrice,
+=======
+      image,
+      finalPrice
+>>>>>>> parent of f742eb4 (Refactor product model and UI for new pricing and images)
     });
 
     await newProduct.save();
@@ -80,8 +96,13 @@ const addProduct = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 // Update product (Admin only)
 const updateProduct = async (req, res) => {
+=======
+// Get all products (For user display)
+exports.getProducts = async (req, res) => {
+>>>>>>> parent of f742eb4 (Refactor product model and UI for new pricing and images)
   try {
     const { productId } = req.params;
     const { title, companyName, description, specifications, price, profit, stock, categoryId } = req.body;
@@ -152,19 +173,67 @@ const getProductById = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 const incrementSoldCount = async (req, res) => {
   try {
     const { productId } = req.params;
     const product = await Product.findByIdAndUpdate(productId, { $inc: { soldCount: 1 } }, { new: true });
     if (!product) return res.status(404).json({ msg: 'Product not found' });
     res.json(product);
+=======
+// Update product (Admin only)
+exports.updateProduct = async (req, res) => {
+  const { productId } = req.params;
+  const { title, companyName, description, specifications, price, profit, stock, categoryId, image } = req.body;
+
+  try {
+    const category = await Category.findById(categoryId);
+    if (!category) return res.status(400).json({ msg: 'Category not found' });
+
+    // Convert to numbers and calculate finalPrice
+    const numericPrice = parseFloat(price) || 0;
+    const numericProfit = parseFloat(profit) || 0;
+    const finalPrice = numericPrice + numericProfit;
+
+    // Validate that price and profit are valid numbers
+    if (isNaN(numericPrice) || isNaN(numericProfit)) {
+      return res.status(400).json({ msg: 'Invalid price or profit value' });
+    }
+
+    const updatedProduct = await Product.findByIdAndUpdate(
+      productId,
+      {
+        title,
+        companyName,
+        description,
+        specifications,
+        price: numericPrice,
+        profit: numericProfit,
+        stock: parseInt(stock) || 0,
+        category: categoryId,
+        image,
+        finalPrice
+      },
+      { new: true }
+    );
+
+    if (!updatedProduct) return res.status(404).json({ msg: 'Product not found' });
+
+    res.json(updatedProduct);
+>>>>>>> parent of f742eb4 (Refactor product model and UI for new pricing and images)
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });
   }
 };
 
+<<<<<<< HEAD
 const incrementSearchCount = async (req, res) => {
+=======
+// Increment sold count
+exports.incrementSoldCount = async (req, res) => {
+  const { productId } = req.params;
+>>>>>>> parent of f742eb4 (Refactor product model and UI for new pricing and images)
   try {
     const { productId } = req.params;
     const product = await Product.findByIdAndUpdate(productId, { $inc: { searchCount: 1 } }, { new: true });

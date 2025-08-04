@@ -51,9 +51,15 @@ const productSchema = new mongoose.Schema({
     ref: 'Category',
     required: true
   },
+<<<<<<< HEAD
   images: [{        // Changed from single image to array
     type: String
   }],
+=======
+  image: {
+    type: String
+  },
+>>>>>>> parent of f742eb4 (Refactor product model and UI for new pricing and images)
   soldCount: {
     type: Number,
     default: 0
