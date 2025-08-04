@@ -8,11 +8,13 @@ import ProductManagement from './admin_panel/pages/ProductManagement';
 import ProductList from './admin_panel/pages/ProductList';
 import ProductAdd from './admin_panel/pages/ProductAdd'; 
 import PrivateRoute from './admin_panel/admincomponents/PrivateRoute';
+import { HomePage } from './user-panel/pages/home_page';
 
 function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/adminlogin" element={<Login />} />
      
           {/* Wrap all admin routes inside the AdminLayout */}

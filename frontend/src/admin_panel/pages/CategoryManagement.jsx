@@ -11,7 +11,7 @@ const CategoryManagement = () => {
   const handleCategorySubmit = async () => {
     try {
       await axios.post(
-        'http://localhost:5000/api/category',
+        'http://18.212.65.1:5000/api/category',
         { name: categoryName, description, isParent, parentCategory },
         { headers: { 'x-auth-token': localStorage.getItem('adminToken') } }
       );

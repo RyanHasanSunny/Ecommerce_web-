@@ -20,7 +20,7 @@ const ProductList = () => {
   const fetchProducts = async () => {
     try {
       const { data } = await axios.get(
-        'http://localhost:5000/api/products',
+        'http://18.212.65.1:5000/api/products',
         { headers: { 'x-auth-token': localStorage.getItem('adminToken') } }
       );
       setProducts(data);
@@ -32,7 +32,7 @@ const ProductList = () => {
   // Fetch categories (with parentCategory populated)
   const fetchCategories = async () => {
     try {
-      const { data } = await axios.get('http://localhost:5000/api/categories');
+      const { data } = await axios.get('http://18.212.65.1:5000/api/categories');
       setCategories(data);
     } catch (err) {
       console.error('Error fetching categories:', err);
@@ -71,7 +71,7 @@ const ProductList = () => {
     const confirmDelete = window.confirm('Are you sure you want to delete this product?');
     if (confirmDelete) {
       try {
-        await axios.delete(`http://localhost:5000/api/products/${productId}`, {
+        await axios.delete(`http://18.212.65.1:5000/api/products/${productId}`, {
           headers: { 'x-auth-token': localStorage.getItem('adminToken') }
         });
         alert('Product deleted successfully');
