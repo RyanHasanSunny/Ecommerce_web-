@@ -3,7 +3,7 @@ import { ShoppingCart, Search, User } from "lucide-react";
 
 export const Header = () => {
     return (
-        <header className="header flex flex-col w-full  bg-[#fff]">
+        <header className="header flex flex-col w-100vw  bg-[#fff]" >
             <div className="topbar flex items-center justify-between items-center py-4 px-8 border-b border-gray-200  text-black">
                 <div className="logo">
                     {/* <img src="/path/to/logo.png" alt="Logo" className="h-8" /> */}

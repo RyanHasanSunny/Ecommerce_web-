@@ -18,7 +18,7 @@ const generateProductId = async () => {
 
 // Add product (Admin only)
 exports.addProduct = async (req, res) => {
-  const { title, companyName, description, specifications, price, profit, stock, categoryId, image } = req.body;
+  const { title, companyName, description, specifications, price, profit, stock, categoryId, thumbnail, images, offerPrice } = req.body;
 
   try {
     const category = await Category.findById(categoryId);
@@ -26,14 +26,13 @@ exports.addProduct = async (req, res) => {
 
     const productId = await generateProductId();
 
-    // Convert to numbers and calculate finalPrice
     const numericPrice = parseFloat(price) || 0;
     const numericProfit = parseFloat(profit) || 0;
-    const finalPrice = numericPrice + numericProfit;
+    const sellingPrice = numericPrice + numericProfit;
+    const numericOfferPrice = offerPrice ? parseFloat(offerPrice) : null;
 
-    // Validate that price and profit are valid numbers
-    if (isNaN(numericPrice) || isNaN(numericProfit)) {
-      return res.status(400).json({ msg: 'Invalid price or profit value' });
+    if (isNaN(numericPrice) || isNaN(numericProfit) || (offerPrice && isNaN(numericOfferPrice))) {
+      return res.status(400).json({ msg: 'Invalid price values' });
     }
 
     const newProduct = new Product({
@@ -44,10 +43,12 @@ exports.addProduct = async (req, res) => {
       specifications,
       price: numericPrice,
       profit: numericProfit,
+      sellingPrice,
+      offerPrice: numericOfferPrice,
       stock: parseInt(stock) || 0,
       category: categoryId,
-      image,
-      finalPrice
+      thumbnail,
+      images
     });
 
     await newProduct.save();
@@ -57,6 +58,7 @@ exports.addProduct = async (req, res) => {
     res.status(500).json({ msg: 'Server error' });
   }
 };
+
 
 // Get all products (For user display)
 exports.getProducts = async (req, res) => {
@@ -84,21 +86,16 @@ exports.getProductById = async (req, res) => {
 // Update product (Admin only)
 exports.updateProduct = async (req, res) => {
   const { productId } = req.params;
-  const { title, companyName, description, specifications, price, profit, stock, categoryId, image } = req.body;
+  const { title, companyName, description, specifications, price, profit, stock, categoryId, thumbnail, images, offerPrice } = req.body;
 
   try {
     const category = await Category.findById(categoryId);
     if (!category) return res.status(400).json({ msg: 'Category not found' });
 
-    // Convert to numbers and calculate finalPrice
     const numericPrice = parseFloat(price) || 0;
     const numericProfit = parseFloat(profit) || 0;
-    const finalPrice = numericPrice + numericProfit;
-
-    // Validate that price and profit are valid numbers
-    if (isNaN(numericPrice) || isNaN(numericProfit)) {
-      return res.status(400).json({ msg: 'Invalid price or profit value' });
-    }
+    const sellingPrice = numericPrice + numericProfit;
+    const numericOfferPrice = offerPrice ? parseFloat(offerPrice) : null;
 
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
@@ -109,22 +106,24 @@ exports.updateProduct = async (req, res) => {
         specifications,
         price: numericPrice,
         profit: numericProfit,
+        sellingPrice,
+        offerPrice: numericOfferPrice,
         stock: parseInt(stock) || 0,
         category: categoryId,
-        image,
-        finalPrice
+        thumbnail,
+        images
       },
       { new: true }
     );
 
     if (!updatedProduct) return res.status(404).json({ msg: 'Product not found' });
-
     res.json(updatedProduct);
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });
   }
 };
+
 
 // Increment sold count
 exports.incrementSoldCount = async (req, res) => {

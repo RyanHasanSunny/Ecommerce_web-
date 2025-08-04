@@ -33,21 +33,21 @@ const ProductPanel = ({ title, subtitle, apiEndpoint, children }) => {
 
     return shouldFetchFromApi
       ? products.map((product) => (
-          <ProductCard
-            key={product._id}
-            image={product.imageUrls?.[0] || product.image}
-            title={product.name}
-            price={product.originalPrice || product.price}
-            offerPrice={product.discountPrice || product.price}
-          />
-        ))
+        <ProductCard
+          key={product._id}
+          thumbnail={product.thumbnail}
+          title={product.title}
+          sellingPrice={product.sellingPrice}
+          offerPrice={product.offerPrice}
+        />
+      ))
       : children;
   };
 
   return (
-    <div className="ProductPanel w-full text-black  py-20 px-10 gap-2 bg-white flex flex-col items-center justify-center">
-       
-      <h2 className="text-2xl font-bold">{title}</h2>
+    <div className="ProductPanel w-full text-black bg-white flex flex-col rounded-xl items-center justify-center" style={{ padding: "40px 0" }}>
+
+      <h2 className="text-xl font-bold">{title}</h2>
       <p className="text-lg mb-6">{subtitle}</p>
 
       <div className="flex flex-wrap justify-center gap-6 max-w-7xl w-full">

@@ -9,9 +9,12 @@ import ProductList from './admin_panel/pages/ProductList';
 import ProductAdd from './admin_panel/pages/ProductAdd'; 
 import PrivateRoute from './admin_panel/admincomponents/PrivateRoute';
 import { HomePage } from './user-panel/pages/home_page';
+import Header from './user-panel/components/header/Header';
 
 function App() {
   return (
+    <div>
+      <Header />
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -28,6 +31,7 @@ function App() {
        
       </Routes>
     </Router>
+     </div>
   );
 }
 

@@ -7,7 +7,7 @@ const originalSlides = [
 ];
 
 const Heropanel = () => {
-  const [currentIndex, setCurrentIndex] = useState(1); // Start at first real slide
+  const [currentIndex, setCurrentIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(true);
   const slideRef = useRef(null);
 
@@ -30,25 +30,21 @@ const Heropanel = () => {
   };
 
   const goToSlide = (realIndex) => {
-    setCurrentIndex(realIndex + 1); // Offset because of cloned first slide
+    setCurrentIndex(realIndex + 1);
     setIsTransitioning(true);
   };
 
-  // Auto-slide
   useEffect(() => {
     const interval = setInterval(nextSlide, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // Reset to real first/last when reaching clones
   useEffect(() => {
     const handleTransitionEnd = () => {
       if (currentIndex === totalSlides - 1) {
-        // If reached clone of first, reset to real first
         setIsTransitioning(false);
         setCurrentIndex(1);
       } else if (currentIndex === 0) {
-        // If reached clone of last, reset to real last
         setIsTransitioning(false);
         setCurrentIndex(originalSlides.length);
       }
@@ -67,61 +63,53 @@ const Heropanel = () => {
   }, [currentIndex]);
 
   return (
-    <div className="heropanel w-screen text-black py-8  gap-4 flex flex-col items-center justify-center">
-        {/* <div className="updates mt-6 text-center">
-        <h2 className="text-2xl font-bold mb-2">Latest Updates</h2>
-        <p className="text-lg">Check out our latest products and offers!</p>
-        </div> */}
-        <div className="flex flex-col w-full py-10 gap-4 items-center bg-white justify-center">
-      <div className="relative w-full max-w-7xl h-[400px] overflow-hidden rounded shadow">
-        <div
-          ref={slideRef}
-          className={`flex ${isTransitioning ? "transition-transform duration-700 ease-in-out" : ""}`}
-          style={{
-            transform: `translateX(-${currentIndex * 100}%)`,
-         
-          }}
-        >
-          {extendedSlides.map((img, index) => (
-            <img
-              key={index}
-              src={img}
-              alt={`Slide ${index}`}
-              className=" object-cover flex-shrink-0"
-              style={{width: "100%" }}
-            />
-          ))}
+    <div className="heropanel w-full text-black py-8 gap-4 flex flex-col items-center justify-center">
+      <div className="w-full py-10 gap-4 flex flex-col items-center">
+        <div className="relative w-full max-w-7xl h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] overflow-hidden rounded shadow">
+          <div
+            ref={slideRef}
+            className={`flex ${isTransitioning ? "transition-transform duration-700 ease-in-out" : ""}`}
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {extendedSlides.map((img, index) => (
+              <img
+                key={index}
+                src={img}
+                alt={`Slide ${index}`}
+                className="w-full h-full object-cover flex-shrink-0"
+              />
+            ))}
+          </div>
         </div>
 
-       
-      </div>
-       {/* Dots */}
-        <div className=" w-full flex justify-center gap-2">
+        {/* Dots */}
+        <div className="w-full flex justify-center gap-2 mt-4">
           {originalSlides.map((_, index) => (
-            <div
+            <button
               key={index}
               className={`w-3 h-3 rounded-full ${
-                currentIndex === index + 1 ? "bg-gray-400" : "bg-gray-200"
+                currentIndex === index + 1 ? "bg-gray-500" : "bg-gray-300"
               }`}
               onClick={() => goToSlide(index)}
             />
           ))}
         </div>
       </div>
-      <div className="companylogos   w-full max-w-7xl mt-8 flex justify-center">
-        <ul className="flex gap-4">
-            <li>    
-                <img src="https://via.placeholder.com/100" alt="Logo 1" />
+
+      {/* Logos section */}
+      <div className="companylogos w-full max-w-7xl py-10 flex justify-center">
+        <ul className="flex flex-wrap justify-center gap-6 px-4">
+          {[1, 2, 3].map((num) => (
+            <li key={num}>
+              <img
+                src={`https://via.placeholder.com/100?text=Logo+${num}`}
+                alt={`Logo ${num}`}
+                className="w-[80px] h-auto sm:w-[100px]"
+              />
             </li>
-            <li>
-                <img src="https://via.placeholder.com/100" alt="Logo 2" />
-                </li>
-            <li>
-                <img src="https://via.placeholder.com/100" alt="Logo 3"
-                />
-            </li>
-        </ul>   
-    </div>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

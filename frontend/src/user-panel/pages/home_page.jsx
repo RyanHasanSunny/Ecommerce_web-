@@ -1,19 +1,31 @@
 import React from "react";
-import Header from "../../user-panel/components/header/Header";
+
 import Heropanel from "../../user-panel/Sections/Heropanel/Heropanel";
 import ProductPanel from "../../user-panel/components/ProductPanelCard/ProductPanel";
-import ProductCard from "../components/ProductPanelCard/productcard/ProductCard";
+import ServiceSection from "../../user-panel/components/Service/Services";
+import ReviewSection from "../../user-panel/components/Review/Review";
+
 
 export const HomePage = () => {
     return (
-        <div className="home-page flex flex-col items-center justify-top min-w-screen min-h-screen bg-gray-100">
-            <Header />
+        <div className="home-page flex flex-col justify-center gap-40 min-h-screen " style={{ width: "100%" }}>
+          
             <Heropanel />
+            <ProductPanel
+                title="Offer Products"
+                subtitle="Check out the latest offers"
+                apiEndpoint="http://18.212.65.1:5000/api/products"
+            />
             <ProductPanel
                 title="New Arrivals"
                 subtitle="Check out the latest products"
-                apiEndpoint="http://localhost:5000/api/products/arrivals"
+                apiEndpoint="http://18.212.65.1:5000/api/products"
             />
+
+            <ServiceSection />
+            <ReviewSection />
+
+
                 
 
 
