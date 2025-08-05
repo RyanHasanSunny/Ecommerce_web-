@@ -76,6 +76,7 @@ const Heropanel = () => {
                 key={index}
                 src={img}
                 alt={`Slide ${index}`}
+                  loading="lazy"  // Add lazy loading
                 className="w-full h-full object-cover flex-shrink-0"
               />
             ))}

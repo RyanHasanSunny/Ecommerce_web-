@@ -3,6 +3,8 @@ import { FaBoxOpen, FaClipboardList, FaTags, FaUsers, FaChartBar } from 'react-i
 
 const menuItems = [
   { name: "Dashboard", icon: <FaClipboardList />, path: "/admin/dashboard" },
+  { name: "Orders", icon: <FaClipboardList />, path: "/admin/orders" },
+  { name: "Sales", icon: <FaChartBar />, path: "/admin/sales" },
   { name: "Products", icon: <FaBoxOpen />, path: "/admin/products" },
   { name: "Categories", icon: <FaTags />, path: "/admin/categories" },
   { name: "Customers", icon: <FaUsers />, path: "/admin/customers" },

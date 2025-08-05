@@ -1,41 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+// src/admincomponents/ProductList.jsx
+import React, { useState, useEffect } from "react";
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Button, Typography, IconButton
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+  Paper, Button, IconButton, Typography, Box
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import EditIcon   from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  getAdminProducts,
+  deleteProduct,
+  getCategories,
+} from "../../user-panel/api/api";
 
 const ProductList = () => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
+  const [products, setProducts]     = useState([]);
   const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery]       = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-
-  // Fetch products (with category populated)
+  // load products
   const fetchProducts = async () => {
     try {
-      const { data } = await axios.get(
-        'http://18.212.65.1:5000/api/products',
-        { headers: { 'x-auth-token': localStorage.getItem('adminToken') } }
-      );
+      const data = await getAdminProducts();
       setProducts(data);
     } catch (err) {
-      console.error('Error fetching products:', err);
+      console.error("Error fetching products:", err);
     }
   };
 
-  // Fetch categories (with parentCategory populated)
+  // load categories
   const fetchCategories = async () => {
     try {
-      const { data } = await axios.get('http://18.212.65.1:5000/api/categories');
+      const data = await getCategories();
       setCategories(data);
     } catch (err) {
-      console.error('Error fetching categories:', err);
+      console.error("Error fetching categories:", err);
     }
   };
 
@@ -44,16 +45,16 @@ const ProductList = () => {
     fetchCategories();
   }, []);
 
-  // Filter logic
-  const filteredProducts = products.filter(p => {
+  // filter logic
+  const filteredProducts = products.filter((p) => {
     const q = searchQuery.trim().toLowerCase();
     const matchesSearch =
       p.title.toLowerCase().includes(q) ||
       p.productId.toLowerCase().includes(q);
 
-    // extract parentCategory ID (could be object or string)
+    // parentCategory might be an ObjectId or populated object
     const rawParent = p.category.parentCategory;
-    const parentId = rawParent && rawParent._id ? rawParent._id : rawParent;
+    const parentId  = rawParent?._id || rawParent;
 
     const matchesCategory =
       !selectedCategory ||
@@ -63,65 +64,61 @@ const ProductList = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleEditProduct = (productId) => {
-    navigate(`/admin/products/edit/${productId}`); // Navigate to the Edit page with the productId
-  };
+  const handleEditProduct = (id) => navigate(`/admin/products/edit/${id}`);
 
-  const handleDeleteProduct = async (productId) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this product?');
-    if (confirmDelete) {
-      try {
-        await axios.delete(`http://18.212.65.1:5000/api/products/${productId}`, {
-          headers: { 'x-auth-token': localStorage.getItem('adminToken') }
-        });
-        alert('Product deleted successfully');
-        fetchProducts(); // Refresh the product list after deletion
-      } catch (err) {
-        alert(`Error deleting product: ${err.message}`);
-      }
+  const handleDeleteProduct = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    try {
+      await deleteProduct(id);
+      alert("Product deleted successfully");
+      fetchProducts();
+    } catch (err) {
+      alert(`Error deleting product: ${err.response?.data?.msg || err.message}`);
     }
   };
 
   return (
-    <div>
-      {/* Top section with heading and Add Product button */}
-      <div className="flex justify-between items-center mb-6">
-        <div></div>
+    <div className="admin-products flex text-left justify-center">
+    <Box >
+      {/* header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Typography variant="h4">Products</Typography>
         <Button
           variant="contained"
-          color="primary"
-          onClick={() => navigate('/admin/products/add')}
-          style={{ textTransform: 'none', fontWeight: 'bold' }}
+          onClick={() => navigate("/admin/products/add")}
         >
           + Add Product
         </Button>
-      </div>
+      </Box>
 
-      {/* Search & Category Filter */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-[#1976d2]">
+      {/* filters */}
+      <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2} mb={4}>
         <input
           type="text"
           placeholder="Search by Name or ID"
           value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          className="w-full border rounded p-2 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-[#1976d2]"
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="border rounded p-2"
         />
-
         <select
           value={selectedCategory}
-          onChange={e => setSelectedCategory(e.target.value)}
-          className="w-full border rounded p-2 text-lg font-medium focus:outline-none focus:ring-2 focus:ring-[#1976d2] focus:border-[#1976d2]"
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="border rounded p-2"
         >
           <option value="">All Categories</option>
-
           {categories
-            .filter(c => c.isParent)
-            .map(parent => (
+            .filter((c) => c.isParent)
+            .map((parent) => (
               <optgroup key={parent._id} label={parent.name}>
                 <option value={parent._id}>{parent.name}</option>
                 {categories
-                  .filter(ch => !ch.isParent && ch.parentCategory?._id === parent._id)
-                  .map(child => (
+                  .filter(
+                    (ch) =>
+                      !ch.isParent &&
+                      String(ch.parentCategory?._id || ch.parentCategory) ===
+                        parent._id
+                  )
+                  .map((child) => (
                     <option key={child._id} value={child._id}>
                       ↳ {child.name}
                     </option>
@@ -129,61 +126,66 @@ const ProductList = () => {
               </optgroup>
             ))}
         </select>
-      </div>
+      </Box>
 
-      {/* Table Container */}
-      <TableContainer
-        component={Paper}
-        sx={{
-          maxHeight: 'calc(100vh - 300px)',
-          height: '100%',
-        }}
-      >
+      {/* table */}
+      <TableContainer component={Paper} sx={{ maxHeight: "calc(100vh - 300px)" }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell>Product ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Stock</TableCell>
-              <TableCell>Last Modified</TableCell>
-              <TableCell>Buying Price</TableCell>
-              <TableCell>Profit</TableCell>
-              <TableCell>Selling Price</TableCell>
-              <TableCell>Action</TableCell> {/* Action column */}
+              {[
+                "Product ID",
+                "Name",
+                "Category",
+                "Stock",
+                "Last Modified",
+                "Price",
+                "Profit",
+                "Selling Price",
+                "Offer Price",
+                "Actions",
+              ].map((h) => (
+                <TableCell key={h}>{h}</TableCell>
+              ))}
             </TableRow>
           </TableHead>
+
           <TableBody>
             {filteredProducts.length > 0 ? (
-              filteredProducts.map(p => {
-                // Calculate the final price (price + profit)
-               // const finalPrice = (parseFloat(p.price) + parseFloat(p.profit)).toFixed(2);
-
-                return (
-                  <TableRow key={p._id}>
-                    <TableCell>{p.productId}</TableCell>
-                    <TableCell>{p.title}</TableCell>
-                    <TableCell>{p.category.name}</TableCell>
-                    <TableCell>{p.stock}</TableCell>
-                    <TableCell>{new Date(p.updatedAt).toLocaleDateString()}</TableCell>
-                    <TableCell>{p.price} BDT</TableCell>
-                    <TableCell>{p.profit} BDT</TableCell>
-                    <TableCell>{p.finalPrice} BDT</TableCell> {/* Display the calculated final price */}
-                    <TableCell>
-                      {/* Action buttons */}
-                      <IconButton onClick={() => handleEditProduct(p._id)} color="primary" size="small">
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton onClick={() => handleDeleteProduct(p._id)} color="secondary" size="small">
-                        <DeleteIcon />
-                      </IconButton>
+              filteredProducts.map((p) => (
+                <TableRow key={p._id}>
+                  <TableCell>{p.productId}</TableCell>
+                  <TableCell>{p.title}</TableCell>
+                  <TableCell>{p.category.name}</TableCell>
+                  <TableCell>{p.stock}</TableCell>
+                  <TableCell>
+                    {new Date(p.updatedAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>{p.price} BDT</TableCell>
+                  <TableCell>{p.profit} BDT</TableCell>
+                  <TableCell>{p.sellingPrice} BDT</TableCell>
+                  <TableCell>
+                    {p.offerPrice ? `${p.offerPrice} BDT` : "N/A"}
                     </TableCell>
-                  </TableRow>
-                );
-              })
+                  <TableCell>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleEditProduct(p._id)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleDeleteProduct(p._id)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} align="center">
+                <TableCell colSpan={9} align="center">
                   No products found.
                 </TableCell>
               </TableRow>
@@ -191,6 +193,7 @@ const ProductList = () => {
           </TableBody>
         </Table>
       </TableContainer>
+    </Box>
     </div>
   );
 };

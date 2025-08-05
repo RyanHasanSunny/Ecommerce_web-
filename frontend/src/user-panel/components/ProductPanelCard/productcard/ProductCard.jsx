@@ -1,19 +1,32 @@
-const ProductCard = ({ thumbnail, title, sellingPrice, offerPrice }) => {
+import React from "react";
+import { Card, CardContent, Typography, CardMedia, Box } from "@mui/material";
+
+const ProductCard = ({ thumbnail, title, sellingPrice, offerPrice, onClick }) => {
   return (
-    <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center text-center">
-      <img src={thumbnail} alt={title} className="w-[300px] h-[300px] object-cover rounded mb-3" />
-      <h3 className="text-md font-semibold">{title}</h3>
-      <div className="flex items-center gap-2 mt-1">
-        {offerPrice ? (
-          <>
-            <span className="text-sm text-gray-500 line-through">${sellingPrice}</span>
-            <span className="text-md font-bold text-red-600">${offerPrice}</span>
-          </>
-        ) : (
-          <span className="text-md font-bold text-black">${sellingPrice}</span>
-        )}
-      </div>
-    </div>
+    <Card sx={{ width: 280, borderRadius: 2, boxShadow: 3 }} onClick={onClick}>  {/* Make card clickable */}
+      <CardMedia
+        component="img"
+        alt={title}
+        height="180"
+        image={thumbnail}
+        sx={{ objectFit: "cover", borderTopLeftRadius: 2, borderTopRightRadius: 2 }}
+      />
+      <CardContent>
+        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+          {title}
+        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mt={1}>
+          <Typography variant="body2" sx={{ textDecoration: offerPrice ? "line-through" : "none", color: "gray" }}>
+            ${sellingPrice}
+          </Typography>
+          {offerPrice && (
+            <Typography variant="body1" color="primary" sx={{ fontWeight: "bold" }}>
+              ${offerPrice}
+            </Typography>
+          )}
+        </Box>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -14,7 +14,7 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className="flex" style={{ flexDirection: 'column', height: '100vh', width: '100vw' }}>
+    <div className="flex" style={{ flexDirection: 'column', }}>
       <Header />
       <div className="flex flex-row" style={{ flex: 1, overflowY: 'auto' }}>
         <LeftMenu onMenuItemClick={handleMenuItemClick} />

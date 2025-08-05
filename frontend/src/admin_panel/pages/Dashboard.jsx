@@ -1,5 +1,6 @@
+// src/admincomponents/Dashboard.jsx
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { getStats } from '../../user-panel/api/api';
 import ContentDisplay from '../admincomponents/ContentDisplay';
 
 const Dashboard = () => {
@@ -12,16 +13,11 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('http://18.212.65.1:5000/api/stats', {
-          headers: {
-            'x-auth-token': localStorage.getItem('adminToken'),
-          },
-        });
-
+        const data = await getStats();
         setStats({
-          totalProducts: response.data.totalProducts,
-          totalSold: response.data.totalSold,
-          totalSearches: response.data.totalSearches,
+          totalProducts: data.totalProducts,
+          totalSold:    data.totalSold,
+          totalSearches:data.totalSearches,
         });
       } catch (error) {
         console.error('Error fetching stats:', error);

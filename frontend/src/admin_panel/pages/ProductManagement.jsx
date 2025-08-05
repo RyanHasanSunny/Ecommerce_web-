@@ -1,41 +1,48 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   TextField, Button, Typography, Select, MenuItem,
   Grid, IconButton, Box, Divider, Paper
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  getProductById,
+  addProduct,
+  updateProduct,
+  getCategories
+} from "../../user-panel/api/api";
+import EnhancedImageUpload from "../admincomponents/fileds/imageupload/EnhancedImageUpload";
 
 const ProductManagement = () => {
   const { productId } = useParams();
-  const [title, setTitle] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [description, setDescription] = useState('');
+  const navigate = useNavigate();
+
+  const [title, setTitle] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [description, setDescription] = useState("");
   const [specifications, setSpecifications] = useState([]);
-  const [specTitle, setSpecTitle] = useState('');
-  const [specDetails, setSpecDetails] = useState('');
-  const [price, setPrice] = useState('');
-  const [profit, setProfit] = useState('');
-  const [offerPrice, setOfferPrice] = useState(''); // new state
-  const [categoryId, setCategoryId] = useState('');
+  const [specTitle, setSpecTitle] = useState("");
+  const [specDetails, setSpecDetails] = useState("");
+  const [price, setPrice] = useState("");
+  const [profit, setProfit] = useState("");
+  const [stock, setStock] = useState("");
+  const [offerPrice, setOfferPrice] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState([]);
-  const [thumbnail, setThumbnail] = useState(''); // separate field for main image
+  const [thumbnail, setThumbnail] = useState("");
   const [images, setImages] = useState([]);
-  
+
   const [editIndex, setEditIndex] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get('http://18.212.65.1:5000/api/categories');
-        setCategories(response.data);
+        const data = await getCategories();
+        setCategories(data);
       } catch (err) {
-        console.error('Error fetching categories:', err);
+        console.error("Error fetching categories:", err);
       }
     };
 
@@ -45,26 +52,24 @@ const ProductManagement = () => {
       const fetchProductDetails = async () => {
         setLoading(true);
         try {
-          const response = await axios.get(`http://18.212.65.1:5000/api/product/${productId}`, {
-            headers: { 'x-auth-token': localStorage.getItem('adminToken') }
-          });
-          const product = response.data;
+          const product = await getProductById(productId);
           setTitle(product.title);
           setCompanyName(product.companyName);
           setDescription(product.description);
-          setSpecifications(product.specifications);
+          setSpecifications(product.specifications || []);
           setPrice(product.price);
           setProfit(product.profit);
-          setOfferPrice(product.offerPrice || '');
-          setCategoryId(product.category?._id || '');
+          setOfferPrice(product.offerPrice || "");
+          setCategoryId(product.category?._id || "");
           setThumbnail(product.thumbnail);
           setImages(product.images || []);
         } catch (err) {
-          console.error('Error fetching product details:', err);
+          console.error("Error fetching product details:", err);
         } finally {
           setLoading(false);
         }
       };
+
       fetchProductDetails();
     } else {
       setLoading(false);
@@ -81,8 +86,8 @@ const ProductManagement = () => {
       } else {
         setSpecifications([...specifications, { title: specTitle, details: specDetails }]);
       }
-      setSpecTitle('');
-      setSpecDetails('');
+      setSpecTitle("");
+      setSpecDetails("");
     }
   };
 
@@ -90,12 +95,7 @@ const ProductManagement = () => {
     setSpecifications(specifications.filter((_, i) => i !== index));
   };
 
-  const handleAddImage = () => setImages([...images, '']);
-  const handleImageChange = (index, value) => {
-    const updated = [...images];
-    updated[index] = value;
-    setImages(updated);
-  };
+  // These functions are no longer needed as EnhancedImageUpload handles image management
 
   const handleProductSubmit = async () => {
     const sellingPrice = Number(price) + Number(profit);
@@ -109,29 +109,21 @@ const ProductManagement = () => {
         profit,
         sellingPrice,
         offerPrice: offerPrice || null,
-        stock: 0,
+        stock,
         categoryId,
         thumbnail,
-        images
+        images,
       };
 
       if (productId) {
-        await axios.put(
-          `http://18.212.65.1:5000/api/product/${productId}`,
-          payload,
-          { headers: { 'x-auth-token': localStorage.getItem('adminToken') } }
-        );
-        alert('Product updated successfully');
+        await updateProduct(productId, payload);
+        alert("Product updated successfully");
       } else {
-        await axios.post(
-          'http://18.212.65.1:5000/api/product',
-          payload,
-          { headers: { 'x-auth-token': localStorage.getItem('adminToken') } }
-        );
-        alert('Product added successfully');
+        await addProduct(payload);
+        alert("Product added successfully");
       }
 
-      navigate('/admin/products');
+      navigate("/admin/products");
     } catch (err) {
       alert(`Error: ${err.message}`);
     }
@@ -140,9 +132,9 @@ const ProductManagement = () => {
   if (loading) return <Typography variant="h6">Loading product details...</Typography>;
 
   return (
-    <div className="container" style={{ maxHeight: 'calc(100vh - 140px)', overflowY: 'auto' }}>
+    <div className="container flex text-left justify-center" style={{ maxHeight: "calc(100vh - 140px)", overflowY: "auto" }}>
       <Paper sx={{ p: 4, mt: 4 }}>
-        <Typography variant="h5">{productId ? 'Edit Product' : 'Add New Product'}</Typography>
+        <Typography variant="h5">{productId ? "Edit Product" : "Add New Product"}</Typography>
         <Grid container spacing={4}>
           <Grid item xs={12} md={7}>
             <TextField label="Product Title" variant="standard" fullWidth value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -150,18 +142,24 @@ const ProductManagement = () => {
               <TextField label="Company Name" variant="standard" fullWidth value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
             </Box>
 
-            {/* Thumbnail */}
+            {/* Thumbnail Image */}
             <Box mt={3}>
-              <TextField label="Thumbnail Image URL" variant="standard" fullWidth value={thumbnail} onChange={(e) => setThumbnail(e.target.value)} />
+              <EnhancedImageUpload 
+                images={thumbnail ? [thumbnail] : []}
+                onImagesChange={(newImages) => setThumbnail(newImages[0] || "")}
+                maxImages={1}
+                title="Product Thumbnail"
+              />
             </Box>
 
             {/* Additional Images */}
             <Box mt={3}>
-              <Typography variant="subtitle1">Additional Images</Typography>
-              {images.map((img, idx) => (
-                <TextField key={idx} label={`Image URL ${idx + 1}`} variant="standard" fullWidth sx={{ my: 1 }} value={img} onChange={(e) => handleImageChange(idx, e.target.value)} />
-              ))}
-              <Button onClick={handleAddImage} size="small">+ Add Image</Button>
+              <EnhancedImageUpload 
+                images={images}
+                onImagesChange={setImages}
+                maxImages={5}
+                title="Additional Product Images"
+              />
             </Box>
 
             {/* Description */}
@@ -173,7 +171,7 @@ const ProductManagement = () => {
             <Box mt={4}>
               <Typography variant="h6">Specifications</Typography>
               {specifications.map((spec, index) => (
-                <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box key={index} sx={{ display: "flex", justifyContent: "space-between" }}>
                   <Typography variant="body2">• <strong>{spec.title}:</strong> {spec.details}</Typography>
                   <IconButton onClick={() => handleDeleteSpecification(index)}><DeleteIcon /></IconButton>
                 </Box>
@@ -204,10 +202,14 @@ const ProductManagement = () => {
               <Divider sx={{ my: 1 }} />
               <Typography>Final Selling Price: <strong>{Number(price) + Number(profit) || 0}</strong></Typography>
             </Box>
+            <Box mt={4}>
+              <Typography>Stock</Typography>
+              <TextField label="Stock Quantity" type="number" variant="standard" fullWidth value={stock} onChange={(e) => setStock(e.target.value)} />
+            </Box>
 
             <Box mt={4}>
               <Button variant="contained" fullWidth onClick={handleProductSubmit}>
-                {productId ? 'Update Product' : 'Submit Product'}
+                {productId ? "Update Product" : "Submit Product"}
               </Button>
             </Box>
           </Grid>
