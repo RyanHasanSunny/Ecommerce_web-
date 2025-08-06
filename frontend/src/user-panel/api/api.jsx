@@ -10,7 +10,7 @@ class APIError extends Error {
 }
 
 const apiService = {
-  baseURL: import.meta.env.BACKEND_URL || 'http://localhost:8080/api',
+  baseURL: import.meta.env.BACKEND_URL || 'http://18.212.65.1:5000/api',
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
