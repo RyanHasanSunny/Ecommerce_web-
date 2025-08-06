@@ -9,7 +9,7 @@ class APIError extends Error {
 }
 
 const apiService = {
-  baseURL: 'http://localhost:8080/api',
+  baseURL: process.env.BACKEND_URL ||'http://localhost:8080/api',
   
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
