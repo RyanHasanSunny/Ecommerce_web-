@@ -4,7 +4,7 @@ import { ShoppingCart, Search, User, LogOut, Settings, Menu, X, Heart, MapPin } 
 // Mock auth context for demo
 const useAuth = () => ({
   isAuthenticated: () => true,
-  logout: () => console.log('Logged out')
+  logout: () => console.log("Logged out")
 });
 
 // Mock navigate for demo
@@ -25,11 +25,6 @@ export const Header = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-    setShowProfileMenu(false);
-  };
 
   const categories = [
     "Electronics", "Fashion", "Home & Garden", "Beauty", "Sports", "Toys", "Books", "Automotive"

@@ -90,21 +90,11 @@ const HeroPanel = () => {
                 loading="lazy"
               />
               
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-black/40" />
+      
               
               {/* Content */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center text-white px-4 max-w-4xl">
-                  <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 leading-tight">
-                    {slide.title}
-                  </h1>
-                  <p className="text-lg md:text-xl lg:text-2xl mb-8 opacity-90">
-                    {slide.subtitle}
-                  </p>
-                  <button className={`px-8 py-3 md:px-10 md:py-4 text-lg font-semibold text-white bg-gradient-to-r ${slide.color} rounded-full hover:shadow-2xl hover:scale-105 transition-all duration-300`}>
-                    {slide.cta}
-                  </button>
                 </div>
               </div>
             </div>
@@ -198,7 +188,6 @@ const HeroPanel = () => {
               We partner with the world's most trusted brands to bring you quality products
             </p>
           </div>
-          
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center">
             {brandLogos.map((brand, index) => (
               <div key={index} className="flex items-center justify-center group">

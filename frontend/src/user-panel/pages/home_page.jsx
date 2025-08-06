@@ -45,6 +45,8 @@ export const HomePage = () => {
     }
   ];
 
+
+
   return (
     <>
       <Helmet>
@@ -54,7 +56,7 @@ export const HomePage = () => {
         <meta property="og:type" content="website" />
       </Helmet>
 
-      <div className="home-page min-h-screen bg-gray-50">
+      <div className="home-page min-h-screen ">
         {/* Hero Section */}
         <section className="relative bg-white">
           <Heropanel />
@@ -62,10 +64,6 @@ export const HomePage = () => {
           {/* Welcome Banner */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-16">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6">
-                <Sparkles className="w-5 h-5 mr-2" />
-                <span className="text-sm font-medium">Welcome to Premium Shopping</span>
-              </div>
               
               <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
                 Discover Amazing
@@ -83,16 +81,13 @@ export const HomePage = () => {
                   Shop Now
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </button>
-                <button className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-200">
-                  Learn More
-                </button>
               </div>
             </div>
           </div>
         </section>
 
         {/* Stats Section */}
-        <section className="bg-white py-16 -mt-8 relative z-10">
+        {/* <section className="bg-white py-16 -mt-8 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
@@ -111,7 +106,7 @@ export const HomePage = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* Categories Section */}
         <section className="py-20 bg-gray-50">
@@ -190,7 +185,7 @@ export const HomePage = () => {
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <ProductPanel
-              title="🔥 Hot Deals"
+              title="Hot Deals"
               subtitle="Limited time offers you can't miss"
             />
           </div>
@@ -199,7 +194,7 @@ export const HomePage = () => {
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <ProductPanel
-              title="✨ New Arrivals"
+              title="New Arrivals"
               subtitle="Fresh products just for you"
             />
           </div>

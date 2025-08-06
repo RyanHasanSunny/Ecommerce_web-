@@ -17,6 +17,7 @@ import LoginPage from './user-panel/pages/Login-page';
 import SignupPage from './user-panel/pages/Signup_page'; // Import SignupPage
 import UserLayout from './user-panel/components/UserLayout';
 import { AuthProvider } from './user-panel/context/AuthContext';
+import UserProductList from './user-panel/pages/productlist';
 import Profile_Page from './user-panel/pages/profile_page'; // Import Profile_Page
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
           <Route path="/" element={<UserLayout />}>
             <Route index element={<HomePage/>}/>
             <Route path= "/profile" element={<Profile_Page/>} />
+            <Route path="/products" element={<UserProductList />} />
             <Route path="/product/:productId" element={<ProductPage />} />
           </Route>
 

@@ -16,6 +16,8 @@ import {
   ArrowUpDown
 } from "lucide-react";
 
+
+
 // Sample product data
 const sampleProducts = [
   {
@@ -267,7 +269,7 @@ const ProductGrid = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">All Products</h1>
@@ -332,7 +334,7 @@ const ProductGrid = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-full mx-auto sm:px-6 lg:px-8 py-8">
         <div className="flex gap-8">
           {/* Filters Sidebar */}
           <div className={`${showFilters ? 'block' : 'hidden'} lg:block w-full lg:w-80 flex-shrink-0`}>
@@ -449,7 +451,7 @@ const ProductGrid = () => {
           {/* Products Grid */}
           <div className="flex-1">
             {filteredProducts.length === 0 ? (
-              <div className="text-center py-16">
+              <div className="text-center py-1">
                 <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
                   <Search className="w-8 h-8 text-gray-400" />
                 </div>
@@ -471,7 +473,7 @@ const ProductGrid = () => {
                 {filteredProducts.map(product => (
                   <div
                     key={product.id}
-                    className={`group bg-white rounded-xl shadow-sm border hover:shadow-lg transition-all duration-300 overflow-hidden ${
+                    className={`group bg-white rounded-xl w-[250px] h-full shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden ${
                       viewMode === "list" ? "flex" : ""
                     }`}
                   >
@@ -482,15 +484,10 @@ const ProductGrid = () => {
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-[250px] object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       
-                      {/* Badge */}
-                      {product.badge && (
-                        <div className={`absolute top-3 left-3 px-2 py-1 text-xs font-semibold text-white rounded-full ${getBadgeColor(product.badge)}`}>
-                          {product.badge}
-                        </div>
-                      )}
+                      
 
                       {/* Stock Status */}
                       {!product.inStock && (
@@ -502,7 +499,7 @@ const ProductGrid = () => {
                       )}
 
                       {/* Quick Actions */}
-                      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 space-y-2">
+                      {/* <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 space-y-2">
                         <button
                           onClick={() => toggleWishlist(product.id)}
                           className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
@@ -516,7 +513,7 @@ const ProductGrid = () => {
                         <button className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-gray-600 hover:text-orange-500 transition-colors">
                           <Eye className="w-4 h-4" />
                         </button>
-                      </div>
+                      </div> */}
                     </div>
 
                     {/* Product Info */}
@@ -533,23 +530,7 @@ const ProductGrid = () => {
                             </p>
                           )}
 
-                          {/* Rating */}
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`w-4 h-4 ${
-                                    i < Math.floor(product.rating)
-                                      ? "text-yellow-400 fill-current"
-                                      : "text-gray-300"
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-sm font-medium text-gray-900">{product.rating}</span>
-                            <span className="text-sm text-gray-500">({product.reviews})</span>
-                          </div>
+                        
 
                           {/* Price */}
                           <div className="flex items-center gap-2 mb-4">
@@ -570,7 +551,7 @@ const ProductGrid = () => {
                         </div>
 
                         {/* Add to Cart Button */}
-                        <div className={viewMode === "list" ? "flex-shrink-0" : ""}>
+                        {/* <div className={viewMode === "list" ? "flex-shrink-0" : ""}>
                           <button
                             disabled={!product.inStock}
                             className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
@@ -582,7 +563,7 @@ const ProductGrid = () => {
                             <ShoppingCart className="w-4 h-4" />
                             {product.inStock ? "Add to Cart" : "Out of Stock"}
                           </button>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </div>
