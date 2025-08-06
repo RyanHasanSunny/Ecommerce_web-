@@ -157,7 +157,7 @@ const HeroPanel = () => {
       </div>
 
       {/* Features Section */}
-      <div className="bg-gradient-to-r from-gray-50 to-gray-100 py-12">
+      {/* <div className="bg-gradient-to-r from-gray-50 to-gray-100 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center group">
@@ -185,7 +185,7 @@ const HeroPanel = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Brand Partners */}
       <div className="py-16 bg-white">

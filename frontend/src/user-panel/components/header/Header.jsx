@@ -37,7 +37,6 @@ export const Header = () => {
 
   const navigationItems = [
     { label: "Home", href: "/" },
-    { label: "Today's Deals", href: "/deals" },
     { label: "New Arrivals", href: "/new" },
     { label: "Best Sellers", href: "/bestsellers" },
   ];
@@ -47,10 +46,10 @@ export const Header = () => {
       isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white'
     }`}>
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white text-sm py-2 px-4 text-center">
-        <div className="flex items-center justify-center gap-2">
+      <div className="bg-orange-200  text-sm py-2 px-4 text-center">
+        <div className="flex items-center justify-center text-black gap-2">
           <MapPin className="w-4 h-4" />
-          <span>Free shipping on orders over $50 • Limited time offer!</span>
+          <span> Free Shipping on Orders Over 1000TK. </span>
         </div>
       </div>
 
@@ -179,7 +178,7 @@ export const Header = () => {
       </div>
 
       {/* Categories Bar */}
-      <div className="hidden lg:block bg-gray-50 border-b border-gray-200">
+      {/* <div className="hidden lg:block bg-gray-50 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-3">
             <ul className="flex space-x-8">
@@ -196,7 +195,7 @@ export const Header = () => {
             </ul>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Mobile Menu */}
       {showMobileMenu && (
