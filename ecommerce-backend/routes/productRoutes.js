@@ -4,6 +4,8 @@ const {
   getProducts,
   getProductById,
   updateProduct,
+  deleteProduct,
+  getUserProducts,
   incrementSoldCount,
   incrementSearchCount
 } = require('../controllers/productController');
@@ -13,6 +15,7 @@ const router = express.Router();
 // Admin routes (Protected by JWT authentication)
 router.post('/product', authMiddleware, addProduct);
 router.put('/product/:productId', authMiddleware, updateProduct);
+router.delete('/product/:productId', authMiddleware, deleteProduct);
 router.put('/product/sold/:productId', authMiddleware, incrementSoldCount);
 router.put('/product/search/:productId', authMiddleware, incrementSearchCount);
 

@@ -58,7 +58,7 @@ exports.getUserProfile = async (req, res) => {
   }
 };
 
-// @route   PUT /api/auth/profile/password
+// @route   PUT /api/auth/password
 // @desc    Update current user's password
 // @access  Private
 exports.updatePassword = async (req, res) => {
@@ -86,36 +86,53 @@ exports.updatePassword = async (req, res) => {
   }
 };
 
+// @route   GET /api/user/addresses
+// @desc    Get user's addresses
+// @access  Private
+exports.getUserAddresses = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('addresses');
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+    
+    // Return addresses as an array with proper structure
+    const formattedAddresses = user.addresses.map((addr, index) => ({
+      id: index,
+      address: addr
+    }));
+    
+    res.json(formattedAddresses);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
 
-exports.addAddress = (req, res, next) => {
+// @route   POST /api/user/address
+// @desc    Add a new address
+// @access  Private
+exports.addAddress = async (req, res) => {
   const { address } = req.body;
   if (!address) {
     return res.status(400).json({ msg: 'Address is required' });
   }
 
-  User.findByIdAndUpdate(
-    req.user.userId,
-    { $push: { addresses: address } },
-    { new: true }
-  )
-    .then(user => res.json(user))
-    .catch(err => {
-      console.error(err);
-      res.status(500).json({ msg: 'Server error' });
-    });
-}
-
-
-
-exports.getUserAddresses = (req, res, next) => {
-  User.findById(req.user.userId)
-    .select('addresses')
-    .then(user => {
-      if (!user) return res.status(404).json({ msg: 'User not found' });
-      res.json(user.addresses);
-    })
-    .catch(err => {
-      console.error(err);
-      res.status(500).json({ msg: 'Server error' });
-    });
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ msg: 'User not found' });
+    
+    // Add address to user's addresses array
+    user.addresses.push(address);
+    await user.save();
+    
+    // Return the newly added address with an id
+    const newAddress = {
+      id: user.addresses.length - 1,
+      address: address
+    };
+    
+    res.json(newAddress);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
 };

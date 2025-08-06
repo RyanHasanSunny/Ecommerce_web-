@@ -13,16 +13,16 @@ const {
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Upload single image
-router.post('/single', upload.single('image'), uploadSingleImage);
+router.post('/single', upload.single('image'), authMiddleware, uploadSingleImage);
 
 // Upload multiple images (max 10)
-router.post('/multiple', upload.array('images', 10), uploadMultipleImages);
+router.post('/multiple', upload.array('images', 10), authMiddleware, uploadMultipleImages);
 
 // Update/Replace existing image
-router.put('/update/:oldFileName', upload.single('image'), updateImage);
+router.put('/update/:oldFileName', upload.single('image'), authMiddleware, updateImage);
 
 // Delete image
-router.delete('/:fileName', deleteImage);
+router.delete('/:fileName', authMiddleware, deleteImage);
 
 // List images with pagination
 router.get('/list', listImages);

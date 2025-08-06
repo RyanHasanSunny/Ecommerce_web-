@@ -1,58 +1,202 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './admin_panel/pages/Login';
-import AdminLayout from './admin_panel/pages/AdminLayout'; // Import the layout
-import Dashboard from './admin_panel/pages/Dashboard';
-import CategoryManagement from './admin_panel/pages/CategoryManagement';
-import ProductManagement from './admin_panel/pages/ProductManagement';
-import ProductList from './admin_panel/pages/ProductList';
-import ProductAdd from './admin_panel/pages/ProductAdd';
-import PrivateRoute from './admin_panel/admincomponents/PrivateRoute';
-import { HomePage } from './user-panel/pages/home_page';
-import ProductPage from './user-panel/pages/ProductPage'; // Import ProductPage
-// import Header from './user-panel/components/header/Header';
-// import Footer from './user-panel/components/footer/Footer';
-import './App.css'; // Import your main CSS file
-import LoginPage from './user-panel/pages/Login-page';
-import SignupPage from './user-panel/pages/Signup_page'; // Import SignupPage
-import UserLayout from './user-panel/components/UserLayout';
+// src/App.jsx - UPDATED VERSION
+
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './user-panel/context/AuthContext';
-import UserProductList from './user-panel/pages/productlist';
-import Profile_Page from './user-panel/pages/profile_page'; // Import Profile_Page
+import { Loader } from 'lucide-react';
+import RouteLoader from './RouteLoader';
+import './App.css';
+
+// -- full-page loader component
+const FullPageLoader = () => (
+  <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+    <Loader className="w-12 h-12 animate-spin text-blue-600" />
+  </div>
+);
+
+// -- lazily imported user-panel pages
+const UserLayout      = lazy(() => import('./user-panel/components/UserLayout'));
+const HomePage        = lazy(() => import('./user-panel/pages/home_page'));
+const UserProductList = lazy(() => import('./user-panel/pages/productlist'));
+const ProductPage     = lazy(() => import('./user-panel/pages/ProductPage'));
+const LoginPage       = lazy(() => import('./user-panel/pages/Login-page'));
+const SignupPage      = lazy(() => import('./user-panel/pages/Signup_page'));
+const ProfilePage     = lazy(() => import('./user-panel/pages/profile_page'));
+const CartPage        = lazy(() => import('./user-panel/pages/CartPage'));
+const OrdersPage      = lazy(() => import('./user-panel/pages/OrderPage'));
+const OrderDetailPage = lazy(() => import('./user-panel/pages/OrderDetailPage'));
+
+// -- lazily imported admin-panel pages
+const AdminLogin        = lazy(() => import('./admin_panel/pages/Login'));
+const AdminLayout       = lazy(() => import('./admin_panel/pages/AdminLayout'));
+const Dashboard         = lazy(() => import('./admin_panel/pages/Dashboard'));
+const CategoryManagement= lazy(() => import('./admin_panel/pages/CategoryManagement'));
+const ProductList       = lazy(() => import('./admin_panel/pages/ProductList'));
+const ProductAdd        = lazy(() => import('./admin_panel/pages/ProductAdd'));
+const ProductManagement = lazy(() => import('./admin_panel/pages/ProductManagement'));
+const PrivateRoute      = lazy(() => import('./admin_panel/admincomponents/PrivateRoute'));
 
 function App() {
   return (
-    <div className="App ">
-      {/* <Header /> */}
-      <Router>
-        <Routes>
-          <Route path="/" element={<UserLayout />}>
-            <Route index element={<HomePage/>}/>
-            <Route path= "/profile" element={<Profile_Page/>} />
-            <Route path="/products" element={<UserProductList />} />
-            <Route path="/product/:productId" element={<ProductPage />} />
-          </Route>
+    <div className="App">
+      <AuthProvider>
+        <Router>
+          <RouteLoader />                           {/* ← show loader on every route-change */}
+          <Suspense fallback={<RouteLoader />}>     {/* also fallback on initial chunk-load */}
+            <Routes>
+              {/* Public Authentication Routes */}
+              <Route path="/login"   element={<LoginPage />} />
+              <Route path="/signup"  element={<SignupPage />} />
+              <Route path="/adminlogin" element={<AdminLogin />} />
 
-          <Route path="/signup" element={ <AuthProvider> <SignupPage /></AuthProvider>} />
-          <Route path="/adminlogin" element={<Login />} />
-          <Route path="/login" element={ <AuthProvider> <LoginPage /></AuthProvider>} />
-          {/* Public routes for user panel */}
+              {/* User Panel */}
+              <Route path="/" element={<UserLayout />}>
+                <Route index           element={<HomePage />} />
+                <Route path="products" element={<UserProductList />} />
+                <Route path="product/:productId" element={<ProductPage />} />
+                <Route path="profile"  element={<ProfilePage />} />
+                <Route path="cart"     element={<CartPage />} />
+                <Route path="orders"   element={<OrdersPage />} />
+                <Route path="order/:orderId" element={<OrderDetailPage />} />
+                <Route path="wishlist" element={<div className="p-8 text-center">Wishlist coming soon!</div>} />
+                <Route path="search"   element={<Navigate to="/products" replace />} />
+              </Route>
 
+              {/* Admin Panel */}
+              <Route
+                path="/admin"
+                element={
+                  <PrivateRoute>
+                    <AdminLayout />
+                  </PrivateRoute>
+                }
+              >
+                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                <Route
+                  path="dashboard"
+                  element={
+                    <PrivateRoute>
+                      <Dashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="products"
+                  element={
+                    <PrivateRoute>
+                      <ProductList />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="products/add"
+                  element={
+                    <PrivateRoute>
+                      <ProductAdd />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="products/edit/:productId"
+                  element={
+                    <PrivateRoute>
+                      <ProductManagement />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="categories"
+                  element={
+                    <PrivateRoute>
+                      <CategoryManagement />
+                    </PrivateRoute>
+                  }
+                />
+                {/* future admin features */}
+                <Route
+                  path="orders"
+                  element={
+                    <PrivateRoute>
+                      <div className="p-8 text-center">
+                        <h2 className="text-2xl font-bold mb-4">Order Management</h2>
+                        <p className="text-gray-600">Coming soon!</p>
+                      </div>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="customers"
+                  element={
+                    <PrivateRoute>
+                      <div className="p-8 text-center">
+                        <h2 className="text-2xl font-bold mb-4">Customer Management</h2>
+                        <p className="text-gray-600">Coming soon!</p>
+                      </div>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="reports"
+                  element={
+                    <PrivateRoute>
+                      <div className="p-8 text-center">
+                        <h2 className="text-2xl font-bold mb-4">Reports & Analytics</h2>
+                        <p className="text-gray-600">Coming soon!</p>
+                      </div>
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="settings"
+                  element={
+                    <PrivateRoute>
+                      <div className="p-8 text-center">
+                        <h2 className="text-2xl font-bold mb-4">Settings</h2>
+                        <p className="text-gray-600">Coming soon!</p>
+                      </div>
+                    </PrivateRoute>
+                  }
+                />
+              </Route>
 
-          {/* Wrap all admin routes inside the AdminLayout */}
-          <Route path="/admin" element={<PrivateRoute><AdminLayout /></PrivateRoute>}>
-            <Route path="/admin/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-            <Route path="/admin/products" element={<PrivateRoute><ProductList /></PrivateRoute>} />
-            <Route path="/admin/products/add" element={<PrivateRoute><ProductAdd /></PrivateRoute>} />
-            <Route path="/admin/products/edit/:productId" element={<PrivateRoute><ProductManagement /></PrivateRoute>} /> {/* Edit route */}
-            <Route path="/admin/categories" element={<PrivateRoute><CategoryManagement /></PrivateRoute>} />
-          </Route>
-
-        </Routes>
-      </Router>
-      {/* <Footer /> */}
+              {/* 404 */}
+              <Route
+                path="*"
+                element={
+                  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                    <div className="text-center">
+                      <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
+                      <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+                        Page Not Found
+                      </h2>
+                      <p className="text-gray-600 mb-8">
+                        The page you're looking for doesn't exist.
+                      </p>
+                      <div className="space-x-4">
+                        <button
+                          onClick={() => window.history.back()}
+                          className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+                        >
+                          Go Back
+                        </button>
+                        <button
+                          onClick={() => (window.location.href = '/')}
+                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                        >
+                          Go Home
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                }
+              />
+            </Routes>
+          </Suspense>
+        </Router>
+      </AuthProvider>
     </div>
   );
 }
 
 export default App;
+               

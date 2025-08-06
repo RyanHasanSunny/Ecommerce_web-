@@ -59,7 +59,6 @@ exports.addProduct = async (req, res) => {
   }
 };
 
-
 // Get all products (For user display)
 exports.getProducts = async (req, res) => {
   try {
@@ -124,6 +123,37 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
+// Delete product (Admin only)
+exports.deleteProduct = async (req, res) => {
+  const { productId } = req.params;
+  
+  try {
+    const product = await Product.findByIdAndDelete(productId);
+    
+    if (!product) {
+      return res.status(404).json({ msg: 'Product not found' });
+    }
+    
+    res.json({ msg: 'Product deleted successfully', deletedProduct: product });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error while deleting product' });
+  }
+};
+
+// Get products for a specific user (their purchase history or wishlist)
+exports.getUserProducts = async (req, res) => {
+  try {
+    // For now, return all products. You can later filter by user's purchases
+    const products = await Product.find()
+      .populate('category')
+      .limit(10); // Limit to user's products
+    res.json(products);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
 
 // Increment sold count
 exports.incrementSoldCount = async (req, res) => {

@@ -1,23 +1,28 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 const {
   placeOrder,
   getUserOrders,
+  getUserOrderById,
   getAllOrders,
-  updateOrderStatus
+  getOrderById,
+  updateOrderStatus,
+  updatePaymentStatus,
+  getOrderStats
 } = require('../controllers/orderController');
 
-// User: Place a new order
-router.post('/orders', authMiddleware, placeOrder);
-
-// User: Get their orders
+// User routes
+router.post('/orders/place', authMiddleware, placeOrder);
 router.get('/orders/my', authMiddleware, getUserOrders);
+router.get('/orders/my/:orderId', authMiddleware, getUserOrderById);
 
-// Admin: Get all orders
-router.get('/orders', authMiddleware, getAllOrders);
-
-// Admin: Update order status
-router.put('/orders/:orderId', authMiddleware, updateOrderStatus);
+// Admin routes
+router.get('/orders/admin/all', authMiddleware, adminMiddleware, getAllOrders);
+router.get('/orders/admin/stats', authMiddleware, adminMiddleware, getOrderStats);
+router.get('/orders/admin/:orderId', authMiddleware, adminMiddleware, getOrderById);
+router.put('/orders/admin/:orderId/status', authMiddleware, adminMiddleware, updateOrderStatus);
+router.put('/orders/admin/:orderId/payment', authMiddleware, adminMiddleware, updatePaymentStatus);
 
 module.exports = router;

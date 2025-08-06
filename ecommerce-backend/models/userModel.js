@@ -21,10 +21,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: "user"  // Default to user role, can be "admin"
   },
-  addresses: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Address'
-  }],
+  addresses: [String], // Simplified to array of strings
   contacts: [{
     phone: {
       type: String,
@@ -44,6 +41,14 @@ const userSchema = new mongoose.Schema({
       type: Number,
       required: true
     }
+  }],
+  wishlist: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Product'
+  }],
+  orders: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order'
   }]
 }, { timestamps: true });
 
