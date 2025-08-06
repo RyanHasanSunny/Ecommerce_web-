@@ -1,10 +1,38 @@
 import React, { useState, useEffect } from "react";
 import {
-  TextField, Button, Typography, Select, MenuItem,
-  Grid, IconButton, Box, Divider, Paper
+  TextField,
+  Button,
+  Typography,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Grid,
+  IconButton,
+  Box,
+  Divider,
+  Paper,
+  Card,
+  CardContent,
+  Chip,
+  Alert,
+  Snackbar,
+  Skeleton,
+  Container,
+  useTheme,
+  useMediaQuery,
+  Fade,
+  Collapse,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  ArrowBack as ArrowBackIcon,
+  Preview as PreviewIcon,
+} from "@mui/icons-material";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getProductById,
@@ -17,205 +45,617 @@ import EnhancedImageUpload from "../admincomponents/fileds/imageupload/EnhancedI
 const ProductManagement = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
 
-  const [title, setTitle] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [description, setDescription] = useState("");
+  // Form state
+  const [formData, setFormData] = useState({
+    title: "",
+    companyName: "",
+    description: "",
+    price: "",
+    profit: "",
+    stock: "",
+    offerPrice: "",
+    categoryId: "",
+    thumbnail: "",
+    images: []
+  });
+
   const [specifications, setSpecifications] = useState([]);
-  const [specTitle, setSpecTitle] = useState("");
-  const [specDetails, setSpecDetails] = useState("");
-  const [price, setPrice] = useState("");
-  const [profit, setProfit] = useState("");
-  const [stock, setStock] = useState("");
-  const [offerPrice, setOfferPrice] = useState("");
-  const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState([]);
-  const [thumbnail, setThumbnail] = useState("");
-  const [images, setImages] = useState([]);
+  const [specForm, setSpecForm] = useState({
+    title: "",
+    details: "",
+    editIndex: null
+  });
 
-  const [editIndex, setEditIndex] = useState(null);
+  // UI state
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [alert, setAlert] = useState({ open: false, message: '', severity: 'info' });
+  const [showPreview, setShowPreview] = useState(false);
+
+  const showAlert = (message, severity = 'info') => {
+    setAlert({ open: true, message, severity });
+  };
+
+  const closeAlert = () => {
+    setAlert({ ...alert, open: false });
+  };
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getCategories();
-        setCategories(data);
+        setLoading(true);
+        
+        // Fetch categories
+        const categoriesData = await getCategories();
+        setCategories(categoriesData);
+
+        // Fetch product details if editing
+        if (productId) {
+          const product = await getProductById(productId);
+          setFormData({
+            title: product.title || "",
+            companyName: product.companyName || "",
+            description: product.description || "",
+            price: product.price || "",
+            profit: product.profit || "",
+            stock: product.stock || "",
+            offerPrice: product.offerPrice || "",
+            categoryId: product.category?._id || "",
+            thumbnail: product.thumbnail || "",
+            images: product.images || []
+          });
+          setSpecifications(product.specifications || []);
+        }
       } catch (err) {
-        console.error("Error fetching categories:", err);
+        console.error("Error fetching data:", err);
+        showAlert("Error loading data. Please try again.", "error");
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchCategories();
-
-    if (productId) {
-      const fetchProductDetails = async () => {
-        setLoading(true);
-        try {
-          const product = await getProductById(productId);
-          setTitle(product.title);
-          setCompanyName(product.companyName);
-          setDescription(product.description);
-          setSpecifications(product.specifications || []);
-          setPrice(product.price);
-          setProfit(product.profit);
-          setOfferPrice(product.offerPrice || "");
-          setCategoryId(product.category?._id || "");
-          setThumbnail(product.thumbnail);
-          setImages(product.images || []);
-        } catch (err) {
-          console.error("Error fetching product details:", err);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      fetchProductDetails();
-    } else {
-      setLoading(false);
-    }
+    fetchData();
   }, [productId]);
 
-  const handleAddSpecification = () => {
-    if (specTitle && specDetails) {
-      if (editIndex !== null) {
-        const updated = [...specifications];
-        updated[editIndex] = { title: specTitle, details: specDetails };
-        setSpecifications(updated);
-        setEditIndex(null);
-      } else {
-        setSpecifications([...specifications, { title: specTitle, details: specDetails }]);
-      }
-      setSpecTitle("");
-      setSpecDetails("");
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSpecificationSubmit = () => {
+    if (!specForm.title.trim() || !specForm.details.trim()) {
+      showAlert("Please fill in both specification title and details", "warning");
+      return;
     }
+
+    const newSpec = {
+      title: specForm.title.trim(),
+      details: specForm.details.trim()
+    };
+
+    if (specForm.editIndex !== null) {
+      // Edit existing specification
+      const updated = [...specifications];
+      updated[specForm.editIndex] = newSpec;
+      setSpecifications(updated);
+      showAlert("Specification updated successfully", "success");
+    } else {
+      // Add new specification
+      setSpecifications(prev => [...prev, newSpec]);
+      showAlert("Specification added successfully", "success");
+    }
+
+    // Reset form
+    setSpecForm({
+      title: "",
+      details: "",
+      editIndex: null
+    });
+  };
+
+  const handleEditSpecification = (index) => {
+    const spec = specifications[index];
+    setSpecForm({
+      title: spec.title,
+      details: spec.details,
+      editIndex: index
+    });
   };
 
   const handleDeleteSpecification = (index) => {
-    setSpecifications(specifications.filter((_, i) => i !== index));
+    setSpecifications(prev => prev.filter((_, i) => i !== index));
+    showAlert("Specification deleted", "info");
+    
+    // Reset form if editing the deleted spec
+    if (specForm.editIndex === index) {
+      setSpecForm({
+        title: "",
+        details: "",
+        editIndex: null
+      });
+    }
   };
 
-  // These functions are no longer needed as EnhancedImageUpload handles image management
+  const calculateSellingPrice = () => {
+    const basePrice = parseFloat(formData.price) || 0;
+    const profit = parseFloat(formData.profit) || 0;
+    return basePrice + profit;
+  };
 
-  const handleProductSubmit = async () => {
-    const sellingPrice = Number(price) + Number(profit);
+  const validateForm = () => {
+    const required = ['title', 'companyName', 'description', 'price', 'profit', 'stock', 'categoryId'];
+    const missing = required.filter(field => !formData[field]?.toString().trim());
+    
+    if (missing.length > 0) {
+      showAlert(`Please fill in: ${missing.join(', ')}`, "error");
+      return false;
+    }
+
+    if (!formData.thumbnail) {
+      showAlert("Please upload a thumbnail image", "error");
+      return false;
+    }
+
+    if (parseFloat(formData.price) < 0 || parseFloat(formData.profit) < 0) {
+      showAlert("Price and profit must be positive numbers", "error");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
+    setSubmitting(true);
     try {
       const payload = {
-        title,
-        companyName,
-        description,
+        ...formData,
         specifications,
-        price,
-        profit,
-        sellingPrice,
-        offerPrice: offerPrice || null,
-        stock,
-        categoryId,
-        thumbnail,
-        images,
+        price: parseFloat(formData.price),
+        profit: parseFloat(formData.profit),
+        stock: parseInt(formData.stock),
+        offerPrice: formData.offerPrice ? parseFloat(formData.offerPrice) : null,
       };
 
       if (productId) {
         await updateProduct(productId, payload);
-        alert("Product updated successfully");
+        showAlert("Product updated successfully!", "success");
       } else {
         await addProduct(payload);
-        alert("Product added successfully");
+        showAlert("Product added successfully!", "success");
       }
 
-      navigate("/admin/products");
+      // Navigate back after a short delay
+      setTimeout(() => {
+        navigate("/admin/products");
+      }, 1500);
     } catch (err) {
-      alert(`Error: ${err.message}`);
+      console.error("Submit error:", err);
+      showAlert(`Error: ${err.message}`, "error");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (loading) return <Typography variant="h6">Loading product details...</Typography>;
-
-  return (
-    <div className="container flex text-left justify-center" style={{ maxHeight: "calc(100vh - 140px)", overflowY: "auto" }}>
-      <Paper sx={{ p: 4, mt: 4 }}>
-        <Typography variant="h5">{productId ? "Edit Product" : "Add New Product"}</Typography>
-        <Grid container spacing={4}>
-          <Grid item xs={12} md={7}>
-            <TextField label="Product Title" variant="standard" fullWidth value={title} onChange={(e) => setTitle(e.target.value)} />
-            <Box mt={3}>
-              <TextField label="Company Name" variant="standard" fullWidth value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
-            </Box>
-
-            {/* Thumbnail Image */}
-            <Box mt={3}>
-              <EnhancedImageUpload 
-                images={thumbnail ? [thumbnail] : []}
-                onImagesChange={(newImages) => setThumbnail(newImages[0] || "")}
-                maxImages={1}
-                title="Product Thumbnail"
-              />
-            </Box>
-
-            {/* Additional Images */}
-            <Box mt={3}>
-              <EnhancedImageUpload 
-                images={images}
-                onImagesChange={setImages}
-                maxImages={5}
-                title="Additional Product Images"
-              />
-            </Box>
-
-            {/* Description */}
-            <Box mt={4}>
-              <TextField label="Description" variant="standard" fullWidth multiline rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
-            </Box>
-
-            {/* Specifications */}
-            <Box mt={4}>
-              <Typography variant="h6">Specifications</Typography>
-              {specifications.map((spec, index) => (
-                <Box key={index} sx={{ display: "flex", justifyContent: "space-between" }}>
-                  <Typography variant="body2">• <strong>{spec.title}:</strong> {spec.details}</Typography>
-                  <IconButton onClick={() => handleDeleteSpecification(index)}><DeleteIcon /></IconButton>
-                </Box>
-              ))}
-              <Grid container spacing={2}>
-                <Grid item xs={6}><TextField label="Spec Title" variant="standard" fullWidth value={specTitle} onChange={(e) => setSpecTitle(e.target.value)} /></Grid>
-                <Grid item xs={6}><TextField label="Spec Details" variant="standard" fullWidth value={specDetails} onChange={(e) => setSpecDetails(e.target.value)} /></Grid>
-              </Grid>
-              <IconButton onClick={handleAddSpecification}><AddIcon /></IconButton>
-            </Box>
+  if (loading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Skeleton variant="rectangular" height={60} sx={{ mb: 3 }} />
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <Skeleton variant="rectangular" height={400} />
           </Grid>
-
-          <Grid item xs={12} md={5}>
-            <Box>
-              <Typography>Category</Typography>
-              <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} variant="standard" fullWidth>
-                <MenuItem value="">Select Category</MenuItem>
-                {categories.map((cat) => <MenuItem key={cat._id} value={cat._id}>{cat.name}</MenuItem>)}
-              </Select>
-            </Box>
-
-            {/* Pricing */}
-            <Box mt={4}>
-              <Typography>Pricing</Typography>
-              <TextField label="Base Price" type="number" variant="standard" fullWidth value={price} onChange={(e) => setPrice(e.target.value)} />
-              <TextField label="Profit" type="number" variant="standard" fullWidth value={profit} onChange={(e) => setProfit(e.target.value)} />
-              <TextField label="Offer Price (optional)" type="number" variant="standard" fullWidth value={offerPrice} onChange={(e) => setOfferPrice(e.target.value)} />
-              <Divider sx={{ my: 1 }} />
-              <Typography>Final Selling Price: <strong>{Number(price) + Number(profit) || 0}</strong></Typography>
-            </Box>
-            <Box mt={4}>
-              <Typography>Stock</Typography>
-              <TextField label="Stock Quantity" type="number" variant="standard" fullWidth value={stock} onChange={(e) => setStock(e.target.value)} />
-            </Box>
-
-            <Box mt={4}>
-              <Button variant="contained" fullWidth onClick={handleProductSubmit}>
-                {productId ? "Update Product" : "Submit Product"}
-              </Button>
-            </Box>
+          <Grid item xs={12} md={4}>
+            <Skeleton variant="rectangular" height={300} />
           </Grid>
         </Grid>
-      </Paper>
-    </div>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 2 }}>
+      <Fade in={true} timeout={800}>
+        <Box>
+          {/* Header */}
+          <Box display="flex" alignItems="center" mb={3}>
+            <IconButton 
+              onClick={() => navigate("/admin/products")}
+              sx={{ mr: 2 }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography variant="h4" component="h1" sx={{ flexGrow: 1 }}>
+              {productId ? "Edit Product" : "Add New Product"}
+            </Typography>
+            <Button
+              variant="outlined"
+              startIcon={<PreviewIcon />}
+              onClick={() => setShowPreview(!showPreview)}
+              sx={{ display: { xs: 'none', sm: 'flex' } }}
+            >
+              Preview
+            </Button>
+          </Box>
+
+          <Grid container spacing={3}>
+            {/* Main Content */}
+            <Grid item xs={12} lg={8}>
+              <Paper sx={{ p: 3 }}>
+                {/* Basic Information */}
+                <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                  Basic Information
+                </Typography>
+                
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Product Title"
+                      variant="outlined"
+                      fullWidth
+                      value={formData.title}
+                      onChange={(e) => handleInputChange('title', e.target.value)}
+                      placeholder="Enter product title"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      label="Company Name"
+                      variant="outlined"
+                      fullWidth
+                      value={formData.companyName}
+                      onChange={(e) => handleInputChange('companyName', e.target.value)}
+                      placeholder="Enter company name"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Description"
+                      variant="outlined"
+                      fullWidth
+                      multiline
+                      rows={4}
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      placeholder="Enter detailed product description"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Divider sx={{ my: 4 }} />
+
+                {/* Images Section */}
+                <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                  Product Images
+                </Typography>
+                
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <EnhancedImageUpload 
+                      images={formData.thumbnail ? [formData.thumbnail] : []}
+                      onImagesChange={(newImages) => handleInputChange('thumbnail', newImages[0] || "")}
+                      maxImages={1}
+                      title="Thumbnail Image (Required)"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <EnhancedImageUpload 
+                      images={formData.images}
+                      onImagesChange={(newImages) => handleInputChange('images', newImages)}
+                      maxImages={5}
+                      title="Additional Images"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Divider sx={{ my: 4 }} />
+
+                {/* Specifications */}
+                <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                  Specifications
+                </Typography>
+                
+                {/* Existing Specifications */}
+                <Box mb={3}>
+                  {specifications.map((spec, index) => (
+                    <Card key={index} variant="outlined" sx={{ mb: 2 }}>
+                      <CardContent sx={{ py: 2 }}>
+                        <Box display="flex" justifyContent="space-between" alignItems="flex-start">
+                          <Box sx={{ flexGrow: 1 }}>
+                            <Typography variant="subtitle2" color="primary" gutterBottom>
+                              {spec.title}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {spec.details}
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleEditSpecification(index)}
+                              color="primary"
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => handleDeleteSpecification(index)}
+                              color="error"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Box>
+
+                {/* Add/Edit Specification Form */}
+                <Card variant="outlined" sx={{ bgcolor: 'grey.50' }}>
+                  <CardContent>
+                    <Typography variant="subtitle1" gutterBottom>
+                      {specForm.editIndex !== null ? 'Edit Specification' : 'Add New Specification'}
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={4}>
+                        <TextField
+                          label="Specification Title"
+                          variant="outlined"
+                          fullWidth
+                          size="small"
+                          value={specForm.title}
+                          onChange={(e) => setSpecForm(prev => ({ ...prev, title: e.target.value }))}
+                          placeholder="e.g., Processor"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField
+                          label="Details"
+                          variant="outlined"
+                          fullWidth
+                          size="small"
+                          value={specForm.details}
+                          onChange={(e) => setSpecForm(prev => ({ ...prev, details: e.target.value }))}
+                          placeholder="e.g., Intel Core i7-12700K"
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={2}>
+                        <Box display="flex" gap={1}>
+                          <IconButton
+                            onClick={handleSpecificationSubmit}
+                            color="primary"
+                            disabled={!specForm.title.trim() || !specForm.details.trim()}
+                          >
+                            <SaveIcon />
+                          </IconButton>
+                          {specForm.editIndex !== null && (
+                            <IconButton
+                              onClick={() => setSpecForm({ title: "", details: "", editIndex: null })}
+                              color="default"
+                            >
+                              <CancelIcon />
+                            </IconButton>
+                          )}
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Paper>
+            </Grid>
+
+            {/* Sidebar */}
+            <Grid item xs={12} lg={4}>
+              <Paper sx={{ p: 3, position: isTablet ? 'static' : 'sticky', top: 20 }}>
+                {/* Category */}
+                <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                  Category & Pricing
+                </Typography>
+                
+                <FormControl fullWidth sx={{ mb: 3 }}>
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    value={formData.categoryId}
+                    onChange={(e) => handleInputChange('categoryId', e.target.value)}
+                    label="Category"
+                  >
+                    <MenuItem value="">
+                      <em>Select Category</em>
+                    </MenuItem>
+                    {categories.map((cat) => (
+                      <MenuItem key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+
+                {/* Pricing */}
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Base Price"
+                      type="number"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      value={formData.price}
+                      onChange={(e) => handleInputChange('price', e.target.value)}
+                      InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Profit"
+                      type="number"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      value={formData.profit}
+                      onChange={(e) => handleInputChange('profit', e.target.value)}
+                      InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Stock"
+                      type="number"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      value={formData.stock}
+                      onChange={(e) => handleInputChange('stock', e.target.value)}
+                      InputProps={{ inputProps: { min: 0, step: 1 } }}
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Offer Price"
+                      type="number"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      value={formData.offerPrice}
+                      onChange={(e) => handleInputChange('offerPrice', e.target.value)}
+                      placeholder="Optional"
+                      InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                    />
+                  </Grid>
+                </Grid>
+
+                {/* Price Summary */}
+                <Card variant="outlined" sx={{ mt: 3, bgcolor: 'primary.50' }}>
+                  <CardContent sx={{ py: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Price Summary
+                    </Typography>
+                    <Box display="flex" justifyContent="space-between" mb={1}>
+                      <Typography variant="body2">Base Price:</Typography>
+                      <Typography variant="body2">৳{formData.price || 0}</Typography>
+                    </Box>
+                    <Box display="flex" justifyContent="space-between" mb={1}>
+                      <Typography variant="body2">Profit:</Typography>
+                      <Typography variant="body2">৳{formData.profit || 0}</Typography>
+                    </Box>
+                    <Divider sx={{ my: 1 }} />
+                    <Box display="flex" justifyContent="space-between">
+                      <Typography variant="subtitle2" color="primary">
+                        Selling Price:
+                      </Typography>
+                      <Typography variant="subtitle2" color="primary">
+                        ৳{calculateSellingPrice()}
+                      </Typography>
+                    </Box>
+                    {formData.offerPrice && (
+                      <Box display="flex" justifyContent="space-between" mt={1}>
+                        <Typography variant="body2" color="error">
+                          Offer Price:
+                        </Typography>
+                        <Typography variant="body2" color="error">
+                          ৳{formData.offerPrice}
+                        </Typography>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Status Chips */}
+                <Box mt={3} display="flex" flexWrap="wrap" gap={1}>
+                  <Chip 
+                    label={`${specifications.length} Specifications`}
+                    color={specifications.length > 0 ? "success" : "default"}
+                    size="small"
+                  />
+                  <Chip 
+                    label={`${formData.images.length} Images`}
+                    color={formData.images.length > 0 ? "success" : "default"}
+                    size="small"
+                  />
+                  <Chip 
+                    label={formData.thumbnail ? "Thumbnail ✓" : "No Thumbnail"}
+                    color={formData.thumbnail ? "success" : "error"}
+                    size="small"
+                  />
+                </Box>
+
+                {/* Submit Button */}
+                <Button
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  sx={{ mt: 4 }}
+                >
+                  {submitting 
+                    ? (productId ? "Updating..." : "Adding...") 
+                    : (productId ? "Update Product" : "Add Product")
+                  }
+                </Button>
+              </Paper>
+            </Grid>
+          </Grid>
+
+          {/* Preview Section */}
+          <Collapse in={showPreview}>
+            <Paper sx={{ mt: 3, p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Product Preview
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={4}>
+                  {formData.thumbnail && (
+                    <img 
+                      src={formData.thumbnail} 
+                      alt="Product preview"
+                      style={{ width: '300px', maxWidth: '300px', borderRadius: 8 }}
+                    />
+                  )}
+                </Grid>
+                <Grid item xs={12} sm={8}>
+                  <Typography variant="h6">{formData.title || "Product Title"}</Typography>
+                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                    {formData.companyName || "Company Name"}
+                  </Typography>
+                  <Typography variant="body2" paragraph>
+                    {formData.description || "Product description..."}
+                  </Typography>
+                  <Typography variant="h6" color="primary">
+                    ৳{calculateSellingPrice()}
+                    {formData.offerPrice && (
+                      <Typography component="span" variant="body2" color="error" sx={{ ml: 1 }}>
+                        (Offer: ৳{formData.offerPrice})
+                      </Typography>
+                    )}
+                  </Typography>
+                </Grid>
+              </Grid>
+            </Paper>
+          </Collapse>
+        </Box>
+      </Fade>
+
+      {/* Alert Snackbar */}
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={4000}
+        onClose={closeAlert}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={closeAlert} severity={alert.severity} sx={{ width: '100%' }}>
+          {alert.message}
+        </Alert>
+      </Snackbar>
+    </Container>
   );
 };
 
