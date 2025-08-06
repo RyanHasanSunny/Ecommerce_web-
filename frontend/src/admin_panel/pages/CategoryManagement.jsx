@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Typography, Button, Box, Dialog, DialogTitle, DialogContent,
-  DialogActions, List, ListItem, TextField, FormControl,
-  InputLabel, Select, MenuItem, Switch, FormControlLabel
+  Typography,
+  Button,
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Switch,
+  FormControlLabel
 } from '@mui/material';
 import { getCategories, addCategory } from '../../user-panel/api/api';
 
@@ -15,11 +28,12 @@ const CategoryManagement = ({ onSuccess }) => {
   const [categories, setCategories] = useState([]);
 
   useEffect(() => {
-    // Load all categories for selection (allow selecting any as parent)
     const fetchAll = async () => {
       try {
         const data = await getCategories();
-        setCategories(data); // show all categories, including children
+        // Ensure categories is always an array
+        const list = Array.isArray(data) ? data : data.categories;
+        setCategories(list || []);
       } catch (err) {
         console.error('Error fetching categories:', err);
       }
@@ -99,7 +113,7 @@ const CategoryManagement = ({ onSuccess }) => {
   );
 };
 
-// CategoryList: Displays list and controls popup
+// CategoryList: Displays list of categories and handles dialog
 const CategoryList = () => {
   const [categories, setCategories] = useState([]);
   const [open, setOpen] = useState(false);
@@ -107,7 +121,8 @@ const CategoryList = () => {
   const fetchCategories = async () => {
     try {
       const data = await getCategories();
-      setCategories(data);
+      const list = Array.isArray(data) ? data : data.categories;
+      setCategories(list || []);
     } catch (err) {
       console.error('Error fetching categories:', err);
     }
@@ -129,6 +144,7 @@ const CategoryList = () => {
         <Typography variant="h4">Category List</Typography>
         <Button variant="contained" onClick={handleOpen}>Add Category</Button>
       </Box>
+
       <List>
         {categories.map(cat => (
           <ListItem key={cat._id}>

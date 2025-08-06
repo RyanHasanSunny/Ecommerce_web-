@@ -19,7 +19,6 @@ const AdminLayout = () => {
       <div className="flex flex-row" style={{ flex: 1, overflowY: 'auto' }}>
         <LeftMenu onMenuItemClick={handleMenuItemClick} />
         <div className="flex-1 p-4">
-          <h1>{selectedMenu}</h1> {/* This will change dynamically */}
           <Outlet /> {/* The dynamic page content will be rendered here */}
         </div>
       </div>

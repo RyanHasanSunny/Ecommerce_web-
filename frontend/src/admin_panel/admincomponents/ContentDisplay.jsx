@@ -1,49 +1,29 @@
 import React from 'react';
-import { Grid, Typography } from '@mui/material';
 import StatsCard from './cards/StatsCard';
 import ProductList from '../pages/ProductList';
-import ProductAdd from '../pages/ProductAdd'; // import it
-import { Routes, Route } from 'react-router-dom';
+import ProductAdd from '../pages/ProductAdd';
+import OrderList from '../pages/OrderList';
 
 const ContentDisplay = ({ selectedMenu, stats }) => {
   switch (selectedMenu) {
     case 'Orders':
-      return (
-        <Grid container spacing={3} style={{ marginTop: '2rem' }}>
-          <Grid item xs={12}>
-            <Typography variant="h5">Order List</Typography>
-            <Typography variant="body1">Here you can manage your orders.</Typography>
-          </Grid>
-        </Grid>
-      );
+      return <OrderList />;
     case 'Products':
-      return (
-        <Grid container spacing={3} style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column' }}>
-          <ProductList />
-        </Grid>
-      );
-    case 'Add Product': // Ensure 'Add Product' shows within the same container
-      return (
-        <Grid container spacing={3} style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column' }}>
-          <ProductAdd />
-        </Grid>
-      );
+      return <ProductList />;
+    case 'Add Product':
+      return <ProductAdd />;
     case 'Categories':
+      // existing category list markup
       return (
-        <Grid container spacing={3} style={{ marginTop: '2rem' }}>
-          <Grid item xs={12}>
-            <Typography variant="h5">Category List</Typography>
-            {/* Category list content */}
-          </Grid>
-        </Grid>
+        <div>/* category management UI here */</div>
       );
     default:
       return (
-        <Grid container spacing={3} style={{ marginTop: '2rem' }}>
+        <div className="grid grid-cols-3 gap-4">
           <StatsCard title="Total Products" value={stats.totalProducts} />
           <StatsCard title="Total Sold" value={stats.totalSold} />
           <StatsCard title="Total Searches" value={stats.totalSearches} />
-        </Grid>
+        </div>
       );
   }
 };

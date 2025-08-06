@@ -4,7 +4,6 @@ const MainContainer = ({ title, breadcrumbs = [], children }) => {
   return (
     <div className="flex-1 p-4" style={{height: '100%' }}>
       <div className="mb-4">
-        <h1 className=" font-bold text-gray-800">{title}</h1>
         <nav >
           <ol className="flex text-sm text-gray-500 space-x-2">
             {breadcrumbs.length > 0 ? (

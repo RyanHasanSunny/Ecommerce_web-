@@ -32,14 +32,15 @@ const ProductList = () => {
 
   // load categories
   const fetchCategories = async () => {
-    try {
-      const data = await getCategories();
-      setCategories(data);
-    } catch (err) {
-      console.error("Error fetching categories:", err);
-    }
-  };
-
+  try {
+    const result = await getCategories();
+    // If API returns { categories: [...] }, use that; otherwise assume it's already an array
+    const list = Array.isArray(result) ? result : result.categories;
+    setCategories(list || []);
+  } catch (err) {
+    console.error("Error fetching categories:", err);
+  }
+};
   useEffect(() => {
     fetchProducts();
     fetchCategories();

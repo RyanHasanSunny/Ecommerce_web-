@@ -8,7 +8,7 @@
   color-scheme: light dark;
   color: rgba(1, 1, 1, 0.87);
   background-color: #f8f8f8;
- justify-content: center;
+ justify-content: top;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -28,8 +28,8 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
-  justify-content: center;
+  place-items: top;
+  justify-content: top;
   width: 100%;
   min-width: 320px;
   min-height: 100vh;

@@ -274,6 +274,7 @@ export const getCart = () => apiService.getCart();
 export const updateCartItem = (itemId, quantity) => apiService.updateCartItem(itemId, quantity);
 export const removeFromCart = (itemId) => apiService.removeFromCart(itemId);
 export const clearCart = () => apiService.clearCart();
+export const getUserOrders =() => apiService.getUserOrders();
 
 export const uploadSingleImage = (imageFile) => apiService.uploadSingleImage(imageFile);
 export const uploadMultipleImages = (imageFiles) => apiService.uploadMultipleImages(imageFiles);
