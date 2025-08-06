@@ -81,7 +81,6 @@ const Header = () => {
   const navigationItems = [
     { label: "Home", href: "/", icon: Home },
     { label: "Products", href: "/products", icon: Grid },
-    { label: "Categories", href: "/categories", icon: Menu },
   ];
 
   return (
@@ -92,7 +91,7 @@ const Header = () => {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm py-2 px-4 text-center">
         <div className="flex items-center justify-center gap-2">
           <MapPin className="w-4 h-4" />
-          <span>🚚 Free Shipping on Orders Over $50 | 📞 24/7 Support Available</span>
+          <span> 24/7 Support Available</span>
         </div>
       </div>
 

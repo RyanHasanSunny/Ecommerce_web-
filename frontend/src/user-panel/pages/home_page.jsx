@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import HeroPanel from "../Sections/Heropanel/Heropanel";
 import apiService from "../api/api";
 import { 
   TrendingUp, 
@@ -380,7 +381,7 @@ const HomePage = () => {
     <div className="home-page min-h-screen bg-white">
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-8">
-        <HeroCarousel />
+       <HeroPanel/>
       </section>
 
       {/* Welcome Banner */}
@@ -405,13 +406,6 @@ const HomePage = () => {
             >
               Shop Now
               <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-            <Link
-              to="/products?sale=true"
-              className="inline-flex items-center px-8 py-4 border-2 border-white text-white rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-200"
-            >
-              View Deals
-              <Gift className="w-5 h-5 ml-2" />
             </Link>
           </div>
         </div>

@@ -1,5 +1,6 @@
 // src/user-panel/api/api.js - UPDATED WITH CART UPDATE FUNCTIONALITY
 
+
 class APIError extends Error {
   constructor(message, status, data) {
     super(message);
@@ -9,27 +10,27 @@ class APIError extends Error {
 }
 
 const apiService = {
-  baseURL: process.env.BACKEND_URL ||'http://localhost:8080/api',
-  
+  baseURL: import.meta.env.BACKEND_URL || 'http://localhost:8080/api',
+
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+    // merge default headers with any passed headers
     const config = {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers
-      },
-      ...options
+        ...(options.headers || {})
+      }
     };
 
     // Add auth token if available
-    const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
+    const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
     if (token) {
       config.headers['x-auth-token'] = token;
     }
 
     try {
       const response = await fetch(url, config);
-      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new APIError(
@@ -38,16 +39,13 @@ const apiService = {
           errorData
         );
       }
-
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      if (error instanceof APIError) {
-        throw error;
-      }
-      throw new APIError('Network error', 0, { originalError: error.message });
+      return await response.json();
+    } catch (err) {
+      if (err instanceof APIError) throw err;
+      throw new APIError('Network error', 0, { originalError: err.message });
     }
   },
+
 
   // Authentication APIs
   async login(email, password) {

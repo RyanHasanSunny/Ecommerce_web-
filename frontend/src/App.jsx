@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './user-panel/context/AuthContext';
 import { Loader } from 'lucide-react';
 import RouteLoader from './RouteLoader';
+import ScrollToTop from './ScrollToTop';
 import './App.css';
 
 // -- full-page loader component
@@ -41,6 +42,7 @@ function App() {
     <div className="App">
       <AuthProvider>
         <Router>
+          <ScrollToTop />
           <RouteLoader />                           {/* ← show loader on every route-change */}
           <Suspense fallback={<RouteLoader />}>     {/* also fallback on initial chunk-load */}
             <Routes>

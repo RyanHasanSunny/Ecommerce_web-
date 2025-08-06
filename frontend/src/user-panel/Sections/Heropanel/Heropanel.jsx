@@ -22,7 +22,7 @@ const HeroPanel = () => {
     {
       id: 3,
       image: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200&h=600&fit=crop",
-      title: "Fashion Forward",
+      title: "Fashion jgjgkForward",
       subtitle: "New arrivals from top brands",
       cta: "Discover Fashion",
       color: "from-pink-500 to-rose-500"
@@ -74,7 +74,8 @@ const HeroPanel = () => {
   return (
     <div className="w-full">
       {/* Hero Carousel */}
-      <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
+      <div className="relative w-full  overflow-hidden"
+      style={{ aspectRatio: "18 / 6" }}>
         {/* Slides */}
         <div
           className="flex transition-transform duration-500 ease-in-out h-full"
@@ -146,36 +147,7 @@ const HeroPanel = () => {
         </button>
       </div>
 
-      {/* Features Section */}
-      {/* <div className="bg-gradient-to-r from-gray-50 to-gray-100 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center group">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <TrendingUp className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Free Shipping</h3>
-              <p className="text-gray-600">On orders over $50 worldwide</p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Star className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">24/7 Support</h3>
-              <p className="text-gray-600">Round the clock customer service</p>
-            </div>
-            
-            <div className="text-center group">
-              <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-orange-400 to-red-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <ChevronRight className="w-8 h-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Easy Returns</h3>
-              <p className="text-gray-600">30-day hassle-free returns</p>
-            </div>
-          </div>
-        </div>
-      </div> */}
+
 
       {/* Brand Partners */}
       <div className="py-16 bg-white">

@@ -106,7 +106,7 @@ const Footer = () => {
 
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12">
-        <div className="flex justify-between gap-8">
+        <div className="flex flex-wrap justify-between gap-8">
           {/* Company Info */}
           <div className="lg:col-span-2 w-full lg:w-1/3">
             <Link to="/" className="inline-block mb-4">
