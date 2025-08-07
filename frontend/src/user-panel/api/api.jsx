@@ -10,7 +10,8 @@ class APIError extends Error {
 }
 
 const apiService = {
-  baseURL: 'http://18.212.65.1:5000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
