@@ -64,7 +64,7 @@ const ProductManagement = () => {
   });
 
   const [specifications, setSpecifications] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories]         = useState([]);
   const [specForm, setSpecForm] = useState({
     title: "",
     details: "",
@@ -89,10 +89,14 @@ const ProductManagement = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch categories
-        const categoriesData = await getCategories();
-        setCategories(categoriesData);
+
+         const raw = await getCategories();
+        const list =
+          Array.isArray(raw)               ? raw :
+          Array.isArray(raw.data)          ? raw.data :
+          Array.isArray(raw.categories)    ? raw.categories
+                                           : [];
+        setCategories(list);
 
         // Fetch product details if editing
         if (productId) {
@@ -172,7 +176,7 @@ const ProductManagement = () => {
   const handleDeleteSpecification = (index) => {
     setSpecifications(prev => prev.filter((_, i) => i !== index));
     showAlert("Specification deleted", "info");
-    
+
     // Reset form if editing the deleted spec
     if (specForm.editIndex === index) {
       setSpecForm({
@@ -192,7 +196,7 @@ const ProductManagement = () => {
   const validateForm = () => {
     const required = ['title', 'companyName', 'description', 'price', 'profit', 'stock', 'categoryId'];
     const missing = required.filter(field => !formData[field]?.toString().trim());
-    
+
     if (missing.length > 0) {
       showAlert(`Please fill in: ${missing.join(', ')}`, "error");
       return false;
@@ -267,7 +271,7 @@ const ProductManagement = () => {
         <Box>
           {/* Header */}
           <Box display="flex" alignItems="center" mb={3}>
-            <IconButton 
+            <IconButton
               onClick={() => navigate("/admin/products")}
               sx={{ mr: 2 }}
             >
@@ -294,7 +298,7 @@ const ProductManagement = () => {
                 <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
                   Basic Information
                 </Typography>
-                
+
                 <Grid container spacing={3}>
                   <Grid item xs={12} sm={6}>
                     <TextField
@@ -336,10 +340,10 @@ const ProductManagement = () => {
                 <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
                   Product Images
                 </Typography>
-                
+
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
-                    <EnhancedImageUpload 
+                    <EnhancedImageUpload
                       images={formData.thumbnail ? [formData.thumbnail] : []}
                       onImagesChange={(newImages) => handleInputChange('thumbnail', newImages[0] || "")}
                       maxImages={1}
@@ -347,7 +351,7 @@ const ProductManagement = () => {
                     />
                   </Grid>
                   <Grid item xs={12} md={6}>
-                    <EnhancedImageUpload 
+                    <EnhancedImageUpload
                       images={formData.images}
                       onImagesChange={(newImages) => handleInputChange('images', newImages)}
                       maxImages={5}
@@ -362,7 +366,7 @@ const ProductManagement = () => {
                 <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
                   Specifications
                 </Typography>
-                
+
                 {/* Existing Specifications */}
                 <Box mb={3}>
                   {specifications.map((spec, index) => (
@@ -456,11 +460,13 @@ const ProductManagement = () => {
             {/* Sidebar */}
             <Grid item xs={12} lg={4}>
               <Paper sx={{ p: 3, position: isTablet ? 'static' : 'sticky', top: 20 }}>
-                {/* Category */}
+
                 <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
                   Category & Pricing
                 </Typography>
-                
+
+
+              
                 <FormControl fullWidth sx={{ mb: 3 }}>
                   <InputLabel>Category</InputLabel>
                   <Select
@@ -570,17 +576,17 @@ const ProductManagement = () => {
 
                 {/* Status Chips */}
                 <Box mt={3} display="flex" flexWrap="wrap" gap={1}>
-                  <Chip 
+                  <Chip
                     label={`${specifications.length} Specifications`}
                     color={specifications.length > 0 ? "success" : "default"}
                     size="small"
                   />
-                  <Chip 
+                  <Chip
                     label={`${formData.images.length} Images`}
                     color={formData.images.length > 0 ? "success" : "default"}
                     size="small"
                   />
-                  <Chip 
+                  <Chip
                     label={formData.thumbnail ? "Thumbnail ✓" : "No Thumbnail"}
                     color={formData.thumbnail ? "success" : "error"}
                     size="small"
@@ -596,8 +602,8 @@ const ProductManagement = () => {
                   disabled={submitting}
                   sx={{ mt: 4 }}
                 >
-                  {submitting 
-                    ? (productId ? "Updating..." : "Adding...") 
+                  {submitting
+                    ? (productId ? "Updating..." : "Adding...")
                     : (productId ? "Update Product" : "Add Product")
                   }
                 </Button>
@@ -614,8 +620,8 @@ const ProductManagement = () => {
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={4}>
                   {formData.thumbnail && (
-                    <img 
-                      src={formData.thumbnail} 
+                    <img
+                      src={formData.thumbnail}
                       alt="Product preview"
                       style={{ width: '300px', maxWidth: '300px', borderRadius: 8 }}
                     />

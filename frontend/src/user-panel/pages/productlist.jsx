@@ -82,7 +82,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
   if (viewMode === 'list') {
     return (
       <div 
-        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden border border-gray-200 flex"
+        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden  flex"
         onClick={handleProductClick}
       >
         {/* Image */}
@@ -124,43 +124,25 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
               {product.description}
             </p>
 
-            {/* Rating */}
-            <div className="flex items-center mb-4">
-              <div className="flex text-yellow-400 mr-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-current" />
-                ))}
-              </div>
-              <span className="text-sm text-gray-600">(4.8) · 267 reviews</span>
-            </div>
+          
           </div>
 
           <div className="flex items-center justify-between">
             {/* Price */}
             <div className="flex items-center space-x-2">
               <span className="text-xl font-bold text-gray-900">
-                ${finalPrice}
+                ৳{finalPrice}
               </span>
               {discount > 0 && (
                 <span className="text-lg text-gray-500 line-through">
-                  ${product.sellingPrice}
+                  ৳{product.sellingPrice}
                 </span>
               )}
             </div>
 
             {/* Actions */}
             <div className="flex items-center space-x-2">
-              <button
-                onClick={handleWishlistToggle}
-                className={`p-2 rounded-full border transition-colors ${
-                  isWishlisted
-                    ? 'border-red-500 bg-red-50 text-red-600'
-                    : 'border-gray-300 hover:border-red-300 hover:bg-red-50 hover:text-red-600'
-                }`}
-              >
-                <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
-              </button>
-
+          
               <button
                 onClick={handleAddToCart}
                 disabled={addingToCart || isOutOfStock}
@@ -179,7 +161,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
   // Grid view
   return (
     <div 
-      className="group bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden border border-gray-200"
+      className="group bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden "
       onClick={handleProductClick}
     >
       {/* Image */}
@@ -187,7 +169,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
         <img
           src={imageError ? '/placeholder-product.jpg' : product.thumbnail}
           alt={product.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover transition-transform duration-300"
           onError={() => setImageError(true)}
         />
         
@@ -207,39 +189,11 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
 
         {/* Quick Actions */}
         <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 space-y-2">
-          <button
-            onClick={handleWishlistToggle}
-            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-              isWishlisted
-                ? 'bg-red-500 text-white'
-                : 'bg-white/90 text-gray-600 hover:text-red-500'
-            }`}
-          >
-            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
-          </button>
-          
-          <button 
-            className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 transition-colors"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
+         
         </div>
 
-        {/* Quick Add to Cart */}
-        <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <button
-            onClick={handleAddToCart}
-            disabled={addingToCart || isOutOfStock}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
-          >
-            {addingToCart ? (
-              <Loader className="w-4 h-4 animate-spin" />
-            ) : (
-              <ShoppingCart className="w-4 h-4" />
-            )}
-            <span>{addingToCart ? 'Adding...' : isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
-          </button>
-        </div>
+       
+        
       </div>
 
       {/* Product Info */}
@@ -252,32 +206,22 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
           <p className="text-sm text-gray-600 mb-2">{product.companyName}</p>
         )}
 
-        {/* Rating */}
-        <div className="flex items-center mb-2">
-          <div className="flex text-yellow-400 mr-1">
-            {[...Array(5)].map((_, i) => (
-              <Star key={i} className="w-3 h-3 fill-current" />
-            ))}
-          </div>
-          <span className="text-xs text-gray-600">(4.8)</span>
-        </div>
-
         {/* Price */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="text-lg font-bold text-gray-900">
-              ${finalPrice}
+              ৳{finalPrice}
             </span>
             {discount > 0 && (
               <span className="text-sm text-gray-500 line-through">
-                ${product.sellingPrice}
+                ৳{product.sellingPrice}
               </span>
             )}
           </div>
           
           {discount > 0 && (
             <span className="text-xs font-semibold text-green-600">
-              Save ${(product.sellingPrice - finalPrice).toFixed(2)}
+              Save ৳{(product.sellingPrice - finalPrice).toFixed(2)}
             </span>
           )}
         </div>
@@ -498,7 +442,7 @@ const ProductList = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
@@ -576,7 +520,7 @@ const ProductList = () => {
         <div className="flex gap-8">
           {/* Filters Sidebar */}
           <div className={`${showFilters ? 'block' : 'hidden'} lg:block w-full lg:w-80 flex-shrink-0`}>
-            <div className="bg-white rounded-xl shadow-sm border p-6 sticky top-4">
+            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Filters</h2>
                 <div className="flex items-center gap-2">
@@ -690,7 +634,7 @@ const ProductList = () => {
                     }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
                   >
-                    Under $50
+                    Under ৳50
                   </button>
                   <button
                     onClick={() => {
@@ -699,7 +643,7 @@ const ProductList = () => {
                     }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
                   >
-                    $50 - $150
+                    ৳50 - ৳150
                   </button>
                   <button
                     onClick={() => {
@@ -708,7 +652,7 @@ const ProductList = () => {
                     }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
                   >
-                    $150 - $300
+                    ৳150 - ৳300
                   </button>
                   <button
                     onClick={() => {
@@ -717,7 +661,7 @@ const ProductList = () => {
                     }}
                     className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
                   >
-                    Over $300
+                    Over ৳300
                   </button>
                 </div>
               </div>
@@ -771,7 +715,7 @@ const ProductList = () => {
                 
                 {(filters.minPrice || filters.maxPrice) && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                    Price: ${filters.minPrice || '0'} - ${filters.maxPrice || '∞'}
+                    Price: ৳{filters.minPrice || '0'} - ৳{filters.maxPrice || '∞'}
                     <button
                       onClick={() => {
                         handleFilterChange('minPrice', '');

@@ -10,19 +10,21 @@ class APIError extends Error {
 }
 
 const apiService = {
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-
+baseURL: import.meta.env.BACKEND_URL || '/api',
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     // merge default headers with any passed headers
+    // Only set JSON header when we're not sending a FormData
+    const headers = { ...(options.headers || {}) };
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
     const config = {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers || {})
-      }
+      headers
     };
+
 
     // Add auth token if available
     const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
@@ -275,7 +277,7 @@ export const getCart = () => apiService.getCart();
 export const updateCartItem = (itemId, quantity) => apiService.updateCartItem(itemId, quantity);
 export const removeFromCart = (itemId) => apiService.removeFromCart(itemId);
 export const clearCart = () => apiService.clearCart();
-export const getUserOrders =() => apiService.getUserOrders();
+export const getUserOrders = () => apiService.getUserOrders();
 
 export const uploadSingleImage = (imageFile) => apiService.uploadSingleImage(imageFile);
 export const uploadMultipleImages = (imageFiles) => apiService.uploadMultipleImages(imageFiles);

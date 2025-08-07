@@ -37,7 +37,8 @@ const authReducer = (state, action) => {
         ...state, 
         user: null, 
         isAuthenticated: false,
-        loading: false
+        loading: false,
+        error: null
       };
     
     case 'UPDATE_USER':
@@ -54,32 +55,48 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
+  // Helper function to clear tokens
+  const clearTokens = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('adminToken');
+  }, []);
+
   // Initialize auth state from localStorage
   useEffect(() => {
     const initializeAuth = async () => {
       const token = localStorage.getItem('token');
       
-      if (token) {
-        try {
-          dispatch({ type: 'SET_LOADING', payload: true });
-          const userData = await apiService.getUserProfile();
-          
-          dispatch({ 
-            type: 'LOGIN_SUCCESS', 
-            payload: { user: userData } 
-          });
-        } catch (error) {
-          console.error('Auth initialization failed:', error);
-          localStorage.removeItem('token');
-          dispatch({ type: 'LOGOUT' });
-        }
-      } else {
+      if (!token) {
         dispatch({ type: 'SET_LOADING', payload: false });
+        return;
+      }
+
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        
+        // Check if token is valid by trying to get user profile
+        const userData = await apiService.getUserProfile();
+        
+        dispatch({ 
+          type: 'LOGIN_SUCCESS', 
+          payload: { user: userData } 
+        });
+      } catch (error) {
+        console.error('Auth initialization failed:', error);
+        
+        // Clear invalid tokens
+        clearTokens();
+        dispatch({ type: 'LOGOUT' });
+        
+        // Only show error if it's not a token expiry issue
+        if (error.status !== 401) {
+          dispatch({ type: 'SET_ERROR', payload: 'Authentication failed. Please login again.' });
+        }
       }
     };
 
     initializeAuth();
-  }, []);
+  }, [clearTokens]);
 
   // Actions - wrapped with useCallback to prevent infinite loops
   const login = useCallback(async (email, password) => {
@@ -102,10 +119,12 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, data: response };
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
-      return { success: false, error: error.message };
+      console.error('Login error:', error);
+      clearTokens();
+      dispatch({ type: 'SET_ERROR', payload: error.message || 'Login failed' });
+      return { success: false, error: error.message || 'Login failed' };
     }
-  }, []);
+  }, [clearTokens]);
 
   const register = useCallback(async (userData) => {
     try {
@@ -118,16 +137,16 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, data: response };
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
-      return { success: false, error: error.message };
+      console.error('Registration error:', error);
+      dispatch({ type: 'SET_ERROR', payload: error.message || 'Registration failed' });
+      return { success: false, error: error.message || 'Registration failed' };
     }
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('adminToken');
+    clearTokens();
     dispatch({ type: 'LOGOUT' });
-  }, []);
+  }, [clearTokens]);
 
   const updateUser = useCallback((userData) => {
     dispatch({ type: 'UPDATE_USER', payload: userData });
@@ -141,6 +160,11 @@ export const AuthProvider = ({ children }) => {
     return state.isAuthenticated;
   }, [state.isAuthenticated]);
 
+  // Function to check if token exists and is potentially valid
+  const hasToken = useCallback(() => {
+    return !!localStorage.getItem('token');
+  }, []);
+
   const value = {
     user: state.user,
     isAuthenticated: state.isAuthenticated,
@@ -151,7 +175,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     clearError,
-    isAuthenticated
+    isAuthenticated,
+    hasToken
   };
 
   return (
