@@ -115,7 +115,7 @@ const Header = () => {
               </h1>
             </div>
           </Link>
-
+         <div className="hidden lg:flex items-center gap-4">
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-8">
             {navigationItems.map((item) => {
@@ -169,21 +169,6 @@ const Header = () => {
             >
               <Search className="w-5 h-5" />
             </button>
-
-            {/* Wishlist */}
-            {isAuthenticated() && (
-              <Link
-                to="/wishlist"
-                className="hidden sm:flex p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors relative"
-                aria-label="Wishlist"
-              >
-                <Heart className="w-5 h-5" />
-                {/* TODO: Add wishlist count */}
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  0
-                </span>
-              </Link>
-            )}
 
             {/* Cart */}
             <Link
@@ -300,6 +285,7 @@ const Header = () => {
                 </Link>
               </div>
             )}
+          </div>
           </div>
         </div>
       </div>
