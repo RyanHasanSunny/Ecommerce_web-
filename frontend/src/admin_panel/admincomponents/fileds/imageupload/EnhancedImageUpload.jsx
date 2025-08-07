@@ -275,9 +275,10 @@ const EnhancedImageUpload = ({
       // Extract filename from URL for deletion
       let fileName = imageUrl;
       if (imageUrl.includes('amazonaws.com')) {
-        const urlParts = imageUrl.split('/');
-        fileName = urlParts.slice(-2).join('/'); // Get 'products/filename.jpg'
-      }
+      // grab the full S3 key from the pathname
+      const url = new URL(imageUrl);
+     fileName = url.pathname.substring(1);   // e.g. 'products/single/abc123.jpg'
+   }
       
       // Delete from S3
       const deleteResult = await deleteImage(fileName);

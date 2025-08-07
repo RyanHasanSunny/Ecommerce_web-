@@ -17,8 +17,8 @@ baseURL: import.meta.env.BACKEND_URL || '/api',
     // merge default headers with any passed headers
     // Only set JSON header when we're not sending a FormData
     const headers = { ...(options.headers || {}) };
-    if (!(options.body instanceof FormData)) {
-      headers['Content-Type'] = 'application/json';
+    if (options.body && !(options.body instanceof FormData)) {
+  headers['Content-Type'] = 'application/json';
     }
     const config = {
       ...options,
