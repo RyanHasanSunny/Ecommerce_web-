@@ -61,7 +61,7 @@ const HeroPanel = ({ heroData }) => {
   return (
     <div className="w-full h-full">
       {/* Hero Carousel */}
-      <div className="relative w-full rounded-xl  overflow-hidden"
+      <div className="relative w-full rounded   overflow-hidden"
       style={{ aspectRatio: "16 / 6" }}>
         {/* Slides */}
         <div
