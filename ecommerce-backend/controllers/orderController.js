@@ -16,162 +16,101 @@ const calculateDeliveryCharge = (city, subtotal) => {
   // if (subtotal > 5000) return 0;
 };
 
-// @route   POST /api/orders/place
-// @desc    Place a new order
-// @access  Private (User)
-// exports.placeOrder = async (req, res) => {
-//   const userId = req.user.userId;
-//   const { 
-//     items,
-//     shippingAddress, 
-//     paymentMethod,
-//     notes,
-//     extraCharge = 0
-//   } = req.body;
+const calculateOrderRevenue = (order) => {
+  let sellingPriceTotal = 0;
+  let offerPriceTotal = 0;
+  let profitTotal = 0;
 
-//   try {
-//     // Validate shipping address
-//     if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || 
-//         !shippingAddress.address || !shippingAddress.city) {
-//       return res.status(400).json({ 
-//         msg: 'Please provide complete shipping address' 
-//       });
-//     }
+  order.items.forEach(item => {
+    // Calculate based on actual product data if available
+    if (item.productId) {
+      const quantity = item.quantity;
+      
+      // Selling price total (original selling price × quantity)
+      sellingPriceTotal += (item.productId.sellingPrice || item.price) * quantity;
+      
+      // Offer price total (if offer price exists)
+      if (item.productId.offerPrice) {
+        offerPriceTotal += item.productId.offerPrice * quantity;
+      }
+      
+      // Profit calculation (selling price - cost price) × quantity
+      if (item.productId.profit) {
+        profitTotal += item.productId.profit * quantity;
+      }
+    } else {
+      // Fallback to stored item data
+      sellingPriceTotal += (item.sellingPrice || item.price) * item.quantity;
+      if (item.offerPrice) {
+        offerPriceTotal += item.offerPrice * item.quantity;
+      }
+      if (item.profit) {
+        profitTotal += item.profit * item.quantity;
+      }
+    }
+  });
 
-//     // Validate items
-//     if (!items || items.length === 0) {
-//       return res.status(400).json({ msg: 'No items in order' });
-//     }
-
-//     // Calculate subtotal and validate products
-//     let subtotal = 0;
-//     const orderItems = [];
-
-//     for (const item of items) {
-//       const product = await Product.findById(item.productId);
-//       if (!product) {
-//         return res.status(404).json({ 
-//           msg: `Product not found: ${item.productId}` 
-//         });
-//       }
-
-//       // Check stock
-//       if (product.stock < item.quantity) {
-//         return res.status(400).json({ 
-//           msg: `Insufficient stock for ${product.title}` 
-//         });
-//       }
-
-//       const itemTotal = product.sellingPrice * item.quantity;
-//       subtotal += itemTotal;
-
-//       orderItems.push({
-//         productId: product._id,
-//         title: product.title,
-//         thumbnail: product.thumbnail,
-//         quantity: item.quantity,
-//         price: product.sellingPrice,
-//         totalPrice: itemTotal
-//       });
-
-//       // Update product stock
-//       product.stock -= item.quantity;
-//       product.soldCount += item.quantity;
-//       await product.save();
-//     }
-
-//     // Calculate charges
-//     const deliveryCharge = calculateDeliveryCharge(shippingAddress.city, subtotal);
-//     const totalAmount = subtotal + deliveryCharge + extraCharge;
-
-//     // Create order
-//     const newOrder = new Order({
-//       userId,
-//       items: orderItems,
-//       subtotal,
-//       deliveryCharge,
-//       extraCharge,
-//       totalAmount,
-//       shippingAddress,
-//       paymentMethod,
-//       paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'unpaid',
-//       notes
-//     });
-
-//     await newOrder.save();
-
-//     // Add order to user's orders
-//     await User.findByIdAndUpdate(userId, {
-//       $push: { orders: newOrder._id }
-//     });
-
-//     // Clear user's cart if order was from cart
-//     if (req.body.fromCart) {
-//       await Cart.findOneAndUpdate(
-//         { userId, status: 'active' },
-//         { status: 'completed', items: [] }
-//       );
-//     }
-
-//     res.status(201).json({ 
-//       success: true,
-//       msg: 'Order placed successfully', 
-//       order: newOrder 
-//     });
-
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ msg: 'Server error while placing order' });
-//   }
-// };
-
-
-
+  return {
+    sellingPriceTotal,
+    offerPriceTotal,
+    profitTotal
+  };
+};
 
 
 exports.placeOrder = async (req, res) => {
   try {
     const { items, shippingAddress, paymentMethod, transactionId, notes, extraCharge = 0 } = req.body;
-    console.log('Request data:', req.body);  // Log request data
-
     const userId = req.user.userId;
 
-    // Validate shipping address
+    // Validate shipping address and items (existing validation code)
     if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city) {
       return res.status(400).json({ msg: 'Please provide complete shipping address' });
     }
 
-    // Validate items
     if (!items || items.length === 0) {
       return res.status(400).json({ msg: 'No items in order' });
     }
 
     let subtotal = 0;
+    let sellingPriceTotal = 0;
+    let offerPriceTotal = 0;
+    let profitTotal = 0;
     const orderItems = [];
 
-    // Process each item
+    // Process each item with revenue calculations
     for (const item of items) {
       const product = await Product.findById(item.productId);
       if (!product) {
         return res.status(404).json({ msg: `Product not found: ${item.productId}` });
       }
 
-      // Check if stock is available
       if (product.stock < item.quantity) {
         return res.status(400).json({ msg: `Insufficient stock for ${product.title}` });
       }
 
-      // Calculate total price for the item
-      const itemTotal = product.sellingPrice * item.quantity;
+      // Calculate prices
+      const finalPrice = product.offerPrice || product.sellingPrice;
+      const itemTotal = finalPrice * item.quantity;
       subtotal += itemTotal;
 
-      // Push the item data into the orderItems array
+      // Revenue calculations
+      sellingPriceTotal += product.sellingPrice * item.quantity;
+      if (product.offerPrice) {
+        offerPriceTotal += product.offerPrice * item.quantity;
+      }
+      profitTotal += (product.profit || 0) * item.quantity;
+
+      // Store detailed item information
       orderItems.push({
         productId: product._id,
         title: product.title,
         thumbnail: product.thumbnail,
         quantity: item.quantity,
-        price: product.sellingPrice,
+        price: finalPrice, // The actual price charged
+        sellingPrice: product.sellingPrice,
+        offerPrice: product.offerPrice || null,
+        profit: product.profit || 0,
         totalPrice: itemTotal
       });
 
@@ -181,10 +120,10 @@ exports.placeOrder = async (req, res) => {
       await product.save();
     }
 
-    const deliveryCharge = 60; // Example delivery charge, modify as needed
+    const deliveryCharge = 60;
     const totalAmount = subtotal + deliveryCharge + extraCharge;
 
-    // Create a new order
+    // Create order with revenue data
     const newOrder = new Order({
       userId,
       items: orderItems,
@@ -192,6 +131,10 @@ exports.placeOrder = async (req, res) => {
       deliveryCharge,
       extraCharge,
       totalAmount,
+      // Revenue tracking fields
+      sellingPriceTotal,
+      offerPriceTotal,
+      profitTotal,
       shippingAddress,
       paymentMethod,
       paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'paid',
@@ -203,34 +146,26 @@ exports.placeOrder = async (req, res) => {
       notes
     });
 
-    // Save the new order
     await newOrder.save();
     await User.findByIdAndUpdate(userId, { $push: { orders: newOrder._id } });
 
-    // If the order was placed from the cart, remove ordered items from the user's cart
-   if (req.body.fromCart) {
-  const orderedProductIds = items.map(item => item.productId);
+    // Clear cart logic (existing code)
+    if (req.body.fromCart) {
+      const orderedProductIds = items.map(item => item.productId);
+      await Cart.findOneAndUpdate(
+        { userId, status: 'active' },
+        { $pull: { items: { productId: { $in: orderedProductIds } } } },
+        { new: true }
+      );
+    }
 
-  // Log the ordered product IDs
-  console.log('Ordered product IDs:', orderedProductIds);
-
-  // Find and update the cart
-  const updatedCart = await Cart.findOneAndUpdate(
-    { userId, status: 'active' },
-    { 
-      $pull: { items: { productId: { $in: orderedProductIds } } }
-    },
-    { new: true }  // Ensure the updated cart is returned
-  );
-
-  // Log the updated cart after pulling items
-  console.log('Updated Cart after pulling items:', updatedCart);
-}
-
-    // Respond with success message
-    res.status(201).json({ success: true, msg: 'Order placed successfully', order: newOrder });
+    res.status(201).json({ 
+      success: true, 
+      msg: 'Order placed successfully', 
+      order: newOrder 
+    });
   } catch (err) {
-    console.error('Error placing order:', err); // Detailed logging for error
+    console.error('Error placing order:', err);
     res.status(500).json({ msg: 'Server error while placing order', error: err.message });
   }
 };
@@ -287,24 +222,39 @@ exports.getUserOrderById = async (req, res) => {
 // @access  Private (Admin)
 exports.getAllOrders = async (req, res) => {
   try {
-    // Check if user is admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({ msg: 'Access denied. Admin only.' });
     }
 
     const { status, paymentStatus, page = 1, limit = 10 } = req.query;
     
-    // Build filter
     const filter = {};
     if (status) filter.status = status;
     if (paymentStatus) filter.paymentStatus = paymentStatus;
 
     const orders = await Order.find(filter)
       .populate('userId', 'name email phone')
-      .populate('items.productId', 'title thumbnail')
+      .populate({
+        path: 'items.productId',
+        select: 'title thumbnail sellingPrice offerPrice profit'
+      })
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
+
+    // Calculate revenue for orders that might not have it stored
+    const ordersWithRevenue = orders.map(order => {
+      if (!order.sellingPriceTotal || !order.profitTotal) {
+        const revenue = calculateOrderRevenue(order);
+        return {
+          ...order.toObject(),
+          sellingPriceTotal: revenue.sellingPriceTotal,
+          offerPriceTotal: revenue.offerPriceTotal,
+          profitTotal: revenue.profitTotal
+        };
+      }
+      return order;
+    });
 
     const count = await Order.countDocuments(filter);
 
@@ -313,7 +263,7 @@ exports.getAllOrders = async (req, res) => {
       count,
       currentPage: page,
       totalPages: Math.ceil(count / limit),
-      orders
+      orders: ordersWithRevenue
     });
   } catch (err) {
     console.error(err);
@@ -472,7 +422,6 @@ exports.updatePaymentStatus = async (req, res) => {
 // @access  Private (Admin)
 exports.getOrderStats = async (req, res) => {
   try {
-    // Check if user is admin
     if (req.user.role !== 'admin') {
       return res.status(403).json({ msg: 'Access denied. Admin only.' });
     }
@@ -483,6 +432,9 @@ exports.getOrderStats = async (req, res) => {
           _id: null,
           totalOrders: { $sum: 1 },
           totalRevenue: { $sum: '$totalAmount' },
+          totalSellingPriceRevenue: { $sum: '$sellingPriceTotal' },
+          totalOfferPriceRevenue: { $sum: '$offerPriceTotal' },
+          totalProfit: { $sum: '$profitTotal' },
           averageOrderValue: { $avg: '$totalAmount' },
           pendingOrders: {
             $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] }
@@ -509,7 +461,7 @@ exports.getOrderStats = async (req, res) => {
       }
     ]);
 
-    // Get today's orders
+    // Today's stats
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -527,17 +479,30 @@ exports.getOrderStats = async (req, res) => {
       {
         $group: {
           _id: null,
-          total: { $sum: '$totalAmount' }
+          total: { $sum: '$totalAmount' },
+          profit: { $sum: '$profitTotal' }
         }
       }
     ]);
 
+    const baseStats = stats[0] || {};
+    const todayData = todayRevenue[0] || {};
+
+    // Calculate profit margin
+    const profitMargin = baseStats.totalRevenue > 0 
+      ? (baseStats.totalProfit / baseStats.totalRevenue) * 100 
+      : 0;
+
     res.json({
       success: true,
       stats: {
-        ...stats[0],
+        ...baseStats,
+        sellingPriceRevenue: baseStats.totalSellingPriceRevenue || 0,
+        offerPriceRevenue: baseStats.totalOfferPriceRevenue || 0,
+        profitMargin,
         todayOrders,
-        todayRevenue: todayRevenue[0]?.total || 0
+        todayRevenue: todayData.total || 0,
+        todayProfit: todayData.profit || 0
       }
     });
   } catch (err) {

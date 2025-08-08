@@ -1,6 +1,6 @@
-// src/user-panel/components/footer/Footer.jsx - FIXED VERSION
+// src/user-panel/components/footer/Footer.jsx - UPDATED WITH BACKEND DATA
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Mail, 
@@ -15,8 +15,12 @@ import {
   Truck,
   Award
 } from 'lucide-react';
+import apiService from '../../api/api';
 
 const Footer = () => {
+  const [contactInfo, setContactInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
   const currentYear = new Date().getFullYear();
 
   const footerLinks = {
@@ -46,12 +50,14 @@ const Footer = () => {
     ]
   };
 
-  const socialLinks = [
-    { name: 'Facebook', icon: Facebook, href: 'https://facebook.com', color: 'hover:text-blue-600' },
-    { name: 'Twitter', icon: Twitter, href: 'https://twitter.com', color: 'hover:text-blue-400' },
-    { name: 'Instagram', icon: Instagram, href: 'https://instagram.com', color: 'hover:text-pink-600' },
-    { name: 'YouTube', icon: Youtube, href: 'https://youtube.com', color: 'hover:text-red-600' }
-  ];
+  // Default social links with icons mapping
+  const socialIconMap = {
+    facebook: { icon: Facebook, color: 'hover:text-blue-600' },
+    twitter: { icon: Twitter, color: 'hover:text-blue-400' },
+    instagram: { icon: Instagram, color: 'hover:text-pink-600' },
+    youtube: { icon: Youtube, color: 'hover:text-red-600' },
+    linkedin: { icon: Facebook, color: 'hover:text-blue-700' } // Using Facebook as fallback for linkedin
+  };
 
   const features = [
     { 
@@ -74,6 +80,46 @@ const Footer = () => {
       title: '24/7 Support', 
       description: 'Dedicated customer service' 
     }
+  ];
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        setLoading(true);
+        const response = await apiService.getHomePage();
+        const homePageData = response.data || response;
+        if (homePageData?.contactInfo) {
+          setContactInfo(homePageData.contactInfo);
+        }
+      } catch (error) {
+        console.error('Error fetching contact info:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContactInfo();
+  }, []);
+
+  // Use backend data if available, otherwise use defaults
+  const displayEmail = contactInfo?.email || 'support@magicmart.com';
+  const displayPhone = contactInfo?.contactNumber || '+1 (555) 123-4567';
+  const displayLocation = contactInfo?.location || '123 Commerce Street, Business District, NY 10001';
+  
+  // Process social links from backend
+  const socialLinks = contactInfo?.socialLinks?.map(link => {
+    const socialData = socialIconMap[link.platform.toLowerCase()] || socialIconMap.facebook;
+    return {
+      name: link.platform,
+      icon: socialData.icon,
+      href: link.url,
+      color: socialData.color
+    };
+  }) || [
+    { name: 'Facebook', icon: Facebook, href: 'https://facebook.com', color: 'hover:text-blue-600' },
+    { name: 'Twitter', icon: Twitter, href: 'https://twitter.com', color: 'hover:text-blue-400' },
+    { name: 'Instagram', icon: Instagram, href: 'https://instagram.com', color: 'hover:text-pink-600' },
+    { name: 'YouTube', icon: Youtube, href: 'https://youtube.com', color: 'hover:text-red-600' }
   ];
 
   return (
@@ -102,8 +148,6 @@ const Footer = () => {
         </div>
       </div>
 
-
-
       {/* Main Footer Content */}
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-wrap justify-between gap-8">
@@ -124,15 +168,15 @@ const Footer = () => {
             <div className="space-y-3 mb-6">
               <div className="flex items-center text-gray-600">
                 <Phone className="w-5 h-5 mr-3 text-blue-600" />
-                <span>+1 (555) 123-4567</span>
+                <span>{displayPhone}</span>
               </div>
               <div className="flex items-center text-gray-600">
                 <Mail className="w-5 h-5 mr-3 text-blue-600" />
-                <span>support@magicmart.com</span>
+                <span>{displayEmail}</span>
               </div>
               <div className="flex items-center text-gray-600">
                 <MapPin className="w-5 h-5 mr-3 text-blue-600" />
-                <span>123 Commerce Street, Business District, NY 10001</span>
+                <span>{displayLocation}</span>
               </div>
             </div>
 
@@ -154,56 +198,7 @@ const Footer = () => {
                 );
               })}
             </div>
-            </div>
-
-          {/* Footer Links */}
-          {/* <div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Company</h4>
-            <ul className="space-y-3">
-              {footerLinks.company.map((link, index) => (
-                <li key={index}>
-                  <Link
-                    to={link.href}
-                    className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
-
-          <div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Support</h4>
-            <ul className="space-y-3">
-              {footerLinks.support.map((link, index) => (
-                <li key={index}>
-                  <Link
-                    to={link.href}
-                    className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Shop</h4>
-            <ul className="space-y-3">
-              {footerLinks.categories.map((link, index) => (
-                <li key={index}>
-                  <Link
-                    to={link.href}
-                    className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div> */}
         </div>
       </div>
 
@@ -227,8 +222,6 @@ const Footer = () => {
                 ))}
               </div>
             </div>
-
-           
           </div>
         </div>
       </div>

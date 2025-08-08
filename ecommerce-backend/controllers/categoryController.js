@@ -33,10 +33,10 @@ exports.addCategory = async (req, res) => {
         return res.status(400).json({ msg: 'The provided parent category does not exist' });
       }
 
-      // Make sure parent is actually a parent category
-      if (!parent.isParent) {
-        return res.status(400).json({ msg: 'The selected parent category is not a parent category' });
-      }
+      // // Make sure parent is actually a parent category
+      // if (!parent.isParent) {
+      //   return res.status(400).json({ msg: 'The selected parent category is not a parent category' });
+      // }
     }
 
     // Create the new category
@@ -71,14 +71,9 @@ exports.addCategory = async (req, res) => {
 // @access  Public
 exports.getCategories = async (req, res) => {
   try {
-    const { includeChildren = 'true', parentOnly = 'false' } = req.query;
+    const { includeChildren = 'true' } = req.query; // Remove parentOnly filtering
     
-    let query = {};
-    
-    // If parentOnly is true, only get parent categories
-    if (parentOnly === 'true') {
-      query.isParent = true;
-    }
+    let query = {}; // No filter to get both parent and child categories
     
     const categories = await Category.find(query)
       .populate('parentCategory', 'name description')

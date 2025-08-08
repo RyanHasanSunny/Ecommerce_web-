@@ -1,5 +1,4 @@
-// src/user-panel/api/api.js - UPDATED WITH CART UPDATE FUNCTIONALITY
-
+// src/user-panel/api/api.js - UPDATED WITH ORDER MANAGEMENT
 
 class APIError extends Error {
   constructor(message, status, data) {
@@ -25,7 +24,6 @@ baseURL: import.meta.env.BACKEND_URL || '/api',
       headers
     };
 
-
     // Add auth token if available
     const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
     if (token) {
@@ -48,7 +46,6 @@ baseURL: import.meta.env.BACKEND_URL || '/api',
       throw new APIError('Network error', 0, { originalError: err.message });
     }
   },
-
 
   // Authentication APIs
   async login(email, password) {
@@ -93,6 +90,17 @@ baseURL: import.meta.env.BACKEND_URL || '/api',
     });
   },
 
+  async updateHomePage(homePageData) {
+    return this.request('/homepagedata', {
+      method: 'POST',
+      body: JSON.stringify(homePageData)
+      });
+  },
+
+  async getHomePage(homePageData) {
+    return this.request('/homepagedata');
+  },
+
   async updateProduct(productId, productData) {
     return this.request(`/product/${productId}`, {
       method: 'PUT',
@@ -118,7 +126,20 @@ baseURL: import.meta.env.BACKEND_URL || '/api',
     });
   },
 
-  // Cart APIs - UPDATED WITH NEW METHOD
+  async removeCategory(categoryId) {
+    return this.request(`/category/${categoryId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async updateCategory(categoryId, categoryData) {
+    return this.request(`/category/${categoryId}`, {
+      method: 'PUT',
+      body: JSON.stringify(categoryData)
+    });
+  },
+
+  // Cart APIs
   async addToCart(productId, quantity) {
     return this.request('/cart', {
       method: 'POST',
@@ -149,7 +170,7 @@ baseURL: import.meta.env.BACKEND_URL || '/api',
     });
   },
 
-  // Order APIs
+  // Order APIs - User
   async placeOrder(orderData) {
     return this.request('/orders/place', {
       method: 'POST',
@@ -157,14 +178,40 @@ baseURL: import.meta.env.BACKEND_URL || '/api',
     });
   },
 
-  
-
   async getUserOrders() {
     return this.request('/orders/my');
   },
 
   async getUserOrderById(orderId) {
     return this.request(`/orders/my/${orderId}`);
+  },
+
+  // Order APIs - Admin
+  async getAllOrders(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/orders/admin/all${queryString ? `?${queryString}` : ''}`);
+  },
+
+  async getOrderById(orderId) {
+    return this.request(`/orders/admin/${orderId}`);
+  },
+
+  async updateOrderStatus(orderId, statusData) {
+    return this.request(`/orders/admin/${orderId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify(statusData)
+    });
+  },
+
+  async updatePaymentStatus(orderId, paymentData) {
+    return this.request(`/orders/admin/${orderId}/payment`, {
+      method: 'PUT',
+      body: JSON.stringify(paymentData)
+    });
+  },
+
+  async getOrderStats() {
+    return this.request('/orders/admin/stats');
   },
 
   // User APIs
@@ -201,7 +248,7 @@ baseURL: import.meta.env.BACKEND_URL || '/api',
     return this.request('/upload/single', {
       method: 'POST',
       body: formData,
-      headers: {} // Let browser set Content-Type for FormData
+      headers: {}
     });
   },
 
@@ -214,7 +261,7 @@ baseURL: import.meta.env.BACKEND_URL || '/api',
     return this.request('/upload/multiple', {
       method: 'POST',
       body: formData,
-      headers: {} // Let browser set Content-Type for FormData
+      headers: {}
     });
   },
 
@@ -233,7 +280,7 @@ baseURL: import.meta.env.BACKEND_URL || '/api',
     return this.request(`/upload/update/${encodedFileName}`, {
       method: 'PUT',
       body: formData,
-      headers: {} // Let browser set Content-Type for FormData
+      headers: {}
     });
   },
 
@@ -264,6 +311,9 @@ export const updateProduct = (productId, productData) => apiService.updateProduc
 export const deleteProduct = (productId) => apiService.deleteProduct(productId);
 
 export const getCategories = () => apiService.getCategories();
+export const getCategoryById = (id) => apiService.getCategoryById(id);
+export const removeCategory = (categoryId) => apiService.removeCategory(categoryId);
+export const updateCategory = (categoryId, categoryData) => apiService.updateCategory(categoryId, categoryData);
 export const addCategory = (categoryData) => apiService.addCategory(categoryData);
 
 export const getUserAddresses = () => apiService.getUserAddresses();
@@ -273,15 +323,26 @@ export const getUserProducts = () => apiService.getUserProducts();
 export const getStats = () => apiService.getStats();
 export const getAdminProducts = () => apiService.getAdminProducts();
 
-// Updated cart exports
+// Cart exports
 export const addToCart = (productId, quantity) => apiService.addToCart(productId, quantity);
 export const getCart = () => apiService.getCart();
 export const updateCartItem = (itemId, quantity) => apiService.updateCartItem(itemId, quantity);
 export const removeFromCart = (itemId) => apiService.removeFromCart(itemId);
 export const clearCart = () => apiService.clearCart();
+
+// Order exports - User
 export const placeOrder = (orderData) => apiService.placeOrder(orderData);
 export const getUserOrders = () => apiService.getUserOrders();
+export const getUserOrderById = (orderId) => apiService.getUserOrderById(orderId);
 
+// Order exports - Admin
+export const getAllOrders = (params) => apiService.getAllOrders(params);
+export const getOrderById = (orderId) => apiService.getOrderById(orderId);
+export const updateOrderStatus = (orderId, statusData) => apiService.updateOrderStatus(orderId, statusData);
+export const updatePaymentStatus = (orderId, paymentData) => apiService.updatePaymentStatus(orderId, paymentData);
+export const getOrderStats = () => apiService.getOrderStats();
+
+// Image exports
 export const uploadSingleImage = (imageFile) => apiService.uploadSingleImage(imageFile);
 export const uploadMultipleImages = (imageFiles) => apiService.uploadMultipleImages(imageFiles);
 export const deleteImage = (fileName) => apiService.deleteImage(fileName);
@@ -289,6 +350,8 @@ export const updateImage = (oldFileName, newImageFile) => apiService.updateImage
 export const listImages = (prefix, maxKeys) => apiService.listImages(prefix, maxKeys);
 export const getImageDetails = (fileName) => apiService.getImageDetails(fileName);
 export const testS3Connection = () => apiService.testS3Connection();
+export const getHomePage = () => apiService.getHomePage();
+export const updateHomePage = (homePageData) => apiService.updateHomePage(homePageData);
 
 export { APIError };
 export default apiService;

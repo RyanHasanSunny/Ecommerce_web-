@@ -1,10 +1,6 @@
 const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
-  orderId: {
-    type: String,
-    unique: true
-  },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -16,7 +12,10 @@ const orderSchema = new mongoose.Schema({
       ref: 'Product',
       required: true
     },
-    title: String,
+    title: {
+      type: String,
+      required: true
+    },
     thumbnail: String,
     quantity: {
       type: Number,
@@ -25,105 +24,198 @@ const orderSchema = new mongoose.Schema({
     },
     price: {
       type: Number,
-      required: true
+      required: true // The actual price charged to customer
+    },
+    // New revenue tracking fields for each item
+    sellingPrice: {
+      type: Number,
+      required: true // Original selling price
+    },
+    offerPrice: {
+      type: Number,
+      default: null // Discounted price if applicable
+    },
+    profit: {
+      type: Number,
+      default: 0 // Profit per unit
     },
     totalPrice: {
       type: Number,
-      required: true
+      required: true // Total for this item (price × quantity)
     }
   }],
-  // Pricing details
-  subtotal: { type: Number, required: true },
-  deliveryCharge: { type: Number, required: true, default: 50 },
-  extraCharge: { type: Number, default: 0 },
-  discount: { type: Number, default: 0 },
-  totalAmount: { type: Number, required: true },
-
-  // Order status
-  status: {
-    type: String,
-    enum: ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
-    default: 'pending'
+  
+  // Order totals
+  subtotal: {
+    type: Number,
+    required: true
   },
-
-  // Payment details
-  paymentMethod: {
-    type: String,
-    enum: ['cod', 'online', 'card', 'bkash', 'nagad', 'rocket'],
+  deliveryCharge: {
+    type: Number,
+    default: 0
+  },
+  extraCharge: {
+    type: Number,
+    default: 0
+  },
+  totalAmount: {
+    type: Number,
     required: true
   },
   
-  paymentStatus: {
-    type: String,
-    enum: ['unpaid', 'paid', 'refunded'],
-    default: 'paid'
+  // New revenue tracking fields for the entire order
+  sellingPriceTotal: {
+    type: Number,
+    default: 0 // Total if all items sold at selling price
+  },
+  offerPriceTotal: {
+    type: Number,
+    default: 0 // Total value of discounts given
+  },
+  profitTotal: {
+    type: Number,
+    default: 0 // Total profit from this order
   },
   
+  // Shipping information
+  shippingAddress: {
+    fullName: {
+      type: String,
+      required: true
+    },
+    phone: {
+      type: String,
+      required: true
+    },
+    address: {
+      type: String,
+      required: true
+    },
+    city: {
+      type: String,
+      required: true
+    },
+    postalCode: String,
+    country: {
+      type: String,
+      default: 'Bangladesh'
+    }
+  },
+  
+  // Payment information
+  paymentMethod: {
+    type: String,
+    enum: ['cod', 'bkash', 'nagad', 'rocket', 'bank_transfer', 'card'],
+    required: true
+  },
+  paymentStatus: {
+    type: String,
+    enum: ['unpaid', 'paid', 'refunded', 'failed'],
+    default: 'unpaid'
+  },
   paymentDetails: {
     transactionId: String,
     paidAt: Date,
-    amount: Number
+    amount: Number,
+    method: String
   },
-
-  // Shipping details
-  shippingAddress: {
-    fullName: { type: String, required: true },
-    phone: { type: String, required: true },
-    email: String,
-    address: { type: String, required: true },
-    city: { type: String, required: true },
-    state: String,
-    zipCode: String,
-    country: { type: String, default: 'Bangladesh' }
+  
+  // Order status
+  status: {
+    type: String,
+    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+    default: 'pending'
   },
-
-  // Tracking
+  
+  // Status history for tracking
+  statusHistory: [{
+    status: {
+      type: String,
+      enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+    },
+    note: String,
+    updatedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  
+  // Tracking information
   trackingNumber: String,
   estimatedDelivery: Date,
   actualDelivery: Date,
-
-  // Status history
-  statusHistory: [{
-    status: String,
-    date: { type: Date, default: Date.now },
-    note: String,
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-  }],
-
-  // Additional info
+  
+  // Additional information
   notes: String,
-  cancelReason: String
-}, { timestamps: true });
+  cancelReason: String,
+  
+  // Internal fields
+  isDeleted: {
+    type: Boolean,
+    default: false
+  }
+}, {
+  timestamps: true
+});
 
+// Add indexes for better query performance
+orderSchema.index({ userId: 1, createdAt: -1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ paymentStatus: 1 });
+orderSchema.index({ 'paymentDetails.transactionId': 1 });
+orderSchema.index({ createdAt: -1 });
 
+// Virtual for calculating profit margin percentage
+orderSchema.virtual('profitMargin').get(function() {
+  if (this.totalAmount > 0) {
+    return (this.profitTotal / this.totalAmount) * 100;
+  }
+  return 0;
+});
 
-// Generate order ID before saving
-orderSchema.pre('save', async function(next) {
-  if (this.isNew) {
-    const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
+// Virtual for calculating discount amount
+orderSchema.virtual('discountAmount').get(function() {
+  return this.sellingPriceTotal - this.subtotal;
+});
+
+// Method to calculate revenue metrics if not stored
+orderSchema.methods.calculateRevenue = function() {
+  let sellingPriceTotal = 0;
+  let offerPriceTotal = 0;
+  let profitTotal = 0;
+
+  this.items.forEach(item => {
+    const quantity = item.quantity;
+    sellingPriceTotal += (item.sellingPrice || item.price) * quantity;
     
-    // Find the last order of the day
-    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+    if (item.offerPrice) {
+      offerPriceTotal += item.offerPrice * quantity;
+    }
     
-    const lastOrder = await this.constructor.findOne({
-      createdAt: { $gte: startOfDay, $lte: endOfDay }
-    }).sort({ createdAt: -1 });
-    
-    const orderNumber = lastOrder ? 
-      (parseInt(lastOrder.orderId.slice(-4)) + 1).toString().padStart(4, '0') : 
-      '0001';
-    
-    this.orderId = `ORD${year}${month}${day}${orderNumber}`;
-    
-    // Add initial status to history
-    this.statusHistory.push({
-      status: this.status,
-      note: 'Order placed'
-    });
+    if (item.profit) {
+      profitTotal += item.profit * quantity;
+    }
+  });
+
+  return {
+    sellingPriceTotal,
+    offerPriceTotal,
+    profitTotal
+  };
+};
+
+// Pre-save middleware to ensure revenue calculations
+orderSchema.pre('save', function(next) {
+  // If revenue fields are missing, calculate them
+  if (!this.sellingPriceTotal || !this.profitTotal) {
+    const revenue = this.calculateRevenue();
+    this.sellingPriceTotal = revenue.sellingPriceTotal;
+    this.offerPriceTotal = revenue.offerPriceTotal;
+    this.profitTotal = revenue.profitTotal;
   }
   next();
 });

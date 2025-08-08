@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaBoxOpen, FaClipboardList, FaTags, FaUsers, FaChartBar } from 'react-icons/fa';
+import { FaBoxOpen, FaClipboardList, FaTags, FaUsers, FaChartBar, FaCog } from 'react-icons/fa';
 
 const menuItems = [
   { name: "Dashboard", icon: <FaClipboardList />, path: "/admin/dashboard" },
@@ -9,6 +9,7 @@ const menuItems = [
   { name: "Categories", icon: <FaTags />, path: "/admin/categories" },
   { name: "Customers", icon: <FaUsers />, path: "/admin/customers" },
   { name: "Reports", icon: <FaChartBar />, path: "/admin/reports" },
+  {name: "Settings", icon: <FaCog />, path: "/admin/settings" }
 ];
 
 const LeftMenu = ({ onMenuItemClick }) => {

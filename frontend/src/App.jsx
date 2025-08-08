@@ -8,6 +8,7 @@ import RouteLoader from './RouteLoader';
 import ScrollToTop from './ScrollToTop';
 import './App.css';
 
+
 // -- full-page loader component
 const FullPageLoader = () => (
   <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
@@ -37,6 +38,8 @@ const ProductList       = lazy(() => import('./admin_panel/pages/ProductList'));
 const ProductAdd        = lazy(() => import('./admin_panel/pages/ProductAdd'));
 const ProductManagement = lazy(() => import('./admin_panel/pages/ProductManagement'));
 const PrivateRoute      = lazy(() => import('./admin_panel/admincomponents/PrivateRoute'));
+const HomepageManagement= lazy(() => import('./admin_panel/pages/HomepageManagement'));
+const OrderManagement   = lazy(() => import('./admin_panel/pages/OrderList'));
 
 function App() {
   return (
@@ -121,10 +124,7 @@ function App() {
                   path="orders"
                   element={
                     <PrivateRoute>
-                      <div className="p-8 text-center">
-                        <h2 className="text-2xl font-bold mb-4">Order Management</h2>
-                        <p className="text-gray-600">Coming soon!</p>
-                      </div>
+                    <OrderManagement/>
                     </PrivateRoute>
                   }
                 />
@@ -154,10 +154,7 @@ function App() {
                   path="settings"
                   element={
                     <PrivateRoute>
-                      <div className="p-8 text-center">
-                        <h2 className="text-2xl font-bold mb-4">Settings</h2>
-                        <p className="text-gray-600">Coming soon!</p>
-                      </div>
+                      <HomepageManagement/>
                     </PrivateRoute>
                   }
                 />

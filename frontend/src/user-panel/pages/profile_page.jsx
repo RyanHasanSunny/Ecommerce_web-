@@ -1,4 +1,4 @@
-// src/user-panel/pages/profile_page.jsx - FIXED VERSION
+// src/user-panel/pages/profile_page.jsx - MOBILE OPTIMIZED VERSION
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -245,22 +245,31 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-white p-1 rounded-lg mb-8 shadow-sm overflow-x-auto">
+        {/* Tab Navigation - Mobile Optimized */}
+        <div className="flex justify-center space-x-1 bg-white p-2 rounded-lg mb-8 shadow-sm">
           {tabs.map(tab => {
             const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-                  activeTab === tab.id
+                className={`flex items-center justify-center space-x-2 px-3 sm:px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 min-w-0 ${
+                  isActive
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                {/* Show label only on active tab for mobile, always show on larger screens */}
+                <span className={`transition-all duration-200 ${
+                  isActive 
+                    ? 'block whitespace-nowrap' 
+                    : 'hidden sm:block whitespace-nowrap'
+                }`}>
+                  {tab.label}
+                </span>
               </button>
             );
           })}

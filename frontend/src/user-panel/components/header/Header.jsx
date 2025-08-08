@@ -239,22 +239,7 @@ const Header = () => {
                         <Package className="w-4 h-4" />
                         My Orders
                       </Link>
-                      <Link
-                        to="/wishlist"
-                        onClick={() => setShowProfileMenu(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <Heart className="w-4 h-4" />
-                        Wishlist
-                      </Link>
-                      <Link
-                        to="/settings"
-                        onClick={() => setShowProfileMenu(false)}
-                        className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      >
-                        <Settings className="w-4 h-4" />
-                        Settings
-                      </Link>
+                   
                       
                       <div className="border-t border-gray-100 mt-1 pt-1">
                         <button
@@ -373,6 +358,13 @@ const Header = () => {
                 >
                   <Package className="w-4 h-4" />
                   <span>My Orders</span>
+                </Link>
+                <Link 
+                to="/cart"
+                className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  <span>My Cart</span>
                 </Link>
                 
                 <button
