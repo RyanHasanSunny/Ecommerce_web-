@@ -82,7 +82,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
   if (viewMode === 'list') {
     return (
       <div 
-        className="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden  flex"
+        className="flex flex-wrap bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden  flex"
         onClick={handleProductClick}
       >
         {/* Image */}
@@ -112,7 +112,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
         {/* Content */}
         <div className="flex-1 p-4 flex flex-col justify-between">
           <div>
-            <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
+            <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">
               {product.title}
             </h3>
             
@@ -127,7 +127,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
           
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between">
             {/* Price */}
             <div className="flex items-center space-x-2">
               <span className="text-xl font-bold text-gray-900">
@@ -141,12 +141,12 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center  space-x-2">
           
               <button
                 onClick={handleAddToCart}
                 disabled={addingToCart || isOutOfStock}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                className="px-4 py-2 bg-blue-600 w-70 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span>{addingToCart ? 'Adding...' : 'Add to Cart'}</span>
@@ -483,7 +483,7 @@ const ProductList = () => {
               </div>
 
               {/* View Toggle */}
-              <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+              {/* <div className="flex border border-gray-300 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2 ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
@@ -498,7 +498,7 @@ const ProductList = () => {
                 >
                   <List className="w-5 h-5" />
                 </button>
-              </div>
+              </div> */}
 
               {/* Filter Toggle */}
               <button
@@ -624,7 +624,7 @@ const ProductList = () => {
               </div>
 
               {/* Quick Filters */}
-              <div className="mb-8">
+              {/* <div className="mb-8">
                 <h3 className="text-sm font-semibold text-gray-900 mb-4">Quick Filters</h3>
                 <div className="space-y-2">
                   <button
@@ -664,7 +664,7 @@ const ProductList = () => {
                     Over ৳300
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               {/* Availability Filter */}
               <div>
@@ -801,13 +801,12 @@ const ProductList = () => {
       </div>
 
       {/* Mobile Filter Overlay */}
-      {showFilters && (
+      {/* {showFilters && (
         <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setShowFilters(false)}>
           <div 
             className="absolute right-0 top-0 h-full w-80 bg-white shadow-xl overflow-y-auto" 
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Mobile filter content would be the same as desktop sidebar */}
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold">Filters</h2>
@@ -818,11 +817,10 @@ const ProductList = () => {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              {/* Same filter content as sidebar */}
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

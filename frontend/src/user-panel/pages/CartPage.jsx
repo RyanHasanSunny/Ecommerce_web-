@@ -1,30 +1,17 @@
-// src/user-panel/pages/CartPage.jsx - CORRECTED VERSION
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiService from '../api/api';
-import {
-  ShoppingCart,
-  Plus,
-  Minus,
-  Trash2,
-  Heart,
-  ArrowLeft,
-  ShoppingBag,
-  AlertCircle,
-  Loader,
-  Tag,
-  Truck,
-  Shield,
-  CreditCard
-} from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Heart, ArrowLeft, ShoppingBag, AlertCircle, Loader, Tag, Truck, Shield } from 'lucide-react';
 
 const CartPage = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
   const [cartItems, setCartItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]); // To track selected items
+  
+  const [totalAmount, setTotalAmount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
@@ -48,7 +35,6 @@ const CartPage = () => {
       
       console.log('Cart API response:', response);
       
-      // Handle different possible response structures
       let items = [];
       if (Array.isArray(response)) {
         items = response;
@@ -70,6 +56,18 @@ const CartPage = () => {
     }
   };
 
+  const handleSelectItem = (itemId) => {
+  setSelectedItems((prevSelectedItems) => {
+    if (prevSelectedItems.includes(itemId)) {
+      // If item is already selected, remove it
+      return prevSelectedItems.filter(id => id !== itemId);
+    } else {
+      // If item is not selected, add it
+      return [...prevSelectedItems, itemId];
+    }
+  });
+};
+
   const updateQuantity = async (itemId, newQuantity) => {
     if (newQuantity < 1) return;
     
@@ -77,22 +75,16 @@ const CartPage = () => {
     try {
       const response = await apiService.updateCartItem(itemId, newQuantity);
       
-      // Handle response and update local state
       if (response.success && response.cart) {
         const updatedItems = response.cart.items || [];
         setCartItems(updatedItems);
       } else {
-        // Fallback: refetch cart
         await fetchCart();
       }
     } catch (err) {
       console.error('Error updating quantity:', err);
       setError(err.message || 'Failed to update quantity');
-      
-      // Show error for a few seconds
       setTimeout(() => setError(''), 5000);
-      
-      // Revert optimistic update by refetching
       fetchCart();
     } finally {
       setUpdating(false);
@@ -106,11 +98,9 @@ const CartPage = () => {
     try {
       const response = await apiService.removeFromCart(itemId);
       
-      // Handle response
       if (response.items) {
         setCartItems(response.items);
       } else {
-        // Fallback: refetch cart
         await fetchCart();
       }
     } catch (err) {
@@ -142,7 +132,6 @@ const CartPage = () => {
     if (!couponCode.trim()) return;
 
     try {
-      // Mock coupon validation - replace with actual API call
       const mockDiscount = couponCode.toUpperCase() === 'SAVE10' ? 10 : 0;
       
       if (mockDiscount > 0) {
@@ -166,11 +155,13 @@ const CartPage = () => {
 
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => {
-      // Get the price from the populated product or the item itself
-      const product = item.productId || item.product || item;
-      const price = product?.offerPrice || product?.sellingPrice || item.price || 0;
-      const quantity = item.quantity || 1;
-      return total + (price * quantity);
+      if (selectedItems.includes(item._id)) {
+        const product = item.productId || item.product || item;
+        const price = product?.offerPrice || product?.sellingPrice || item.price || 0;
+        const quantity = item.quantity || 1;
+        return total + (price * quantity);
+      }
+      return total;
     }, 0);
   };
 
@@ -181,8 +172,21 @@ const CartPage = () => {
   };
 
   const handleCheckout = () => {
-    if (cartItems.length === 0) return;
-    navigate('/checkout');
+    if (selectedItems.length === 0) {
+      alert('Please select at least one item for checkout.');
+      return;
+    }
+    
+    const total = calculateTotal();
+    
+    // Navigate to payment page with cart data
+    navigate('/checkout', {
+      state: {
+        cartItems,
+        selectedItems,
+        totalAmount: total
+      }
+    });
   };
 
   if (loading) {
@@ -204,7 +208,6 @@ const CartPage = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
-          {/* Header */}
           <div className="flex items-center mb-8">
             <button
               onClick={() => navigate(-1)}
@@ -216,7 +219,6 @@ const CartPage = () => {
             <h1 className="text-3xl font-bold text-gray-900">Shopping Cart</h1>
           </div>
 
-          {/* Empty Cart */}
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <div className="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
               <ShoppingCart className="w-12 h-12 text-gray-400" />
@@ -237,9 +239,8 @@ const CartPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen item-center bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="flex items-center mb-8">
           <button
             onClick={() => navigate(-1)}
@@ -252,7 +253,6 @@ const CartPage = () => {
           <span className="ml-4 text-gray-600">({cartItems.length} items)</span>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
             <AlertCircle className="w-5 h-5 text-red-600 mr-3" />
@@ -261,10 +261,8 @@ const CartPage = () => {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Cart Items */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm">
-              {/* Header */}
               <div className="p-6 border-b border-gray-200 flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">Cart Items</h2>
                 <button
@@ -276,10 +274,8 @@ const CartPage = () => {
                 </button>
               </div>
 
-              {/* Items List */}
               <div className="divide-y divide-gray-200">
                 {cartItems.map((item) => {
-                  // Handle different possible data structures
                   const product = item.productId || item.product || item;
                   const price = product?.offerPrice || product?.sellingPrice || item.price || 0;
                   const originalPrice = product?.sellingPrice || item.originalPrice || price;
@@ -287,7 +283,6 @@ const CartPage = () => {
                   const quantity = item.quantity || 1;
                   const itemId = item._id || item.id;
 
-                  // Safety check to ensure we have required data
                   if (!product || !itemId) {
                     console.warn('Invalid cart item:', item);
                     return null;
@@ -296,7 +291,6 @@ const CartPage = () => {
                   return (
                     <div key={itemId} className="p-6 hover:bg-gray-50 transition-colors">
                       <div className="flex items-start space-x-4">
-                        {/* Product Image */}
                         <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
                           <img
                             src={product.thumbnail || product.image || '/placeholder-product.jpg'}
@@ -308,7 +302,6 @@ const CartPage = () => {
                           />
                         </div>
 
-                        {/* Product Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div>
@@ -323,8 +316,7 @@ const CartPage = () => {
                               {product.companyName && (
                                 <p className="text-sm text-gray-600 mb-2">{product.companyName}</p>
                               )}
-                              
-                              {/* Price */}
+
                               <div className="flex items-center space-x-2 mb-3">
                                 <span className="text-lg font-semibold text-gray-900">
                                   ${price.toFixed(2)}
@@ -341,7 +333,6 @@ const CartPage = () => {
                                 )}
                               </div>
 
-                              {/* Stock Status */}
                               {product.stock !== undefined && (
                                 <>
                                   {product.stock <= 5 && product.stock > 0 && (
@@ -356,14 +347,17 @@ const CartPage = () => {
                               )}
                             </div>
 
-                            {/* Actions */}
                             <div className="flex items-center space-x-2">
                               <button
-                                onClick={() => {/* Add to wishlist */}}
-                                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                                aria-label="Add to wishlist"
+                                onClick={() => handleSelectItem(itemId)} // Add selection functionality here
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                  selectedItems.includes(itemId) 
+                                    ? 'bg-green-500 text-white hover:bg-green-600' 
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                                aria-label="Select item"
                               >
-                                <Heart className="w-5 h-5" />
+                                {selectedItems.includes(itemId) ? 'Selected' : 'Select'}
                               </button>
                               <button
                                 onClick={() => removeItem(itemId)}
@@ -376,7 +370,6 @@ const CartPage = () => {
                             </div>
                           </div>
 
-                          {/* Quantity Controls */}
                           <div className="flex items-center justify-between mt-4">
                             <div className="flex items-center border border-gray-300 rounded-lg">
                               <button
@@ -398,7 +391,6 @@ const CartPage = () => {
                               </button>
                             </div>
 
-                            {/* Item Total */}
                             <div className="text-right">
                               <p className="text-lg font-semibold text-gray-900">
                                 ${(price * quantity).toFixed(2)}
@@ -414,17 +406,15 @@ const CartPage = () => {
                       </div>
                     </div>
                   );
-                }).filter(Boolean)} {/* Filter out null items */}
+                }).filter(Boolean)}
               </div>
             </div>
           </div>
 
-          {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-4">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Order Summary</h2>
 
-              {/* Coupon Code */}
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Promo Code
@@ -461,10 +451,9 @@ const CartPage = () => {
                 )}
               </div>
 
-              {/* Price Breakdown */}
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-gray-600">
-                  <span>Subtotal ({cartItems.length} items)</span>
+                  <span>Subtotal ({selectedItems.length} selected items)</span>
                   <span>${calculateSubtotal().toFixed(2)}</span>
                 </div>
                 
@@ -493,16 +482,14 @@ const CartPage = () => {
                 </div>
               </div>
 
-              {/* Checkout Button */}
               <button
                 onClick={handleCheckout}
-                disabled={cartItems.length === 0 || updating}
+                disabled={cartItems.length === 0 || updating || selectedItems.length === 0}
                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed mb-4"
               >
-                Proceed to Checkout
+                Proceed to Checkout ({selectedItems.length} items)
               </button>
 
-              {/* Security Features */}
               <div className="space-y-2 text-sm text-gray-600">
                 <div className="flex items-center">
                   <Shield className="w-4 h-4 mr-2" />
@@ -512,13 +499,8 @@ const CartPage = () => {
                   <Truck className="w-4 h-4 mr-2" />
                   <span>Free shipping on orders over $50</span>
                 </div>
-                <div className="flex items-center">
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  <span>Multiple payment options</span>
-                </div>
               </div>
 
-              {/* Continue Shopping */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <Link
                   to="/products"

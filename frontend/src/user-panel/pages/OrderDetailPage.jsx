@@ -112,6 +112,39 @@ const OrderDetailPage = () => {
     }
   };
 
+  // Helper function to format shipping address
+  const formatShippingAddress = (shippingAddress) => {
+    if (!shippingAddress) return 'N/A';
+    
+    // If it's already a string, return it
+    if (typeof shippingAddress === 'string') {
+      return shippingAddress;
+    }
+    
+    // If it's an object, format it nicely
+    if (typeof shippingAddress === 'object') {
+      const { fullName, address, city, zipCode, country, phone } = shippingAddress;
+      const addressParts = [address, city, zipCode, country].filter(Boolean);
+      return addressParts.join(', ');
+    }
+    
+    return 'N/A';
+  };
+
+  // Helper function to get customer info from shipping address
+  const getCustomerInfo = (shippingAddress, fallbackName = 'Customer') => {
+    if (!shippingAddress) return { name: fallbackName, phone: null };
+    
+    if (typeof shippingAddress === 'object') {
+      return {
+        name: shippingAddress.fullName || fallbackName,
+        phone: shippingAddress.phone || null
+      };
+    }
+    
+    return { name: fallbackName, phone: null };
+  };
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text).then(() => {
       alert('Copied to clipboard!');
@@ -181,8 +214,9 @@ const OrderDetailPage = () => {
     );
   }
 
-  const statusConfig = getStatusConfig(order.status);
+  const statusConfig = getStatusConfig(order?.status || 'pending');
   const StatusIcon = statusConfig.icon;
+  const customerInfo = getCustomerInfo(order?.shippingAddress, order?.customerName);
 
   const orderSteps = [
     { name: 'Order Placed', status: 'completed' },
@@ -206,9 +240,9 @@ const OrderDetailPage = () => {
           </button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Order #{order.orderId || order._id.slice(-8)}
+              Order #{order?.orderId || order?._id?.slice(-8) || 'Loading...'}
             </h1>
-            <p className="text-gray-600">Placed on {formatDate(order.createdAt)}</p>
+            <p className="text-gray-600">Placed on {order?.createdAt ? formatDate(order.createdAt) : 'Loading...'}</p>
           </div>
         </div>
 
@@ -224,7 +258,7 @@ const OrderDetailPage = () => {
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">
-                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                      {order?.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Loading...'}
                     </h2>
                     <p className="text-gray-600">{statusConfig.description}</p>
                   </div>
@@ -232,7 +266,7 @@ const OrderDetailPage = () => {
                 
                 <div className="flex items-center space-x-3">
                   <button
-                    onClick={() => copyToClipboard(order.orderId || order._id)}
+                    onClick={() => copyToClipboard(order?.orderId || order?._id || '')}
                     className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
                   >
                     <Copy className="w-4 h-4 mr-1" />
@@ -249,7 +283,7 @@ const OrderDetailPage = () => {
               </div>
 
               {/* Progress Steps */}
-              {order.status !== 'cancelled' && (
+              {order?.status !== 'cancelled' && (
                 <div className="mt-8">
                   <div className="flex items-center justify-between">
                     {orderSteps.map((step, index) => (
@@ -278,13 +312,13 @@ const OrderDetailPage = () => {
               )}
 
               {/* Tracking Info */}
-              {order.status === 'shipped' && order.trackingNumber && (
+              {order?.status === 'shipped' && order?.trackingNumber && (
                 <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Truck className="w-5 h-5 text-blue-600" />
                     <div>
                       <p className="font-medium text-blue-900">Package Tracking</p>
-                      <p className="text-blue-700">Tracking Number: {order.trackingNumber}</p>
+                      <p className="text-blue-700">Tracking Number: {order?.trackingNumber}</p>
                     </div>
                   </div>
                 </div>
@@ -298,7 +332,7 @@ const OrderDetailPage = () => {
               </div>
               
               <div className="divide-y divide-gray-200">
-                {order.items?.map((item, index) => (
+                {order?.items?.map((item, index) => (
                   <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
                     <div className="flex items-start space-x-4">
                       <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
@@ -328,7 +362,7 @@ const OrderDetailPage = () => {
                           <span>Price: ${item.price}</span>
                         </div>
 
-                        {order.status === 'delivered' && (
+                        {order?.status === 'delivered' && (
                           <div className="mt-3">
                             <button className="flex items-center text-sm text-yellow-600 hover:text-yellow-700 font-medium">
                               <Star className="w-4 h-4 mr-1" />
@@ -342,7 +376,7 @@ const OrderDetailPage = () => {
                         <p className="text-lg font-semibold text-gray-900">
                           ${(item.quantity * item.price).toFixed(2)}
                         </p>
-                        {order.status === 'delivered' && (
+                        {order?.status === 'delivered' && (
                           <button
                             onClick={() => apiService.addToCart(item.product._id, item.quantity)}
                             className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -358,18 +392,18 @@ const OrderDetailPage = () => {
             </div>
 
             {/* Delivery Information */}
-            {order.shippingAddress && (
+            {order?.shippingAddress && (
               <div className="bg-white rounded-lg shadow-sm p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Delivery Information</h2>
                 <div className="flex items-start space-x-3">
                   <MapPin className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" />
                   <div>
-                    <p className="font-medium text-gray-900">{order.customerName || 'Customer'}</p>
-                    <p className="text-gray-600 mt-1">{order.shippingAddress}</p>
-                    {order.customerPhone && (
+                    <p className="font-medium text-gray-900">{customerInfo.name}</p>
+                    <p className="text-gray-600 mt-1">{formatShippingAddress(order?.shippingAddress)}</p>
+                    {(customerInfo.phone || order?.customerPhone) && (
                       <div className="flex items-center mt-2 text-sm text-gray-600">
                         <Phone className="w-4 h-4 mr-1" />
-                        {order.customerPhone}
+                        {customerInfo.phone || order?.customerPhone}
                       </div>
                     )}
                   </div>
@@ -386,33 +420,33 @@ const OrderDetailPage = () => {
               
               <div className="space-y-3">
                 <div className="flex justify-between text-gray-600">
-                  <span>Subtotal ({order.items?.length} items)</span>
-                  <span>${(order.totalAmount - (order.shippingCost || 0) - (order.tax || 0)).toFixed(2)}</span>
+                  <span>Subtotal ({order?.items?.length || 0} items)</span>
+                  <span>${((order?.totalAmount || 0) - (order?.shippingCost || 0) - (order?.tax || 0)).toFixed(2)}</span>
                 </div>
                 
-                {order.discount > 0 && (
+                {(order?.discount || 0) > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount</span>
-                    <span>-${order.discount.toFixed(2)}</span>
+                    <span>-${(order?.discount || 0).toFixed(2)}</span>
                   </div>
                 )}
                 
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span>{order.shippingCost > 0 ? `$${order.shippingCost.toFixed(2)}` : 'Free'}</span>
+                  <span>{(order?.shippingCost || 0) > 0 ? `${(order?.shippingCost || 0).toFixed(2)}` : 'Free'}</span>
                 </div>
                 
-                {order.tax > 0 && (
+                {(order?.tax || 0) > 0 && (
                   <div className="flex justify-between text-gray-600">
                     <span>Tax</span>
-                    <span>${order.tax.toFixed(2)}</span>
+                    <span>${(order?.tax || 0).toFixed(2)}</span>
                   </div>
                 )}
                 
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-lg font-semibold text-gray-900">
                     <span>Total</span>
-                    <span>${order.totalAmount.toFixed(2)}</span>
+                    <span>${(order?.totalAmount || 0).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -423,23 +457,23 @@ const OrderDetailPage = () => {
                 <div className="flex items-center space-x-3">
                   <CreditCard className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-600 capitalize">
-                    {order.paymentMethod || 'Credit Card'}
+                    {order?.paymentMethod || 'Credit Card'}
                   </span>
                 </div>
-                {order.paymentStatus && (
+                {order?.paymentStatus && (
                   <div className={`mt-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    order.paymentStatus === 'paid' 
+                    order?.paymentStatus === 'paid' 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-yellow-100 text-yellow-800'
                   }`}>
-                    {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
+                    {order?.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
                   </div>
                 )}
               </div>
 
               {/* Actions */}
               <div className="mt-6 space-y-3">
-                {order.status === 'delivered' && (
+                {order?.status === 'delivered' && (
                   <button
                     onClick={handleReorder}
                     className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -449,7 +483,7 @@ const OrderDetailPage = () => {
                   </button>
                 )}
 
-                {['pending', 'confirmed'].includes(order.status) && (
+                {['pending', 'confirmed'].includes(order?.status) && (
                   <button className="w-full flex items-center justify-center px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
                     <XCircle className="w-4 h-4 mr-2" />
                     Cancel Order
@@ -494,25 +528,25 @@ const OrderDetailPage = () => {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">Order Placed</p>
-                    <p className="text-sm text-gray-600">{formatDate(order.createdAt)}</p>
+                    <p className="text-sm text-gray-600">{formatDate(order?.createdAt)}</p>
                     <p className="text-sm text-gray-500 mt-1">Your order has been received and is being processed.</p>
                   </div>
                 </div>
 
-                {order.status !== 'pending' && (
+                {order?.status !== 'pending' && (
                   <div className="flex items-start space-x-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="w-4 h-4 text-blue-600" />
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">Order Confirmed</p>
-                      <p className="text-sm text-gray-600">{formatDate(order.updatedAt || order.createdAt)}</p>
+                      <p className="text-sm text-gray-600">{formatDate(order?.updatedAt || order?.createdAt)}</p>
                       <p className="text-sm text-gray-500 mt-1">We've confirmed your order and payment.</p>
                     </div>
                   </div>
                 )}
 
-                {['processing', 'shipped', 'delivered'].includes(order.status) && (
+                {['processing', 'shipped', 'delivered'].includes(order?.status) && (
                   <div className="flex items-start space-x-3">
                     <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <Package className="w-4 h-4 text-purple-600" />
@@ -520,14 +554,14 @@ const OrderDetailPage = () => {
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">Order Processing</p>
                       <p className="text-sm text-gray-600">
-                        {order.processingDate ? formatDate(order.processingDate) : 'In progress'}
+                        {order?.processingDate ? formatDate(order.processingDate) : 'In progress'}
                       </p>
                       <p className="text-sm text-gray-500 mt-1">Your order is being prepared for shipment.</p>
                     </div>
                   </div>
                 )}
 
-                {['shipped', 'delivered'].includes(order.status) && (
+                {['shipped', 'delivered'].includes(order?.status) && (
                   <div className="flex items-start space-x-3">
                     <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <Truck className="w-4 h-4 text-indigo-600" />
@@ -535,17 +569,17 @@ const OrderDetailPage = () => {
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">Order Shipped</p>
                       <p className="text-sm text-gray-600">
-                        {order.shippedDate ? formatDate(order.shippedDate) : 'Recently shipped'}
+                        {order?.shippedDate ? formatDate(order.shippedDate) : 'Recently shipped'}
                       </p>
                       <p className="text-sm text-gray-500 mt-1">
                         Your package is on the way.
-                        {order.trackingNumber && ` Tracking: ${order.trackingNumber}`}
+                        {order?.trackingNumber && ` Tracking: ${order.trackingNumber}`}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {order.status === 'delivered' && (
+                {order?.status === 'delivered' && (
                   <div className="flex items-start space-x-3">
                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="w-4 h-4 text-green-600" />
@@ -553,14 +587,14 @@ const OrderDetailPage = () => {
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">Order Delivered</p>
                       <p className="text-sm text-gray-600">
-                        {order.deliveredDate ? formatDate(order.deliveredDate) : 'Recently delivered'}
+                        {order?.deliveredDate ? formatDate(order.deliveredDate) : 'Recently delivered'}
                       </p>
                       <p className="text-sm text-gray-500 mt-1">Your package has been delivered successfully.</p>
                     </div>
                   </div>
                 )}
 
-                {order.status === 'cancelled' && (
+                {order?.status === 'cancelled' && (
                   <div className="flex items-start space-x-3">
                     <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
                       <XCircle className="w-4 h-4 text-red-600" />
@@ -568,11 +602,11 @@ const OrderDetailPage = () => {
                     <div className="flex-1">
                       <p className="font-medium text-gray-900">Order Cancelled</p>
                       <p className="text-sm text-gray-600">
-                        {order.cancelledDate ? formatDate(order.cancelledDate) : 'Recently cancelled'}
+                        {order?.cancelledDate ? formatDate(order.cancelledDate) : 'Recently cancelled'}
                       </p>
                       <p className="text-sm text-gray-500 mt-1">
                         This order has been cancelled. 
-                        {order.cancellationReason && ` Reason: ${order.cancellationReason}`}
+                        {order?.cancellationReason && ` Reason: ${order.cancellationReason}`}
                       </p>
                     </div>
                   </div>

@@ -84,11 +84,11 @@ const Header = () => {
   ];
 
   return (
-    <header className={`sticky top-0 z-50 transition-all duration-300 ${
+    <header className={`sticky top-0 z-10 transition-all duration-300 ${
       isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white shadow-sm'
     }`}>
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm py-2 px-4 text-center">
+      <div className="bg-gradient-to-r from-blue-600  to-purple-600 text-white text-sm py-2 px-4 text-center">
         <div className="flex items-center justify-center gap-2">
           <MapPin className="w-4 h-4" />
           <span> 24/7 Support Available</span>

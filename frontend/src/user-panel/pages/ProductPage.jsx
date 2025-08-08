@@ -216,11 +216,11 @@ const ProductPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Images */}
           <div className="space-y-4">
-            <div className="relative group bg-gray-50 rounded-2xl overflow-hidden">
+            <div className="relative group w-full lg:w-[500px] h-full lg:h-[500px]  bg-gray-50 rounded-2xl overflow-hidden">
               <img
                 src={imageError ? "/placeholder-product.jpg" : images[currentImageIndex]}
                 alt={product.title}
-                className="w-full h-96 lg:h-[500px] object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full lg:w-[500px] h-full lg:h-[500px] object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={() => setImageError(true)}
               />
               {discount > 0 && (
@@ -296,36 +296,23 @@ const ProductPage = () => {
               {product.companyName && (
                 <p className="text-lg text-gray-600">{product.companyName}</p>
               )}
-              <div className="flex items-center space-x-2 mt-2">
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400" />
-                  ))}
-                </div>
-                <span className="text-gray-600">(4.8)</span>
-                <span className="text-blue-600 hover:underline cursor-pointer">267 reviews</span>
-              </div>
             </div>
 
             <div>
               <div className="flex items-center space-x-4">
-                <span className="text-3xl font-bold">${finalPrice}</span>
+                <span className="text-3xl font-bold">৳{finalPrice}</span>
                 {discount > 0 && (
                   <>
                     <span className="text-xl text-gray-500 line-through">
-                      ${product.sellingPrice}
+                      ৳{product.sellingPrice}
                     </span>
                     <span className="bg-green-100 text-green-800 px-3 py-1 rounded-md text-sm font-semibold">
-                      Save ${(product.sellingPrice - finalPrice).toFixed(2)}
+                      Save ৳{(product.sellingPrice - finalPrice).toFixed(2)}
                     </span>
                   </>
                 )}
               </div>
-              {discount > 0 && (
-                <p className="text-green-600">
-                  🎉 You save ${(product.sellingPrice - finalPrice).toFixed(2)} ({discount}% off)!
-                </p>
-              )}
+             
             </div>
 
             <div className="space-y-2">
@@ -415,7 +402,7 @@ const ProductPage = () => {
                         : "Add to Cart"}
                     </span>
                   </button>
-                  <button
+                  {/* <button
                     onClick={handleWishlistToggle}
                     className={`p-3 rounded-lg border-2 transition ${
                       isWishlisted
@@ -424,7 +411,7 @@ const ProductPage = () => {
                     }`}
                   >
                     <Heart className="w-5 h-5" />
-                  </button>
+                  </button> */}
                   <button
                     onClick={handleShare}
                     className="p-3 rounded-lg border border-gray-300 hover:border-gray-400"
@@ -437,7 +424,7 @@ const ProductPage = () => {
                   <div className="flex items-center space-x-2">
                     <Truck className="w-4 h-4 text-green-600" />
                     <span>
-                      <strong>Free delivery</strong> on orders over $50
+                      <strong>Free delivery</strong> on orders over ৳50
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -485,13 +472,13 @@ const ProductPage = () => {
               {[
                 { id: "description", label: "Description" },
                 { id: "specifications", label: "Specifications" },
-                { id: "reviews", label: `Reviews (${product.reviews?.length || 0})` },
-                { id: "shipping", label: "Shipping & Returns" }
+                // { id: "reviews", label: `Reviews (${product.reviews?.length || 0})` },
+               
               ].map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setSelectedTab(tab.id)}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-4 px-1 border-b-2 font-medium ${
                     selectedTab === tab.id
                       ? "border-blue-500 text-blue-600"
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -570,7 +557,7 @@ const ProductPage = () => {
                 <div>
                   <h4 className="font-semibold mb-2">Shipping</h4>
                   <p>
-                    Free standard shipping on orders over $50. Orders
+                    Free standard shipping on orders over ৳500. Orders
                     processed within 1–2 business days; delivery in 5–7 days.
                   </p>
                 </div>

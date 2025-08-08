@@ -19,23 +19,126 @@ const calculateDeliveryCharge = (city, subtotal) => {
 // @route   POST /api/orders/place
 // @desc    Place a new order
 // @access  Private (User)
-exports.placeOrder = async (req, res) => {
-  const userId = req.user.userId;
-  const { 
-    items,
-    shippingAddress, 
-    paymentMethod,
-    notes,
-    extraCharge = 0
-  } = req.body;
+// exports.placeOrder = async (req, res) => {
+//   const userId = req.user.userId;
+//   const { 
+//     items,
+//     shippingAddress, 
+//     paymentMethod,
+//     notes,
+//     extraCharge = 0
+//   } = req.body;
 
+//   try {
+//     // Validate shipping address
+//     if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || 
+//         !shippingAddress.address || !shippingAddress.city) {
+//       return res.status(400).json({ 
+//         msg: 'Please provide complete shipping address' 
+//       });
+//     }
+
+//     // Validate items
+//     if (!items || items.length === 0) {
+//       return res.status(400).json({ msg: 'No items in order' });
+//     }
+
+//     // Calculate subtotal and validate products
+//     let subtotal = 0;
+//     const orderItems = [];
+
+//     for (const item of items) {
+//       const product = await Product.findById(item.productId);
+//       if (!product) {
+//         return res.status(404).json({ 
+//           msg: `Product not found: ${item.productId}` 
+//         });
+//       }
+
+//       // Check stock
+//       if (product.stock < item.quantity) {
+//         return res.status(400).json({ 
+//           msg: `Insufficient stock for ${product.title}` 
+//         });
+//       }
+
+//       const itemTotal = product.sellingPrice * item.quantity;
+//       subtotal += itemTotal;
+
+//       orderItems.push({
+//         productId: product._id,
+//         title: product.title,
+//         thumbnail: product.thumbnail,
+//         quantity: item.quantity,
+//         price: product.sellingPrice,
+//         totalPrice: itemTotal
+//       });
+
+//       // Update product stock
+//       product.stock -= item.quantity;
+//       product.soldCount += item.quantity;
+//       await product.save();
+//     }
+
+//     // Calculate charges
+//     const deliveryCharge = calculateDeliveryCharge(shippingAddress.city, subtotal);
+//     const totalAmount = subtotal + deliveryCharge + extraCharge;
+
+//     // Create order
+//     const newOrder = new Order({
+//       userId,
+//       items: orderItems,
+//       subtotal,
+//       deliveryCharge,
+//       extraCharge,
+//       totalAmount,
+//       shippingAddress,
+//       paymentMethod,
+//       paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'unpaid',
+//       notes
+//     });
+
+//     await newOrder.save();
+
+//     // Add order to user's orders
+//     await User.findByIdAndUpdate(userId, {
+//       $push: { orders: newOrder._id }
+//     });
+
+//     // Clear user's cart if order was from cart
+//     if (req.body.fromCart) {
+//       await Cart.findOneAndUpdate(
+//         { userId, status: 'active' },
+//         { status: 'completed', items: [] }
+//       );
+//     }
+
+//     res.status(201).json({ 
+//       success: true,
+//       msg: 'Order placed successfully', 
+//       order: newOrder 
+//     });
+
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ msg: 'Server error while placing order' });
+//   }
+// };
+
+
+
+
+
+exports.placeOrder = async (req, res) => {
   try {
+    const { items, shippingAddress, paymentMethod, transactionId, notes, extraCharge = 0 } = req.body;
+    console.log('Request data:', req.body);  // Log request data
+
+    const userId = req.user.userId;
+
     // Validate shipping address
-    if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || 
-        !shippingAddress.address || !shippingAddress.city) {
-      return res.status(400).json({ 
-        msg: 'Please provide complete shipping address' 
-      });
+    if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city) {
+      return res.status(400).json({ msg: 'Please provide complete shipping address' });
     }
 
     // Validate items
@@ -43,28 +146,26 @@ exports.placeOrder = async (req, res) => {
       return res.status(400).json({ msg: 'No items in order' });
     }
 
-    // Calculate subtotal and validate products
     let subtotal = 0;
     const orderItems = [];
 
+    // Process each item
     for (const item of items) {
       const product = await Product.findById(item.productId);
       if (!product) {
-        return res.status(404).json({ 
-          msg: `Product not found: ${item.productId}` 
-        });
+        return res.status(404).json({ msg: `Product not found: ${item.productId}` });
       }
 
-      // Check stock
+      // Check if stock is available
       if (product.stock < item.quantity) {
-        return res.status(400).json({ 
-          msg: `Insufficient stock for ${product.title}` 
-        });
+        return res.status(400).json({ msg: `Insufficient stock for ${product.title}` });
       }
 
+      // Calculate total price for the item
       const itemTotal = product.sellingPrice * item.quantity;
       subtotal += itemTotal;
 
+      // Push the item data into the orderItems array
       orderItems.push({
         productId: product._id,
         title: product.title,
@@ -80,11 +181,10 @@ exports.placeOrder = async (req, res) => {
       await product.save();
     }
 
-    // Calculate charges
-    const deliveryCharge = calculateDeliveryCharge(shippingAddress.city, subtotal);
+    const deliveryCharge = 60; // Example delivery charge, modify as needed
     const totalAmount = subtotal + deliveryCharge + extraCharge;
 
-    // Create order
+    // Create a new order
     const newOrder = new Order({
       userId,
       items: orderItems,
@@ -94,36 +194,47 @@ exports.placeOrder = async (req, res) => {
       totalAmount,
       shippingAddress,
       paymentMethod,
-      paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'unpaid',
+      paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'paid',
+      paymentDetails: {
+        transactionId,
+        paidAt: new Date(),
+        amount: totalAmount
+      },
       notes
     });
 
+    // Save the new order
     await newOrder.save();
+    await User.findByIdAndUpdate(userId, { $push: { orders: newOrder._id } });
 
-    // Add order to user's orders
-    await User.findByIdAndUpdate(userId, {
-      $push: { orders: newOrder._id }
-    });
+    // If the order was placed from the cart, remove ordered items from the user's cart
+   if (req.body.fromCart) {
+  const orderedProductIds = items.map(item => item.productId);
 
-    // Clear user's cart if order was from cart
-    if (req.body.fromCart) {
-      await Cart.findOneAndUpdate(
-        { userId, status: 'active' },
-        { status: 'completed', items: [] }
-      );
-    }
+  // Log the ordered product IDs
+  console.log('Ordered product IDs:', orderedProductIds);
 
-    res.status(201).json({ 
-      success: true,
-      msg: 'Order placed successfully', 
-      order: newOrder 
-    });
+  // Find and update the cart
+  const updatedCart = await Cart.findOneAndUpdate(
+    { userId, status: 'active' },
+    { 
+      $pull: { items: { productId: { $in: orderedProductIds } } }
+    },
+    { new: true }  // Ensure the updated cart is returned
+  );
 
+  // Log the updated cart after pulling items
+  console.log('Updated Cart after pulling items:', updatedCart);
+}
+
+    // Respond with success message
+    res.status(201).json({ success: true, msg: 'Order placed successfully', order: newOrder });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error while placing order' });
+    console.error('Error placing order:', err); // Detailed logging for error
+    res.status(500).json({ msg: 'Server error while placing order', error: err.message });
   }
 };
+
 
 // @route   GET /api/orders/my
 // @desc    Get current user's orders

@@ -176,6 +176,32 @@ const OrdersPage = () => {
     }
   };
 
+  // Helper function to format shipping address
+  const formatShippingAddress = (shippingAddress) => {
+    if (!shippingAddress) return 'N/A';
+    
+    // If it's already a string, return it
+    if (typeof shippingAddress === 'string') {
+      return shippingAddress;
+    }
+    
+    // If it's an object, format it nicely
+    if (typeof shippingAddress === 'object') {
+      const { fullName, address, city, zipCode, country } = shippingAddress;
+      const parts = [
+        fullName,
+        address,
+        city,
+        zipCode,
+        country
+      ].filter(Boolean); // Remove any undefined/null values
+      
+      return parts.join(', ');
+    }
+    
+    return 'N/A';
+  };
+
   const handleReorder = async (order) => {
     try {
       // Add all items from the order back to cart
@@ -338,13 +364,13 @@ const OrdersPage = () => {
                           </div>
                           
                           <div className="flex items-center space-x-2">
-                            <button
+                            {/* <button
                               onClick={() => navigate(`/order/${order._id}`)}
                               className="flex items-center px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium"
                             >
                               <Eye className="w-4 h-4 mr-1" />
                               View Details
-                            </button>
+                            </button> */}
                             
                             {order.status === 'delivered' && (
                               <button
@@ -356,13 +382,13 @@ const OrdersPage = () => {
                               </button>
                             )}
                             
-                            <button
+                            {/* <button
                               onClick={() => downloadInvoice(order._id)}
                               className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm font-medium"
                             >
                               <Download className="w-4 h-4 mr-1" />
                               Invoice
-                            </button>
+                            </button> */}
                           </div>
                         </div>
 
@@ -426,7 +452,7 @@ const OrdersPage = () => {
                             </div>
                           ))}
                           
-                          {order.items?.length > 3 && (
+                          {/* {order.items?.length > 3 && (
                             <button
                               onClick={() => navigate(`/order/${order._id}`)}
                               className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -434,7 +460,7 @@ const OrdersPage = () => {
                               View all {order.items.length} items
                               <ChevronRight className="w-4 h-4 ml-1" />
                             </button>
-                          )}
+                          )} */}
                         </div>
 
                         {/* Delivery Address */}
@@ -444,7 +470,7 @@ const OrdersPage = () => {
                               <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
                               <div>
                                 <p className="text-sm font-medium text-gray-700">Delivery Address</p>
-                                <p className="text-sm text-gray-600">{order.shippingAddress}</p>
+                                <p className="text-sm text-gray-600">{formatShippingAddress(order.shippingAddress)}</p>
                               </div>
                             </div>
                           </div>
@@ -453,12 +479,12 @@ const OrdersPage = () => {
                         {/* Order Actions */}
                         <div className="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between">
                           <div className="flex items-center space-x-4">
-                            {order.status === 'delivered' && (
+                            {/* {order.status === 'delivered' && (
                               <button className="flex items-center text-sm text-yellow-600 hover:text-yellow-700 font-medium">
                                 <Star className="w-4 h-4 mr-1" />
                                 Rate & Review
                               </button>
-                            )}
+                            )} */}
                             
                             {['pending', 'confirmed'].includes(order.status) && (
                               <button className="flex items-center text-sm text-red-600 hover:text-red-700 font-medium">

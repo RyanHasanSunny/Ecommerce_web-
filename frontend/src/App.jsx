@@ -24,6 +24,7 @@ const LoginPage       = lazy(() => import('./user-panel/pages/Login-page'));
 const SignupPage      = lazy(() => import('./user-panel/pages/Signup_page'));
 const ProfilePage     = lazy(() => import('./user-panel/pages/profile_page'));
 const CartPage        = lazy(() => import('./user-panel/pages/CartPage'));
+const CheckoutPage    = lazy(() => import('./user-panel/components/paymentModal/PaymentModal'));
 const OrdersPage      = lazy(() => import('./user-panel/pages/OrderPage'));
 const OrderDetailPage = lazy(() => import('./user-panel/pages/OrderDetailPage'));
 
@@ -58,6 +59,7 @@ function App() {
                 <Route path="product/:productId" element={<ProductPage />} />
                 <Route path="profile"  element={<ProfilePage />} />
                 <Route path="cart"     element={<CartPage />} />
+                <Route path="checkout" element={<CheckoutPage />} />
                 <Route path="orders"   element={<OrdersPage />} />
                 <Route path="order/:orderId" element={<OrderDetailPage />} />
                 <Route path="wishlist" element={<div className="p-8 text-center">Wishlist coming soon!</div>} />

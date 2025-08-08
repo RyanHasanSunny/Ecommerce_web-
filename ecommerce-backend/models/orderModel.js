@@ -3,16 +3,13 @@ const mongoose = require('mongoose');
 const orderSchema = new mongoose.Schema({
   orderId: {
     type: String,
-    required: true,
     unique: true
   },
-  
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-
   items: [{
     productId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -35,33 +32,12 @@ const orderSchema = new mongoose.Schema({
       required: true
     }
   }],
-
   // Pricing details
-  subtotal: {
-    type: Number,
-    required: true
-  },
-  
-  deliveryCharge: {
-    type: Number,
-    required: true,
-    default: 50 // Default delivery charge
-  },
-  
-  extraCharge: {
-    type: Number,
-    default: 0
-  },
-  
-  discount: {
-    type: Number,
-    default: 0
-  },
-  
-  totalAmount: {
-    type: Number,
-    required: true
-  },
+  subtotal: { type: Number, required: true },
+  deliveryCharge: { type: Number, required: true, default: 50 },
+  extraCharge: { type: Number, default: 0 },
+  discount: { type: Number, default: 0 },
+  totalAmount: { type: Number, required: true },
 
   // Order status
   status: {
@@ -73,14 +49,14 @@ const orderSchema = new mongoose.Schema({
   // Payment details
   paymentMethod: {
     type: String,
-    enum: ['cod', 'online', 'card'],
+    enum: ['cod', 'online', 'card', 'bkash', 'nagad', 'rocket'],
     required: true
   },
   
   paymentStatus: {
     type: String,
     enum: ['unpaid', 'paid', 'refunded'],
-    default: 'unpaid'
+    default: 'paid'
   },
   
   paymentDetails: {
@@ -91,29 +67,14 @@ const orderSchema = new mongoose.Schema({
 
   // Shipping details
   shippingAddress: {
-    fullName: {
-      type: String,
-      required: true
-    },
-    phone: {
-      type: String,
-      required: true
-    },
+    fullName: { type: String, required: true },
+    phone: { type: String, required: true },
     email: String,
-    address: {
-      type: String,
-      required: true
-    },
-    city: {
-      type: String,
-      required: true
-    },
+    address: { type: String, required: true },
+    city: { type: String, required: true },
     state: String,
     zipCode: String,
-    country: {
-      type: String,
-      default: 'Bangladesh'
-    }
+    country: { type: String, default: 'Bangladesh' }
   },
 
   // Tracking
@@ -124,22 +85,17 @@ const orderSchema = new mongoose.Schema({
   // Status history
   statusHistory: [{
     status: String,
-    date: {
-      type: Date,
-      default: Date.now
-    },
+    date: { type: Date, default: Date.now },
     note: String,
-    updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   }],
 
   // Additional info
   notes: String,
   cancelReason: String
-
 }, { timestamps: true });
+
+
 
 // Generate order ID before saving
 orderSchema.pre('save', async function(next) {
