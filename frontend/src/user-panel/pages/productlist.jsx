@@ -503,19 +503,19 @@ const ProductList = () => {
                 )}
               </div>
             ) : (
-              <div className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
-                  : 'grid-cols-1'
-              }`}>
-                {processedProducts.map(product => (
-                  <ProductCard
-                    key={product._id}
-                    product={product}
-                    viewMode={viewMode}
-                  />
-                ))}
-              </div>
+             <div className="flex flex-wrap justify-center gap-8">
+        {products.length === 0 ? (
+          <div className="col-span-full text-center py-16">
+            <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-xl text-gray-500">No products available at the moment.</p>
+            <p className="text-gray-400">Check back soon for amazing deals!</p>
+          </div>
+        ) : (
+          products.map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))
+        )}
+      </div>
             )}
 
             {/* Load More / Pagination (for future implementation) */}

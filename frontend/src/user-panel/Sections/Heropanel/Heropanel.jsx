@@ -61,8 +61,8 @@ const HeroPanel = ({ heroData }) => {
   return (
     <div className="w-full h-full">
       {/* Hero Carousel */}
-      <div className="relative w-full  overflow-hidden"
-      style={{ aspectRatio: "18 / 6" }}>
+      <div className="relative w-full rounded-xl  overflow-hidden"
+      style={{ aspectRatio: "16 / 6" }}>
         {/* Slides */}
         <div
           className="flex transition-transform duration-500 ease-in-out h-full"

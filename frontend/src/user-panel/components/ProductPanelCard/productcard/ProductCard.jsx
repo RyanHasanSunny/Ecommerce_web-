@@ -70,7 +70,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
         onClick={handleProductClick}
       >
         {/* Image */}
-        <div className="w-48 h-48 flex-shrink-0 relative">
+        <div className="w-64 h-64 flex-shrink-0 relative">
           <img
             src={imageError ? '/placeholder-product.jpg' : product.thumbnail}
             alt={product.title}
