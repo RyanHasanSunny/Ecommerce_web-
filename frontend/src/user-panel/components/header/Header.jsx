@@ -84,7 +84,7 @@ const Header = () => {
   ];
 
   return (
-    <header className={`sticky top-0 z-10 transition-all duration-300 ${
+    <header className={` top-0 z-10 transition-all duration-300 ${
       isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white shadow-sm'
     }`}>
       {/* Top Banner */}

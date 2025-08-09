@@ -22,8 +22,14 @@ const HeroPanel = ({ heroData }) => {
     }
   ];
 
+  // Text slides for continuous animation
+  const textSlides = [
+    "🎉 Summer Sale - Up to 50% OFF on all products!",
+    "🚚 Free Shipping on orders above $50",
+    
+  ];
   // Use backend data if available, otherwise use default slides
-  const slides = heroData && heroData.length > 0 
+  const originalSlides = heroData && heroData.length > 0 
     ? heroData.map((item, index) => ({
         id: index + 1,
         image: item.imageUrl,
@@ -31,7 +37,15 @@ const HeroPanel = ({ heroData }) => {
       }))
     : defaultSlides;
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Create infinite slides by duplicating first and last slides
+  const slides = [
+    originalSlides[originalSlides.length - 1], // Last slide at beginning
+    ...originalSlides,
+    originalSlides[0] // First slide at end
+  ];
+
+  const [currentIndex, setCurrentIndex] = useState(0); // Start at first real slide
+  const [currentIndex1, setCurrentIndex1] = useState(1); // Start at first real slide
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,14 +53,43 @@ const HeroPanel = ({ heroData }) => {
   const nextSlide = useCallback(() => {
     if (isTransitioning) return;
     setIsTransitioning(true);
-    setCurrentIndex((prev) => (prev + 1) % slides.length);
+    
+    setCurrentIndex((prev) => {
+      const newIndex = prev + 1;
+      if (newIndex === slides.length - 1) {
+        setTimeout(() => {
+          setCurrentIndex(1);
+        }, 500);
+      }
+      return newIndex;
+    });
+    
+    setCurrentIndex1((prev) => {
+      const newIndex = prev + 1;
+      if (newIndex === slides.length - 1) {
+        setTimeout(() => {
+          setCurrentIndex1(1);
+        }, 500);
+      }
+      return newIndex;
+    });
+    
     setTimeout(() => setIsTransitioning(false), 500);
   }, [slides.length, isTransitioning]);
 
   const goToSlide = (index) => {
-    if (isTransitioning || index === currentIndex) return;
+    const realIndex = index + 1; // +1 because of duplicate at beginning
+    if (isTransitioning || realIndex === currentIndex) return;
     setIsTransitioning(true);
-    setCurrentIndex(index);
+    setCurrentIndex(realIndex);
+    setTimeout(() => setIsTransitioning(false), 500);
+  };
+
+  const goToSlide1 = (index) => {
+    const realIndex = index + 1; // +1 because of duplicate at beginning
+    if (isTransitioning || realIndex === currentIndex1) return;
+    setIsTransitioning(true);
+    setCurrentIndex1(realIndex);
     setTimeout(() => setIsTransitioning(false), 500);
   };
 
@@ -56,20 +99,30 @@ const HeroPanel = ({ heroData }) => {
     return () => clearInterval(interval);
   }, [nextSlide, isAutoPlaying]);
 
+  // Get the real index for indicators (excluding duplicates)
+  const getRealIndex = (index) => {
+    if (index === 0) return originalSlides.length - 1;
+    if (index === slides.length - 1) return 0;
+    return index - 1;
+  };
+
   const currentSlide = slides[currentIndex];
 
   return (
-    <div className="w-full h-full">
+    <div className="w- flex flex-wrap justify-center gap-6 h-full">
       {/* Hero Carousel */}
-      <div className="relative w-full rounded   overflow-hidden"
+      <div className="relative w-8xl  overflow-hidden"
       style={{ aspectRatio: "16 / 6" }}>
         {/* Slides */}
         <div
           className="flex transition-transform duration-500 ease-in-out h-full"
-          style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          style={{ 
+            transform: `translateX(-${currentIndex * 100}%)`,
+            transition: isTransitioning ? 'transform 0.5s ease-in-out' : 'none'
+          }}
         >
-          {slides.map((slide) => (
-            <div key={slide.id} className="relative w-full h-full flex-shrink-0">
+          {slides.map((slide, slideIndex) => (
+            <div key={`${slide.id}-${slideIndex}`} className="relative w-full h-full flex-shrink-0">
               {/* Background Image */}
               <img
                 src={slide.image}
@@ -77,18 +130,21 @@ const HeroPanel = ({ heroData }) => {
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
+              
+              {/* Overlay Content */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
             </div>
           ))}
         </div>
 
         {/* Slide Indicators */}
-        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {slides.map((_, index) => (
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
+          {originalSlides.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                index === currentIndex 
+              className={`w-1 h-1 rounded-full transition-all duration-200 ${
+                index === getRealIndex(currentIndex)
                   ? 'bg-white scale-110' 
                   : 'bg-white/50 hover:bg-white/70'
               }`}
@@ -97,6 +153,34 @@ const HeroPanel = ({ heroData }) => {
           ))}
         </div>
       </div>
+       {/* Sliding Text Banner */}
+        <div className=" w-full bg-gray-200 overflow-hidden">
+          <div className="relative">
+            <div className="animate-slide-right-to-left whitespace-nowrap">
+              {textSlides.map((text, index) => (
+                <span key={index} className="inline-block px-8 text-black font-semibold text-sm m:text-lg ">
+                  {text}
+                </span>
+              ))}
+            
+            </div>
+          </div>
+        </div>
+      
+      <style jsx>{`
+        @keyframes slide-right-to-left {
+          0% {
+            transform: translateX(100%);
+          }
+          100% {
+            transform: translateX(-100%);
+          }
+        }
+        
+        .animate-slide-right-to-left {
+          animation: slide-right-to-left 20s linear infinite;
+        }
+      `}</style>
     </div>
   );
 };

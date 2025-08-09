@@ -11,7 +11,7 @@ const calculateDeliveryCharge = (city, subtotal) => {
   }
   // Outside Dhaka
   return 120;
-  
+
   // You can also add free delivery for orders above certain amount
   // if (subtotal > 5000) return 0;
 };
@@ -25,15 +25,15 @@ const calculateOrderRevenue = (order) => {
     // Calculate based on actual product data if available
     if (item.productId) {
       const quantity = item.quantity;
-      
+
       // Selling price total (original selling price × quantity)
       sellingPriceTotal += (item.productId.sellingPrice || item.price) * quantity;
-      
+
       // Offer price total (if offer price exists)
       if (item.productId.offerPrice) {
         offerPriceTotal += item.productId.offerPrice * quantity;
       }
-      
+
       // Profit calculation (selling price - cost price) × quantity
       if (item.productId.profit) {
         profitTotal += item.productId.profit * quantity;
@@ -159,10 +159,10 @@ exports.placeOrder = async (req, res) => {
       );
     }
 
-    res.status(201).json({ 
-      success: true, 
-      msg: 'Order placed successfully', 
-      order: newOrder 
+    res.status(201).json({
+      success: true,
+      msg: 'Order placed successfully',
+      order: newOrder
     });
   } catch (err) {
     console.error('Error placing order:', err);
@@ -179,7 +179,7 @@ exports.getUserOrders = async (req, res) => {
     const orders = await Order.find({ userId: req.user.userId })
       .populate('items.productId', 'title thumbnail')
       .sort({ createdAt: -1 });
-    
+
     res.json({
       success: true,
       count: orders.length,
@@ -196,12 +196,12 @@ exports.getUserOrders = async (req, res) => {
 // @access  Private (User)
 exports.getUserOrderById = async (req, res) => {
   try {
-    const order = await Order.findOne({ 
+    const order = await Order.findOne({
       _id: req.params.orderId,
-      userId: req.user.userId 
+      userId: req.user.userId
     })
-    .populate('items.productId', 'title thumbnail companyName')
-    .populate('userId', 'name email');
+      .populate('items.productId', 'title thumbnail companyName')
+      .populate('userId', 'name email');
 
     if (!order) {
       return res.status(404).json({ msg: 'Order not found' });
@@ -227,7 +227,7 @@ exports.getAllOrders = async (req, res) => {
     }
 
     const { status, paymentStatus, page = 1, limit = 10 } = req.query;
-    
+
     const filter = {};
     if (status) filter.status = status;
     if (paymentStatus) filter.paymentStatus = paymentStatus;
@@ -344,12 +344,19 @@ exports.updateOrderStatus = async (req, res) => {
       // Restore product stock
       for (const item of order.items) {
         await Product.findByIdAndUpdate(item.productId, {
-          $inc: { 
+          $inc: {
             stock: item.quantity,
             soldCount: -item.quantity
           }
         });
+        await Sell.findByIdAndUpdate(order.sellId, {
+          $inc: {
+            totalSell: -order.totalAmount
+          }
+        });
       }
+      // Restore sell revienew 
+
     }
 
     // Update tracking info if provided
@@ -358,10 +365,10 @@ exports.updateOrderStatus = async (req, res) => {
 
     await order.save();
 
-    res.json({ 
+    res.json({
       success: true,
-      msg: 'Order status updated successfully', 
-      order 
+      msg: 'Order status updated successfully',
+      order
     });
   } catch (err) {
     console.error(err);
@@ -388,7 +395,7 @@ exports.updatePaymentStatus = async (req, res) => {
     }
 
     order.paymentStatus = paymentStatus;
-    
+
     if (paymentStatus === 'paid') {
       order.paymentDetails = {
         transactionId: transactionId || 'MANUAL',
@@ -406,10 +413,10 @@ exports.updatePaymentStatus = async (req, res) => {
 
     await order.save();
 
-    res.json({ 
+    res.json({
       success: true,
-      msg: 'Payment status updated successfully', 
-      order 
+      msg: 'Payment status updated successfully',
+      order
     });
   } catch (err) {
     console.error(err);
@@ -464,7 +471,7 @@ exports.getOrderStats = async (req, res) => {
     // Today's stats
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const todayOrders = await Order.countDocuments({
       createdAt: { $gte: today }
     });
@@ -489,8 +496,8 @@ exports.getOrderStats = async (req, res) => {
     const todayData = todayRevenue[0] || {};
 
     // Calculate profit margin
-    const profitMargin = baseStats.totalRevenue > 0 
-      ? (baseStats.totalProfit / baseStats.totalRevenue) * 100 
+    const profitMargin = baseStats.totalRevenue > 0
+      ? (baseStats.totalProfit / baseStats.totalRevenue) * 100
       : 0;
 
     res.json({

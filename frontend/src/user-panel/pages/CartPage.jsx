@@ -241,7 +241,7 @@ const CartPage = () => {
   return (
     <div className="min-h-screen item-center bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center mb-8">
+        <div className="flex items-center  justify-between  mb-8">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
@@ -319,15 +319,15 @@ const CartPage = () => {
 
                               <div className="flex items-center space-x-2 mb-3">
                                 <span className="text-lg font-semibold text-gray-900">
-                                  ${price.toFixed(2)}
+                                   ৳{price.toFixed(2)}
                                 </span>
                                 {hasDiscount && (
                                   <>
                                     <span className="text-sm text-gray-500 line-through">
-                                      ${originalPrice.toFixed(2)}
+                                      ৳{originalPrice.toFixed(2)}
                                     </span>
                                     <span className="text-sm text-green-600 font-medium">
-                                      Save ${(originalPrice - price).toFixed(2)}
+                                      Save ৳{(originalPrice - price).toFixed(2)}
                                     </span>
                                   </>
                                 )}
@@ -393,11 +393,11 @@ const CartPage = () => {
 
                             <div className="text-right">
                               <p className="text-lg font-semibold text-gray-900">
-                                ${(price * quantity).toFixed(2)}
+                              ৳{(price * quantity).toFixed(2)}
                               </p>
                               {hasDiscount && (
                                 <p className="text-sm text-gray-500">
-                                  You save ${((originalPrice - price) * quantity).toFixed(2)}
+                                  You save  ৳{((originalPrice - price) * quantity).toFixed(2)}
                                 </p>
                               )}
                             </div>
@@ -454,13 +454,13 @@ const CartPage = () => {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({selectedItems.length} selected items)</span>
-                  <span>${calculateSubtotal().toFixed(2)}</span>
+                  <span> ৳{calculateSubtotal().toFixed(2)}</span>
                 </div>
                 
                 {discount > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount ({discount}%)</span>
-                    <span>-${((calculateSubtotal() * discount) / 100).toFixed(2)}</span>
+                    <span>- ৳{((calculateSubtotal() * discount) / 100).toFixed(2)}</span>
                   </div>
                 )}
                 
@@ -477,7 +477,7 @@ const CartPage = () => {
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-lg font-semibold text-gray-900">
                     <span>Total</span>
-                    <span>${calculateTotal().toFixed(2)}</span>
+                    <span> ৳{calculateTotal().toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -497,7 +497,7 @@ const CartPage = () => {
                 </div>
                 <div className="flex items-center">
                   <Truck className="w-4 h-4 mr-2" />
-                  <span>Free shipping on orders over $50</span>
+                  <span>Free shipping on orders over  ৳50</span>
                 </div>
               </div>
 

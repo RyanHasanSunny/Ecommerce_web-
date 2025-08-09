@@ -88,15 +88,15 @@ const HomePage = () => {
   }
 
   return (
-    <div className="home-page min-h-screen bg-white">
+    <div className=" min-h-screen bg-white">
       {/* Hero Section */}
       <section className="container mx-auto  py-8">
         <HeroPanel heroData={homePageData?.heroPanel} />
       </section>
 
       {/* Welcome Banner */}
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
+      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-10">
+        <div className=" mx-auto px-4 text-center">
           <div className="flex items-center justify-center mb-6">
             <Sparkles className="w-8 h-8 mr-3" />
             <h1 className="text-2xl md:text-2xl font-bold">
