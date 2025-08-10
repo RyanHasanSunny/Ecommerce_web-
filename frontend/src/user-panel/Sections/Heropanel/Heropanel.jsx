@@ -109,10 +109,10 @@ const HeroPanel = ({ heroData }) => {
   const currentSlide = slides[currentIndex];
 
   return (
-    <div className="w- flex flex-wrap justify-center gap-6 h-full">
+    <div className="flex flex-wrap justify-center h-full">
       {/* Hero Carousel */}
-      <div className="relative w-8xl  overflow-hidden"
-      style={{ aspectRatio: "16 / 6" }}>
+      <div className="relative  overflow-hidden"
+      style={{ aspectRatio: "16 / 4" }}>
         {/* Slides */}
         <div
           className="flex transition-transform duration-500 ease-in-out h-full"
@@ -132,7 +132,7 @@ const HeroPanel = ({ heroData }) => {
               />
               
               {/* Overlay Content */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            
             </div>
           ))}
         </div>
@@ -154,7 +154,7 @@ const HeroPanel = ({ heroData }) => {
         </div>
       </div>
        {/* Sliding Text Banner */}
-        <div className=" w-full bg-gray-200 overflow-hidden">
+        <div className=" w-full bg-gray-200 py-2 overflow-hidden">
           <div className="relative">
             <div className="animate-slide-right-to-left whitespace-nowrap">
               {textSlides.map((text, index) => (

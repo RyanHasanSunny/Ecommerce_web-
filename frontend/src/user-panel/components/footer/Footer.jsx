@@ -205,7 +205,7 @@ const Footer = () => {
       {/* Bottom Bar */}
       <div className="border-t border-gray-200 bg-gray-50">
         <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between">
+          <div className="flex flex-col md:flex-row items-center justify-center">
             <div className="flex flex-col md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-6 mb-4 md:mb-0">
               <p className="text-gray-600 text-sm">
                 © {currentYear} Magic Mart. All rights reserved.
@@ -215,7 +215,7 @@ const Footer = () => {
                   <Link
                     key={index}
                     to={link.href}
-                    className="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-sm"
+                    className="text-gray-500 hover:text-blue-600 transition-colors duration-200 text-[11px] lg:text-sm"
                   >
                     {link.name}
                   </Link>

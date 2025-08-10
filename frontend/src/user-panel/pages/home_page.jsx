@@ -90,9 +90,9 @@ const HomePage = () => {
   return (
     <div className=" min-h-screen bg-white">
       {/* Hero Section */}
-      <section className="container mx-auto  py-8">
+    
         <HeroPanel heroData={homePageData?.heroPanel} />
-      </section>
+     
 
       {/* Welcome Banner */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-10">
@@ -112,8 +112,8 @@ const HomePage = () => {
 
       {/* Categories Section */}
       <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+        <div className="container flex flex-col mx-auto  px-4">
+          <div className="text-center mb-5">
             <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-6">
               Shop by Category
             </h2>
@@ -127,7 +127,7 @@ const HomePage = () => {
               <Link
                 key={index}
                 to={`/products?category=${category._id}`}  // Use category._id for filtering products
-                className="group relative bg-white rounded-xl py-5 px-5 justify-center text-center overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 no-underline"
+                className="group relative bg-white rounded-xl py-2 px-5 justify-center text-center overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 no-underline"
               >
                 <div className="overflow-hidden">
                   <h3 className="font-semibold">{category.name}</h3>

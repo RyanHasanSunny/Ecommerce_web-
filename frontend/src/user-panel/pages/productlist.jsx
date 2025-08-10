@@ -274,16 +274,7 @@ const ProductList = () => {
               </div>
 
               {/* Filter Toggle */}
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-                Filters
-                {Object.values(filters).some(v => v) && (
-                  <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
-                )}
-              </button>
+            
             </div>
           </div>
         </div>

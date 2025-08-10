@@ -349,11 +349,11 @@ exports.updateOrderStatus = async (req, res) => {
             soldCount: -item.quantity
           }
         });
-        await Sell.findByIdAndUpdate(order.sellId, {
-          $inc: {
-            totalSell: -order.totalAmount
-          }
-        });
+        // await Sell.findByIdAndUpdate(order.sellId, {
+        //   $inc: {
+        //     totalSell: -order.totalAmount
+        //   }
+        // });
       }
       // Restore sell revienew 
 

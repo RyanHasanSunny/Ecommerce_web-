@@ -243,33 +243,27 @@ const handleConfirmOrder = async () => {
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-6 mb-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <button
-                onClick={() => navigate('/cart')}
-                className="flex items-center text-white hover:text-gray-200 mr-6 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                {t.backToCart}
-              </button>
-              <h1 className="text-3xl font-bold">{t.title}</h1>
+          
+              <h3 className=" lg:text-3xl font-bold">{t.title}</h3>
             </div>
             
             {/* Language Toggle */}
             <div className="flex items-center space-x-3">
               <Globe className="w-5 h-5" />
-              <div className="relative">
+              <div className="flex item-center gap-4 justify-center">
                 <button
                   onClick={() => setLanguage(language === "english" ? "bangla" : "english")}
-                  className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 ${
+                  className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors focus:outline-none   ${
                     language === "english" ? "bg-blue-800" : "bg-green-600"
                   }`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                      language === "english" ? "translate-x-1" : "translate-x-9"
+                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                      language === "english" ? "translate-x-1" : "translate-x-4"
                     }`}
                   />
                 </button>
-                <div className="absolute -bottom-6 left-0 text-xs font-medium">
+                <div className="  left-0 text-xs font-medium">
                   {language === "english" ? "EN" : "বাং"}
                 </div>
               </div>
@@ -436,6 +430,7 @@ const handleConfirmOrder = async () => {
                           onChange={handleTransactionIdChange}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                           placeholder={t.transactionIdPlaceholder}
+                          required
                         />
                       </div>
 
