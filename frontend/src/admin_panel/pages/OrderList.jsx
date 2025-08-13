@@ -54,9 +54,8 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
-// You'll need to add these API functions to your api.js file
+// API Service (same as before - no changes needed)
 const apiService = {
-  // Admin Order APIs
   async getAllOrders(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
@@ -143,7 +142,7 @@ const apiService = {
   }
 };
 
-// Order Status Update Dialog
+// Order Status Update Dialog (no changes needed)
 const OrderStatusDialog = ({ open, onClose, order, onUpdate }) => {
   const [status, setStatus] = useState(order?.status || '');
   const [note, setNote] = useState('');
@@ -279,7 +278,7 @@ const OrderStatusDialog = ({ open, onClose, order, onUpdate }) => {
   );
 };
 
-// Payment Status Update Dialog
+// Payment Status Update Dialog (no changes needed)
 const PaymentStatusDialog = ({ open, onClose, order, onUpdate }) => {
   const [paymentStatus, setPaymentStatus] = useState(order?.paymentStatus || '');
   const [transactionId, setTransactionId] = useState(order?.paymentDetails?.transactionId || '');
@@ -391,7 +390,7 @@ const PaymentStatusDialog = ({ open, onClose, order, onUpdate }) => {
   );
 };
 
-// Order Detail Dialog
+// UPDATED Order Detail Dialog with new pricing structure
 const OrderDetailDialog = ({ open, onClose, orderId }) => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -518,7 +517,7 @@ const OrderDetailDialog = ({ open, onClose, orderId }) => {
                 </Card>
               </Grid>
 
-              {/* Order Items */}
+              {/* Order Items - UPDATED with new pricing structure */}
               <Grid item xs={12}>
                 <Card variant="outlined">
                   <CardContent>
@@ -529,9 +528,11 @@ const OrderDetailDialog = ({ open, onClose, orderId }) => {
                           <TableCell>Product</TableCell>
                           <TableCell>Qty</TableCell>
                           <TableCell>Unit Price</TableCell>
-                          <TableCell>Selling Price</TableCell>
-                          <TableCell>Offer Price</TableCell>
                           <TableCell>Profit</TableCell>
+                          <TableCell>Delivery</TableCell>
+                          <TableCell>Selling Price</TableCell>
+                          <TableCell>Offer Value</TableCell>
+                          <TableCell>Final Price</TableCell>
                           <TableCell>Total</TableCell>
                         </TableRow>
                       </TableHead>
@@ -546,24 +547,38 @@ const OrderDetailDialog = ({ open, onClose, orderId }) => {
                             <TableCell>
                               <Chip label={item.quantity} size="small" variant="outlined" />
                             </TableCell>
-                            <TableCell>৳{item.price?.toLocaleString()}</TableCell>
                             <TableCell>
-                              <Typography color="primary.main" fontWeight="medium">
-                                ৳{(item.sellingPrice * item.quantity)?.toLocaleString() || 'N/A'}
+                              <Typography variant="body2">
+                                ৳{item.unitPrice?.toLocaleString() || 'N/A'}
                               </Typography>
                             </TableCell>
                             <TableCell>
-                              <Typography color="error.main" fontWeight="medium">
-                                ৳{(item.offerPrice ? item.offerPrice * item.quantity : 0)?.toLocaleString() || 'N/A'}
+                              <Typography variant="body2" color="success.main">
+                                ৳{item.profit?.toLocaleString() || 'N/A'}
                               </Typography>
                             </TableCell>
                             <TableCell>
-                              <Typography color="success.main" fontWeight="medium">
-                                ৳{(item.profit * item.quantity)?.toLocaleString() || 'N/A'}
+                              <Typography variant="body2" color="info.main">
+                                ৳{item.deliveryCharge?.toLocaleString() || '0'}
                               </Typography>
                             </TableCell>
                             <TableCell>
-                              <Typography fontWeight="medium">
+                              <Typography variant="body2" color="primary.main" fontWeight="medium">
+                                ৳{item.sellingPrice?.toLocaleString() || 'N/A'}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" color="error.main">
+                                ৳{item.offerValue?.toLocaleString() || '0'}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="medium" color="secondary.main">
+                                ৳{item.finalPrice?.toLocaleString() || 'N/A'}
+                              </Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" fontWeight="medium">
                                 ৳{item.totalPrice?.toLocaleString()}
                               </Typography>
                             </TableCell>
@@ -574,17 +589,25 @@ const OrderDetailDialog = ({ open, onClose, orderId }) => {
                     
                     <Divider sx={{ my: 2 }} />
                     
-                    {/* Revenue Breakdown */}
+                    {/* UPDATED Revenue Breakdown */}
                     <Typography variant="h6" gutterBottom color="primary">
                       Revenue Breakdown
                     </Typography>
                     <Grid container spacing={1} sx={{ mb: 2 }}>
-                      <Grid item xs={6}><Typography color="primary.main">Total Selling Price:</Typography></Grid>
-                      <Grid item xs={6}><Typography align="right" color="primary.main" fontWeight="medium">৳{order.sellingPriceTotal?.toLocaleString() || 'N/A'}</Typography></Grid>
-                      <Grid item xs={6}><Typography color="error.main">Total Offer Price:</Typography></Grid>
-                      <Grid item xs={6}><Typography align="right" color="error.main" fontWeight="medium">৳{order.offerPriceTotal?.toLocaleString() || 'N/A'}</Typography></Grid>
+                      <Grid item xs={6}><Typography color="text.secondary">Total Unit Price:</Typography></Grid>
+                      <Grid item xs={6}><Typography align="right" fontWeight="medium">৳{order.totalUnitPrice?.toLocaleString() || 'N/A'}</Typography></Grid>
+                      
                       <Grid item xs={6}><Typography color="success.main">Total Profit:</Typography></Grid>
-                      <Grid item xs={6}><Typography align="right" color="success.main" fontWeight="medium">৳{order.profitTotal?.toLocaleString() || 'N/A'}</Typography></Grid>
+                      <Grid item xs={6}><Typography align="right" color="success.main" fontWeight="medium">৳{order.totalProfit?.toLocaleString() || 'N/A'}</Typography></Grid>
+                      
+                      <Grid item xs={6}><Typography color="info.main">Product Delivery Charges:</Typography></Grid>
+                      <Grid item xs={6}><Typography align="right" color="info.main" fontWeight="medium">৳{order.totalProductDeliveryCharge?.toLocaleString() || 'N/A'}</Typography></Grid>
+                      
+                      <Grid item xs={6}><Typography color="primary.main">Total Selling Price:</Typography></Grid>
+                      <Grid item xs={6}><Typography align="right" color="primary.main" fontWeight="medium">৳{order.totalSellingPrice?.toLocaleString() || 'N/A'}</Typography></Grid>
+                      
+                      <Grid item xs={6}><Typography color="error.main">Total Offer Value (Discount):</Typography></Grid>
+                      <Grid item xs={6}><Typography align="right" color="error.main" fontWeight="medium">৳{order.totalOfferValue?.toLocaleString() || 'N/A'}</Typography></Grid>
                     </Grid>
 
                     <Divider sx={{ my: 2 }} />
@@ -594,13 +617,13 @@ const OrderDetailDialog = ({ open, onClose, orderId }) => {
                       Order Summary
                     </Typography>
                     <Grid container spacing={1}>
-                      <Grid item xs={6}><Typography>Subtotal:</Typography></Grid>
+                      <Grid item xs={6}><Typography>Subtotal (Final Prices):</Typography></Grid>
                       <Grid item xs={6}><Typography align="right">৳{order.subtotal?.toLocaleString()}</Typography></Grid>
-                      <Grid item xs={6}><Typography>Delivery Charge:</Typography></Grid>
+                      <Grid item xs={6}><Typography>Order Delivery Charge:</Typography></Grid>
                       <Grid item xs={6}><Typography align="right">৳{order.deliveryCharge?.toLocaleString()}</Typography></Grid>
                       <Grid item xs={6}><Typography>Extra Charge:</Typography></Grid>
                       <Grid item xs={6}><Typography align="right">৳{order.extraCharge?.toLocaleString()}</Typography></Grid>
-                      <Grid item xs={6}><Typography variant="h6">Final Total:</Typography></Grid>
+                      <Grid item xs={6}><Typography variant="h6">Customer Pays:</Typography></Grid>
                       <Grid item xs={6}><Typography variant="h6" align="right">৳{order.totalAmount?.toLocaleString()}</Typography></Grid>
                     </Grid>
                   </CardContent>
@@ -617,7 +640,7 @@ const OrderDetailDialog = ({ open, onClose, orderId }) => {
   );
 };
 
-// Main OrderList Component
+// UPDATED Main OrderList Component
 const OrderList = () => {
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({});
@@ -744,7 +767,7 @@ const OrderList = () => {
           Order Management
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Manage and track all customer orders
+          Manage and track all customer orders with detailed pricing breakdown
         </Typography>
       </Box>
 
@@ -771,7 +794,7 @@ const OrderList = () => {
             <CardContent>
               <Typography color="text.secondary" gutterBottom>Total Revenue</Typography>
               <Typography variant="h5">৳{stats.totalRevenue?.toLocaleString() || 0}</Typography>
-              <Typography variant="caption" color="text.secondary">Actual Collected</Typography>
+              <Typography variant="caption" color="text.secondary">Customer Payments</Typography>
             </CardContent>
           </Card>
         </Grid>
@@ -794,39 +817,54 @@ const OrderList = () => {
         </Grid>
       </Grid>
 
-      {/* Revenue Breakdown Cards */}
+      {/* UPDATED Revenue Breakdown Cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" gutterBottom color="primary">
                 💰 Selling Price Revenue
               </Typography>
               <Typography variant="h4" color="primary.main">
-                ৳{stats.sellingPriceRevenue?.toLocaleString() || 0}
+                ৳{stats.totalSellingPrice?.toLocaleString() || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Total from product selling prices
+                Total from all selling prices (before discounts)
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" gutterBottom color="error">
-                🔥 Offer Price Revenue
+                🎯 Total Discounts
               </Typography>
               <Typography variant="h4" color="error.main">
-                ৳{stats.offerPriceRevenue?.toLocaleString() || 0}
+                ৳{stats.totalOfferValue?.toLocaleString() || 0}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Total from discounted offers
+                Total discount amount given to customers
               </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" gutterBottom color="info">
+                🚚 Product Delivery Charges
+              </Typography>
+              <Typography variant="h4" color="info.main">
+                ৳{stats.totalProductDeliveryCharge?.toLocaleString() || 0}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Product-specific delivery charges
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} md={3}>
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" gutterBottom color="success">
@@ -843,7 +881,7 @@ const OrderList = () => {
         </Grid>
       </Grid>
 
-      {/* Filters */}
+      {/* Filters (no changes) */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={4}>
@@ -921,7 +959,7 @@ const OrderList = () => {
         </Grid>
       </Paper>
 
-      {/* Orders Table */}
+      {/* UPDATED Orders Table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -932,10 +970,10 @@ const OrderList = () => {
               <TableCell>Status</TableCell>
               <TableCell>Payment</TableCell>
               <TableCell>Transaction ID</TableCell>
-              <TableCell>Total</TableCell>
-              <TableCell>Sell Price</TableCell>
+              <TableCell>Final Total</TableCell>
+              <TableCell>Selling Price</TableCell>
               <TableCell>Profit</TableCell>
-              <TableCell>Offer Value</TableCell>
+              <TableCell>Discount</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -1005,20 +1043,32 @@ const OrderList = () => {
                     <Typography variant="body2" fontWeight="medium">
                       ৳{order.totalAmount?.toLocaleString()}
                     </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Customer Paid
+                    </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium" color="primary.main">
-                      ৳{order.sellingPriceTotal?.toLocaleString() || 'N/A'}
+                      ৳{order.totalSellingPrice?.toLocaleString() || 'N/A'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Before Discount
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium" color="success.main">
-                      ৳{order.profitTotal?.toLocaleString() || 'N/A'}
+                      ৳{order.totalProfit?.toLocaleString() || 'N/A'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Net Profit
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium" color="error.main">
-                      ৳{order.offerPriceTotal?.toLocaleString() || 'N/A'}
+                      ৳{order.totalOfferValue?.toLocaleString() || '0'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Discount Given
                     </Typography>
                   </TableCell>
                   <TableCell align="center">

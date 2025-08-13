@@ -22,59 +22,79 @@ const orderSchema = new mongoose.Schema({
       required: true,
       min: 1
     },
-    price: {
+    // NEW PRICING STRUCTURE FOR EACH ITEM
+    unitPrice: {
       type: Number,
-      required: true // The actual price charged to customer
-    },
-    // New revenue tracking fields for each item
-    sellingPrice: {
-      type: Number,
-      required: true // Original selling price
-    },
-    offerPrice: {
-      type: Number,
-      default: null // Discounted price if applicable
+      required: true // Base cost of the product
     },
     profit: {
       type: Number,
-      default: 0 // Profit per unit
+      required: true, // Profit margin per unit
+      default: 0
+    },
+    deliveryCharge: {
+      type: Number,
+      default: 0 // Product-specific delivery charge per unit
+    },
+    sellingPrice: {
+      type: Number,
+      required: true // unitPrice + profit + deliveryCharge
+    },
+    offerValue: {
+      type: Number,
+      default: 0 // Discount amount per unit (not price)
+    },
+    finalPrice: {
+      type: Number,
+      required: true // sellingPrice - offerValue (actual price charged)
     },
     totalPrice: {
       type: Number,
-      required: true // Total for this item (price × quantity)
+      required: true // finalPrice × quantity
     }
   }],
   
   // Order totals
   subtotal: {
     type: Number,
-    required: true
+    required: true // Sum of all item totals (finalPrice × quantity)
   },
   deliveryCharge: {
     type: Number,
-    default: 0
+    default: 0 // Order-level delivery charge
   },
   extraCharge: {
     type: Number,
-    default: 0
+    default: 0 // Any additional charges
   },
   totalAmount: {
     type: Number,
-    required: true
+    required: true // subtotal + deliveryCharge + extraCharge
   },
   
-  // New revenue tracking fields for the entire order
-  sellingPriceTotal: {
+  // NEW REVENUE TRACKING FIELDS FOR THE ENTIRE ORDER
+  totalUnitPrice: {
     type: Number,
-    default: 0 // Total if all items sold at selling price
+    required: true, // Sum of all unit prices
+    default: 0
   },
-  offerPriceTotal: {
+  totalProfit: {
     type: Number,
-    default: 0 // Total value of discounts given
+    required: true, // Sum of all profits
+    default: 0
   },
-  profitTotal: {
+  totalProductDeliveryCharge: {
     type: Number,
-    default: 0 // Total profit from this order
+    default: 0 // Sum of product-specific delivery charges
+  },
+  totalSellingPrice: {
+    type: Number,
+    required: true, // Sum of all selling prices (before discounts)
+    default: 0
+  },
+  totalOfferValue: {
+    type: Number,
+    default: 0 // Sum of all discount amounts
   },
   
   // Shipping information
@@ -169,55 +189,142 @@ orderSchema.index({ paymentStatus: 1 });
 orderSchema.index({ 'paymentDetails.transactionId': 1 });
 orderSchema.index({ createdAt: -1 });
 
-// Virtual for calculating profit margin percentage
+// UPDATED Virtual for calculating profit margin percentage
 orderSchema.virtual('profitMargin').get(function() {
-  if (this.totalAmount > 0) {
-    return (this.profitTotal / this.totalAmount) * 100;
+  if (this.totalSellingPrice > 0) {
+    return (this.totalProfit / this.totalSellingPrice) * 100;
   }
   return 0;
 });
 
-// Virtual for calculating discount amount
-orderSchema.virtual('discountAmount').get(function() {
-  return this.sellingPriceTotal - this.subtotal;
+// UPDATED Virtual for calculating total discount amount
+orderSchema.virtual('totalDiscountAmount').get(function() {
+  return this.totalOfferValue || 0;
 });
 
-// Method to calculate revenue metrics if not stored
+// Virtual for calculating discount percentage
+orderSchema.virtual('discountPercentage').get(function() {
+  if (this.totalSellingPrice > 0) {
+    return (this.totalOfferValue / this.totalSellingPrice) * 100;
+  }
+  return 0;
+});
+
+// Virtual for calculating average order value
+orderSchema.virtual('averageItemValue').get(function() {
+  if (this.items.length > 0) {
+    return this.subtotal / this.items.length;
+  }
+  return 0;
+});
+
+// UPDATED Method to calculate revenue metrics if not stored
 orderSchema.methods.calculateRevenue = function() {
-  let sellingPriceTotal = 0;
-  let offerPriceTotal = 0;
-  let profitTotal = 0;
+  let totalUnitPrice = 0;
+  let totalProfit = 0;
+  let totalProductDeliveryCharge = 0;
+  let totalSellingPrice = 0;
+  let totalOfferValue = 0;
 
   this.items.forEach(item => {
     const quantity = item.quantity;
-    sellingPriceTotal += (item.sellingPrice || item.price) * quantity;
     
-    if (item.offerPrice) {
-      offerPriceTotal += item.offerPrice * quantity;
-    }
-    
-    if (item.profit) {
-      profitTotal += item.profit * quantity;
-    }
+    // Use new pricing structure fields
+    totalUnitPrice += (item.unitPrice || 0) * quantity;
+    totalProfit += (item.profit || 0) * quantity;
+    totalProductDeliveryCharge += (item.deliveryCharge || 0) * quantity;
+    totalSellingPrice += (item.sellingPrice || 0) * quantity;
+    totalOfferValue += (item.offerValue || 0) * quantity;
   });
 
   return {
-    sellingPriceTotal,
-    offerPriceTotal,
-    profitTotal
+    totalUnitPrice,
+    totalProfit,
+    totalProductDeliveryCharge,
+    totalSellingPrice,
+    totalOfferValue
   };
 };
 
-// Pre-save middleware to ensure revenue calculations
+// Method to validate pricing consistency
+orderSchema.methods.validatePricing = function() {
+  const errors = [];
+  
+  this.items.forEach((item, index) => {
+    // Check if sellingPrice = unitPrice + profit + deliveryCharge
+    const expectedSellingPrice = item.unitPrice + item.profit + (item.deliveryCharge || 0);
+    if (Math.abs(item.sellingPrice - expectedSellingPrice) > 0.01) {
+      errors.push(`Item ${index}: Selling price mismatch. Expected: ${expectedSellingPrice}, Got: ${item.sellingPrice}`);
+    }
+    
+    // Check if finalPrice = sellingPrice - offerValue
+    const expectedFinalPrice = item.sellingPrice - (item.offerValue || 0);
+    if (Math.abs(item.finalPrice - expectedFinalPrice) > 0.01) {
+      errors.push(`Item ${index}: Final price mismatch. Expected: ${expectedFinalPrice}, Got: ${item.finalPrice}`);
+    }
+    
+    // Check if totalPrice = finalPrice × quantity
+    const expectedTotalPrice = item.finalPrice * item.quantity;
+    if (Math.abs(item.totalPrice - expectedTotalPrice) > 0.01) {
+      errors.push(`Item ${index}: Total price mismatch. Expected: ${expectedTotalPrice}, Got: ${item.totalPrice}`);
+    }
+  });
+  
+  return errors;
+};
+
+// UPDATED Pre-save middleware to ensure revenue calculations and validation
 orderSchema.pre('save', function(next) {
-  // If revenue fields are missing, calculate them
-  if (!this.sellingPriceTotal || !this.profitTotal) {
+  // Calculate revenue fields if missing
+  if (!this.totalUnitPrice || !this.totalProfit || !this.totalSellingPrice) {
     const revenue = this.calculateRevenue();
-    this.sellingPriceTotal = revenue.sellingPriceTotal;
-    this.offerPriceTotal = revenue.offerPriceTotal;
-    this.profitTotal = revenue.profitTotal;
+    this.totalUnitPrice = revenue.totalUnitPrice;
+    this.totalProfit = revenue.totalProfit;
+    this.totalProductDeliveryCharge = revenue.totalProductDeliveryCharge;
+    this.totalSellingPrice = revenue.totalSellingPrice;
+    this.totalOfferValue = revenue.totalOfferValue;
   }
+  
+  // Validate pricing consistency (optional - comment out in production if needed)
+  const pricingErrors = this.validatePricing();
+  if (pricingErrors.length > 0) {
+    console.warn('Pricing validation warnings:', pricingErrors);
+    // You can choose to throw an error here if you want strict validation
+    // return next(new Error('Pricing validation failed: ' + pricingErrors.join(', ')));
+  }
+  
   next();
 });
+
+// Static method to get revenue statistics
+orderSchema.statics.getRevenueStats = async function(dateRange = {}) {
+  const matchStage = { isDeleted: { $ne: true } };
+  
+  if (dateRange.startDate || dateRange.endDate) {
+    matchStage.createdAt = {};
+    if (dateRange.startDate) matchStage.createdAt.$gte = new Date(dateRange.startDate);
+    if (dateRange.endDate) matchStage.createdAt.$lte = new Date(dateRange.endDate);
+  }
+  
+  const stats = await this.aggregate([
+    { $match: matchStage },
+    {
+      $group: {
+        _id: null,
+        totalOrders: { $sum: 1 },
+        totalRevenue: { $sum: '$totalAmount' },
+        totalUnitPrice: { $sum: '$totalUnitPrice' },
+        totalProfit: { $sum: '$totalProfit' },
+        totalSellingPrice: { $sum: '$totalSellingPrice' },
+        totalOfferValue: { $sum: '$totalOfferValue' },
+        totalProductDeliveryCharge: { $sum: '$totalProductDeliveryCharge' },
+        averageOrderValue: { $avg: '$totalAmount' },
+        averageProfit: { $avg: '$totalProfit' }
+      }
+    }
+  ]);
+  
+  return stats[0] || {};
+};
 
 module.exports = mongoose.model('Order', orderSchema);

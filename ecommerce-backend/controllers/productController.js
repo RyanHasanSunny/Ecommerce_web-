@@ -18,7 +18,22 @@ const generateProductId = async () => {
 
 // Add product (Admin only)
 exports.addProduct = async (req, res) => {
-  const { title, companyName, description, specifications, price, profit, stock, categoryId, thumbnail, images, offerPrice } = req.body;
+  const { 
+    title, 
+    companyName, 
+    description, 
+    specifications, 
+    price, 
+    profit, 
+    sellingPrice,
+    deliveryCharge,
+    stock, 
+    categoryId, 
+    thumbnail, 
+    images, 
+    offerValue,
+    finalPrice,  // Changed from offerPrice to offerValue
+  } = req.body;
 
   try {
     const category = await Category.findById(categoryId);
@@ -28,11 +43,13 @@ exports.addProduct = async (req, res) => {
 
     const numericPrice = parseFloat(price) || 0;
     const numericProfit = parseFloat(profit) || 0;
-    const sellingPrice = numericPrice + numericProfit;
-    const numericOfferPrice = offerPrice ? parseFloat(offerPrice) : null;
+    const numericSellingPrice = parseFloat(sellingPrice) || 0;
+    const numericDeliveryCharge = parseFloat(deliveryCharge) || 0;
+    const numericOfferValue = parseFloat(offerValue) || 0;
+    const numericFinalPrice = parseFloat(finalPrice) || 0;
 
-    if (isNaN(numericPrice) || isNaN(numericProfit) || (offerPrice && isNaN(numericOfferPrice))) {
-      return res.status(400).json({ msg: 'Invalid price values' });
+    if (isNaN(numericPrice) || isNaN(numericProfit)) {
+      return res.status(400).json({ msg: 'Invalid price or profit values' });
     }
 
     const newProduct = new Product({
@@ -43,8 +60,10 @@ exports.addProduct = async (req, res) => {
       specifications,
       price: numericPrice,
       profit: numericProfit,
-      sellingPrice,
-      offerPrice: numericOfferPrice,
+      sellingPrice: numericSellingPrice || 0, // Changed from offerPrice to sellingPric
+      deliveryCharge: numericDeliveryCharge,
+      offerValue: numericOfferValue,  // Using offerValue instead of offerPrice
+      finalPrice: numericFinalPrice || 0, // Changed from offerPrice to finalPrice
       stock: parseInt(stock) || 0,
       category: categoryId,
       thumbnail,
@@ -85,7 +104,22 @@ exports.getProductById = async (req, res) => {
 // Update product (Admin only)
 exports.updateProduct = async (req, res) => {
   const { productId } = req.params;
-  const { title, companyName, description, specifications, price, profit, stock, categoryId, thumbnail, images, offerPrice } = req.body;
+  const { 
+    title, 
+    companyName, 
+    description, 
+    specifications, 
+    price, 
+    profit, 
+    sellingPrice,
+    deliveryCharge,
+    stock, 
+    categoryId, 
+    thumbnail, 
+    images, 
+    offerValue,  // Changed from offerPrice to offerValue
+    finalPrice,
+  } = req.body;
 
   try {
     const category = await Category.findById(categoryId);
@@ -93,8 +127,10 @@ exports.updateProduct = async (req, res) => {
 
     const numericPrice = parseFloat(price) || 0;
     const numericProfit = parseFloat(profit) || 0;
-    const sellingPrice = numericPrice + numericProfit;
-    const numericOfferPrice = offerPrice ? parseFloat(offerPrice) : null;
+    const numericSellingPrice = parseFloat(sellingPrice) || 0;
+    const numericDeliveryCharge = parseFloat(deliveryCharge) || 0;
+    const numericOfferValue = parseFloat(offerValue) || 0;
+    const numericFinalPrice = parseFloat(finalPrice) || 0;
 
     const updatedProduct = await Product.findByIdAndUpdate(
       productId,
@@ -105,8 +141,10 @@ exports.updateProduct = async (req, res) => {
         specifications,
         price: numericPrice,
         profit: numericProfit,
-        sellingPrice,
-        offerPrice: numericOfferPrice,
+        sellingPrice: numericSellingPrice,
+        deliveryCharge: numericDeliveryCharge,
+        offerValue: numericOfferValue,  // Using offerValue instead of offerPrice
+        finalPrice: numericFinalPrice,
         stock: parseInt(stock) || 0,
         category: categoryId,
         thumbnail,

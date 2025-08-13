@@ -16,54 +16,14 @@ const calculateDeliveryCharge = (city, subtotal) => {
   // if (subtotal > 5000) return 0;
 };
 
-const calculateOrderRevenue = (order) => {
-  let sellingPriceTotal = 0;
-  let offerPriceTotal = 0;
-  let profitTotal = 0;
 
-  order.items.forEach(item => {
-    // Calculate based on actual product data if available
-    if (item.productId) {
-      const quantity = item.quantity;
-
-      // Selling price total (original selling price × quantity)
-      sellingPriceTotal += (item.productId.sellingPrice || item.price) * quantity;
-
-      // Offer price total (if offer price exists)
-      if (item.productId.offerPrice) {
-        offerPriceTotal += item.productId.offerPrice * quantity;
-      }
-
-      // Profit calculation (selling price - cost price) × quantity
-      if (item.productId.profit) {
-        profitTotal += item.productId.profit * quantity;
-      }
-    } else {
-      // Fallback to stored item data
-      sellingPriceTotal += (item.sellingPrice || item.price) * item.quantity;
-      if (item.offerPrice) {
-        offerPriceTotal += item.offerPrice * item.quantity;
-      }
-      if (item.profit) {
-        profitTotal += item.profit * item.quantity;
-      }
-    }
-  });
-
-  return {
-    sellingPriceTotal,
-    offerPriceTotal,
-    profitTotal
-  };
-};
-
-
+// Updated placeOrder function with corrected pricing structure
 exports.placeOrder = async (req, res) => {
   try {
     const { items, shippingAddress, paymentMethod, transactionId, notes, extraCharge = 0 } = req.body;
     const userId = req.user.userId;
 
-    // Validate shipping address and items (existing validation code)
+    // Validation (existing code remains same)
     if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city) {
       return res.status(400).json({ msg: 'Please provide complete shipping address' });
     }
@@ -73,12 +33,14 @@ exports.placeOrder = async (req, res) => {
     }
 
     let subtotal = 0;
-    let sellingPriceTotal = 0;
-    let offerPriceTotal = 0;
-    let profitTotal = 0;
+    let totalUnitPrice = 0;
+    let totalProfit = 0;
+    let totalDeliveryCharge = 0;
+    let totalOfferValue = 0;
+    let totalSellingPrice = 0;
     const orderItems = [];
 
-    // Process each item with revenue calculations
+    // Process each item with NEW pricing structure
     for (const item of items) {
       const product = await Product.findById(item.productId);
       if (!product) {
@@ -89,17 +51,16 @@ exports.placeOrder = async (req, res) => {
         return res.status(400).json({ msg: `Insufficient stock for ${product.title}` });
       }
 
-      // Calculate prices
-      const finalPrice = product.offerPrice || product.sellingPrice;
-      const itemTotal = finalPrice * item.quantity;
+      // Use the finalPrice (which is already calculated in the model)
+      const itemTotal = product.finalPrice * item.quantity;
       subtotal += itemTotal;
 
-      // Revenue calculations
-      sellingPriceTotal += product.sellingPrice * item.quantity;
-      if (product.offerPrice) {
-        offerPriceTotal += product.offerPrice * item.quantity;
-      }
-      profitTotal += (product.profit || 0) * item.quantity;
+      // Calculate totals for revenue tracking
+      totalUnitPrice += product.price * item.quantity;
+      totalProfit += product.profit * item.quantity;
+      totalDeliveryCharge += (product.deliveryCharge || 0) * item.quantity;
+      totalOfferValue += (product.offerValue || 0) * item.quantity;
+      totalSellingPrice += product.sellingPrice * item.quantity;
 
       // Store detailed item information
       orderItems.push({
@@ -107,11 +68,13 @@ exports.placeOrder = async (req, res) => {
         title: product.title,
         thumbnail: product.thumbnail,
         quantity: item.quantity,
-        price: finalPrice, // The actual price charged
-        sellingPrice: product.sellingPrice,
-        offerPrice: product.offerPrice || null,
-        profit: product.profit || 0,
-        totalPrice: itemTotal
+        unitPrice: product.price,              // Unit price
+        profit: product.profit,                // Profit per item
+        deliveryCharge: product.deliveryCharge || 0,  // Delivery charge per item
+        sellingPrice: product.sellingPrice,    // Calculated selling price
+        offerValue: product.offerValue || 0,   // Discount per item
+        finalPrice: product.finalPrice,        // Final price charged
+        totalPrice: itemTotal                  // Total for this item
       });
 
       // Update product stock
@@ -120,21 +83,24 @@ exports.placeOrder = async (req, res) => {
       await product.save();
     }
 
-    const deliveryCharge = 60;
+    // Calculate delivery charge using existing function
+    const deliveryCharge = calculateDeliveryCharge(shippingAddress.city, subtotal);
     const totalAmount = subtotal + deliveryCharge + extraCharge;
 
-    // Create order with revenue data
+    // Create order with detailed revenue data
     const newOrder = new Order({
       userId,
       items: orderItems,
-      subtotal,
-      deliveryCharge,
+      subtotal,                    // Total of all items (finalPrice * quantity)
+      deliveryCharge,              // Order-level delivery charge
       extraCharge,
       totalAmount,
       // Revenue tracking fields
-      sellingPriceTotal,
-      offerPriceTotal,
-      profitTotal,
+      totalUnitPrice,              // Sum of all unit prices
+      totalProfit,                 // Sum of all profits
+      totalProductDeliveryCharge: totalDeliveryCharge,  // Product-level delivery charges
+      totalSellingPrice,           // Sum of all selling prices
+      totalOfferValue,             // Sum of all discounts
       shippingAddress,
       paymentMethod,
       paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'paid',
@@ -149,7 +115,7 @@ exports.placeOrder = async (req, res) => {
     await newOrder.save();
     await User.findByIdAndUpdate(userId, { $push: { orders: newOrder._id } });
 
-    // Clear cart logic (existing code)
+    // Clear cart logic (existing code remains same)
     if (req.body.fromCart) {
       const orderedProductIds = items.map(item => item.productId);
       await Cart.findOneAndUpdate(
@@ -170,6 +136,41 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
+
+
+
+// Updated calculateOrderRevenue function
+const calculateOrderRevenue = (order) => {
+  let totalUnitPrice = 0;
+  let totalProfit = 0;
+  let totalSellingPrice = 0;
+  let totalOfferValue = 0;
+
+  order.items.forEach(item => {
+    const quantity = item.quantity;
+
+    if (item.productId) {
+      // Use product data if available
+      totalUnitPrice += (item.productId.price || item.unitPrice) * quantity;
+      totalProfit += (item.productId.profit || item.profit) * quantity;
+      totalSellingPrice += (item.productId.sellingPrice || item.sellingPrice) * quantity;
+      totalOfferValue += (item.productId.offerValue || item.offerValue || 0) * quantity;
+    } else {
+      // Fallback to stored item data
+      totalUnitPrice += (item.unitPrice || item.price) * quantity;
+      totalProfit += (item.profit || 0) * quantity;
+      totalSellingPrice += (item.sellingPrice || item.price) * quantity;
+      totalOfferValue += (item.offerValue || 0) * quantity;
+    }
+  });
+
+  return {
+    totalUnitPrice,
+    totalProfit,
+    totalSellingPrice,
+    totalOfferValue
+  };
+};
 
 // @route   GET /api/orders/my
 // @desc    Get current user's orders

@@ -49,27 +49,34 @@ const ProductManagement = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
 
-  // Form state
+
+
+  const [specifications, setSpecifications] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [specForm, setSpecForm] = useState({
+    title: "",
+    details: "",
+    editIndex: null
+  });
+
+
+  // Updated form state in React component
   const [formData, setFormData] = useState({
     title: "",
     companyName: "",
     description: "",
     price: "",
     profit: "",
+    sellingPrice: "",
+    deliveryCharge: "",
     stock: "",
-    offerPrice: "",
+    offerValue: "",
+    finalPrice: "",
     categoryId: "",
     thumbnail: "",
     images: []
   });
 
-  const [specifications, setSpecifications] = useState([]);
-  const [categories, setCategories]         = useState([]);
-  const [specForm, setSpecForm] = useState({
-    title: "",
-    details: "",
-    editIndex: null
-  });
 
   // UI state
   const [loading, setLoading] = useState(true);
@@ -90,12 +97,12 @@ const ProductManagement = () => {
       try {
         setLoading(true);
 
-         const raw = await getCategories();
+        const raw = await getCategories();
         const list =
-          Array.isArray(raw)               ? raw :
-          Array.isArray(raw.data)          ? raw.data :
-          Array.isArray(raw.categories)    ? raw.categories
-                                           : [];
+          Array.isArray(raw) ? raw :
+            Array.isArray(raw.data) ? raw.data :
+              Array.isArray(raw.categories) ? raw.categories
+                : [];
         setCategories(list);
 
         // Fetch product details if editing
@@ -108,7 +115,7 @@ const ProductManagement = () => {
             price: product.price || "",
             profit: product.profit || "",
             stock: product.stock || "",
-            offerPrice: product.offerPrice || "",
+            offerValue: product.offerValue || "",
             categoryId: product.category?._id || "",
             thumbnail: product.thumbnail || "",
             images: product.images || []
@@ -188,10 +195,20 @@ const ProductManagement = () => {
   };
 
   const calculateSellingPrice = () => {
-    const basePrice = parseFloat(formData.price) || 0;
+    const unitPrice = parseFloat(formData.price) || 0;
     const profit = parseFloat(formData.profit) || 0;
-    return basePrice + profit;
+    const deliveryCharge = parseFloat(formData.deliveryCharge) || 0;
+    return unitPrice + profit + deliveryCharge;
   };
+
+  const calculateFinalPrice = () => {
+    const sellingPrice = calculateSellingPrice();
+    const offerValue = parseFloat(formData.offerValue) || 0;
+    const finalPrice = sellingPrice - offerValue;
+    return finalPrice < 0 ? 0 : finalPrice;
+  };
+
+
 
   const validateForm = () => {
     const required = ['title', 'companyName', 'description', 'price', 'profit', 'stock', 'categoryId'];
@@ -223,10 +240,14 @@ const ProductManagement = () => {
       const payload = {
         ...formData,
         specifications,
-        price: parseFloat(formData.price),
-        profit: parseFloat(formData.profit),
+        price: parseFloat(formData.price),                    // Unit price
+        profit: parseFloat(formData.profit),                  // Profit
+        sellingPrice: calculateSellingPrice(),
+        deliveryCharge: formData.deliveryCharge ? parseFloat(formData.deliveryCharge) : 0,
         stock: parseInt(formData.stock),
-        offerPrice: formData.offerPrice ? parseFloat(formData.offerPrice) : null,
+        offerValue: parseFloat(formData.offerValue),
+        finalPrice: calculateFinalPrice(),
+        // sellingPrice and finalPrice will be auto-calculated in the backend
       };
 
       if (productId) {
@@ -237,7 +258,6 @@ const ProductManagement = () => {
         showAlert("Product added successfully!", "success");
       }
 
-      // Navigate back after a short delay
       setTimeout(() => {
         navigate("/admin/products");
       }, 1500);
@@ -466,7 +486,7 @@ const ProductManagement = () => {
                 </Typography>
 
 
-              
+
                 <FormControl fullWidth sx={{ mb: 3 }}>
                   <InputLabel>Category</InputLabel>
                   <Select
@@ -486,10 +506,11 @@ const ProductManagement = () => {
                 </FormControl>
 
                 {/* Pricing */}
+                {/* Pricing Section - Replace the existing pricing grid */}
                 <Grid container spacing={2}>
                   <Grid item xs={6}>
                     <TextField
-                      label="Base Price"
+                      label="Unit Price"
                       type="number"
                       variant="outlined"
                       fullWidth
@@ -497,6 +518,7 @@ const ProductManagement = () => {
                       value={formData.price}
                       onChange={(e) => handleInputChange('price', e.target.value)}
                       InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                      helperText="Base cost of the product"
                     />
                   </Grid>
                   <Grid item xs={6}>
@@ -509,6 +531,21 @@ const ProductManagement = () => {
                       value={formData.profit}
                       onChange={(e) => handleInputChange('profit', e.target.value)}
                       InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                      helperText="Profit margin"
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      label="Delivery Charge"
+                      type="number"
+                      variant="outlined"
+                      fullWidth
+                      size="small"
+                      value={formData.deliveryCharge}
+                      onChange={(e) => handleInputChange('deliveryCharge', e.target.value)}
+                      placeholder="Optional"
+                      InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                      helperText="Product-specific delivery charge"
                     />
                   </Grid>
                   <Grid item xs={6}>
@@ -521,19 +558,21 @@ const ProductManagement = () => {
                       value={formData.stock}
                       onChange={(e) => handleInputChange('stock', e.target.value)}
                       InputProps={{ inputProps: { min: 0, step: 1 } }}
+                      helperText="Available quantity"
                     />
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid item xs={12}>
                     <TextField
-                      label="Offer Price"
+                      label="Offer Value (Discount)"
                       type="number"
                       variant="outlined"
                       fullWidth
                       size="small"
-                      value={formData.offerPrice}
-                      onChange={(e) => handleInputChange('offerPrice', e.target.value)}
-                      placeholder="Optional"
+                      value={formData.offerValue}
+                      onChange={(e) => handleInputChange('offerValue', e.target.value)}
+                      placeholder="Discount amount (optional)"
                       InputProps={{ inputProps: { min: 0, step: 0.01 } }}
+                      helperText="Discount amount to subtract from selling price"
                     />
                   </Grid>
                 </Grid>
@@ -542,18 +581,24 @@ const ProductManagement = () => {
                 <Card variant="outlined" sx={{ mt: 3, bgcolor: 'primary.50' }}>
                   <CardContent sx={{ py: 2 }}>
                     <Typography variant="subtitle2" gutterBottom>
-                      Price Summary
+                      Price Calculation
                     </Typography>
                     <Box display="flex" justifyContent="space-between" mb={1}>
-                      <Typography variant="body2">Base Price:</Typography>
+                      <Typography variant="body2">Unit Price:</Typography>
                       <Typography variant="body2">৳{formData.price || 0}</Typography>
                     </Box>
                     <Box display="flex" justifyContent="space-between" mb={1}>
-                      <Typography variant="body2">Profit:</Typography>
+                      <Typography variant="body2">+ Profit:</Typography>
                       <Typography variant="body2">৳{formData.profit || 0}</Typography>
                     </Box>
+                    {formData.deliveryCharge && (
+                      <Box display="flex" justifyContent="space-between" mb={1}>
+                        <Typography variant="body2">+ Delivery Charge:</Typography>
+                        <Typography variant="body2">৳{formData.deliveryCharge}</Typography>
+                      </Box>
+                    )}
                     <Divider sx={{ my: 1 }} />
-                    <Box display="flex" justifyContent="space-between">
+                    <Box display="flex" justifyContent="space-between" mb={1}>
                       <Typography variant="subtitle2" color="primary">
                         Selling Price:
                       </Typography>
@@ -561,16 +606,25 @@ const ProductManagement = () => {
                         ৳{calculateSellingPrice()}
                       </Typography>
                     </Box>
-                    {formData.offerPrice && (
-                      <Box display="flex" justifyContent="space-between" mt={1}>
+                    {formData.offerValue && (
+                      <Box display="flex" justifyContent="space-between" mb={1}>
                         <Typography variant="body2" color="error">
-                          Offer Price:
+                          - Offer Value:
                         </Typography>
                         <Typography variant="body2" color="error">
-                          ৳{formData.offerPrice}
+                          ৳{formData.offerValue}
                         </Typography>
                       </Box>
                     )}
+                    <Divider sx={{ my: 1 }} />
+                    <Box display="flex" justifyContent="space-between">
+                      <Typography variant="h6" color="success.main">
+                        Final Price:
+                      </Typography>
+                      <Typography variant="h6" color="success.main">
+                        ৳{calculateFinalPrice()}
+                      </Typography>
+                    </Box>
                   </CardContent>
                 </Card>
 
@@ -636,10 +690,23 @@ const ProductManagement = () => {
                     {formData.description || "Product description..."}
                   </Typography>
                   <Typography variant="h6" color="primary">
-                    ৳{calculateSellingPrice()}
-                    {formData.offerPrice && (
-                      <Typography component="span" variant="body2" color="error" sx={{ ml: 1 }}>
-                        (Offer: ৳{formData.offerPrice})
+                    ৳{calculateFinalPrice()}
+                    {formData.offerValue && (
+                      <Typography
+                        component="span"
+                        variant="body2"
+                        sx={{
+                          ml: 1,
+                          textDecoration: 'line-through',
+                          color: 'text.secondary'
+                        }}
+                      >
+                        ৳{calculateSellingPrice()}
+                      </Typography>
+                    )}
+                    {formData.offerValue && (
+                      <Typography component="span" variant="body2" color="success.main" sx={{ ml: 1 }}>
+                        (Save ৳{formData.offerValue})
                       </Typography>
                     )}
                   </Typography>

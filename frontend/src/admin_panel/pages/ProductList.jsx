@@ -394,9 +394,9 @@ const ProductList = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {p.offerPrice ? (
+                      {p.offerValue ? (
                         <Typography variant="body2" color="error.main" fontWeight="medium">
-                          ৳{p.offerPrice.toLocaleString()}
+                          ৳{p.finalPrice.toLocaleString()}
                         </Typography>
                       ) : (
                         <Typography variant="body2" color="text.secondary">
