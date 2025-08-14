@@ -1,4 +1,5 @@
 // src/user-panel/pages/ProductPage.jsx
+// CORRECTED VERSION WITH PROPER PRICING STRUCTURE
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -21,7 +22,10 @@ import {
   AlertCircle,
   Loader,
   Clock,
-  MapPin
+  MapPin,
+  Package,
+  CreditCard,
+  Info
 } from "lucide-react";
 
 const ProductPage = () => {
@@ -39,6 +43,7 @@ const ProductPage = () => {
   const [addingToCart, setAddingToCart] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [selectedCity, setSelectedCity] = useState('dhaka'); // For delivery charge calculation
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -75,13 +80,35 @@ const ProductPage = () => {
     }
   };
 
-  const calculateDiscount = () => {
-    if (product.offerPrice && product.offerPrice < product.sellingPrice) {
-      return Math.round(
-        ((product.sellingPrice - product.offerPrice) / product.sellingPrice) * 100
-      );
-    }
-    return 0;
+  // CORRECTED PRICING CALCULATIONS
+  const getPricing = () => {
+    if (!product) return null;
+
+    const unitPrice = product.price || 0;
+    const profit = product.profit || 0;
+    const sellingPrice = product.sellingPrice || (unitPrice + profit);
+    const offerValue = product.offerValue || 0;
+    const finalPrice = product.finalPrice || (sellingPrice - offerValue);
+    
+    const hasDiscount = offerValue > 0;
+    const discountPercentage = hasDiscount && sellingPrice > 0
+      ? Math.round((offerValue / sellingPrice) * 100)
+      : 0;
+
+    return {
+      unitPrice,
+      profit,
+      sellingPrice,
+      offerValue,
+      finalPrice,
+      hasDiscount,
+      discountPercentage
+    };
+  };
+
+  // Calculate delivery charge based on location (ORDER LEVEL, not product)
+  const getDeliveryCharge = () => {
+    return selectedCity === 'dhaka' ? 60 : 120;
   };
 
   const handleAddToCart = async () => {
@@ -141,8 +168,10 @@ const ProductPage = () => {
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
-            <Loader className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading product...</p>
+            <div className="text-center">
+              <Loader className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+              <p className="text-gray-600">Loading product...</p>
+            </div>
           </div>
         </div>
       </div>
@@ -181,9 +210,9 @@ const ProductPage = () => {
     );
   }
 
-  const finalPrice = product.offerPrice || product.sellingPrice;
-  const discount = calculateDiscount();
+  const pricing = getPricing();
   const isOutOfStock = product.stock === 0;
+  const deliveryCharge = getDeliveryCharge();
 
   return (
     <div className="min-h-screen bg-white">
@@ -216,16 +245,16 @@ const ProductPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Images */}
           <div className="space-y-4">
-            <div className="relative group w-full lg:w-[500px] h-full lg:h-[500px]  bg-gray-50 rounded-2xl overflow-hidden">
+            <div className="relative group w-full lg:w-[500px] h-full lg:h-[500px] bg-gray-50 rounded-2xl overflow-hidden">
               <img
                 src={imageError ? "/placeholder-product.jpg" : images[currentImageIndex]}
                 alt={product.title}
                 className="w-full lg:w-[500px] h-full lg:h-[500px] object-cover transition-transform duration-300 group-hover:scale-105"
                 onError={() => setImageError(true)}
               />
-              {discount > 0 && (
+              {pricing.hasDiscount && (
                 <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                  {discount}% OFF
+                  {pricing.discountPercentage}% OFF
                 </div>
               )}
               {isOutOfStock && (
@@ -298,28 +327,54 @@ const ProductPage = () => {
               )}
             </div>
 
+            {/* CORRECTED PRICING DISPLAY */}
             <div>
               <div className="flex items-center space-x-4">
-                <span className="text-3xl font-bold">৳{finalPrice}</span>
-                {discount > 0 && (
+                <span className="text-3xl font-bold text-gray-900">
+                  ৳{pricing.finalPrice.toFixed(2)}
+                </span>
+                {pricing.hasDiscount && (
                   <>
                     <span className="text-xl text-gray-500 line-through">
-                      ৳{product.sellingPrice}
+                      ৳{pricing.sellingPrice.toFixed(2)}
                     </span>
                     <span className="bg-green-100 text-green-800 px-3 py-1 rounded-md text-sm font-semibold">
-                      Save ৳{(product.sellingPrice - finalPrice).toFixed(2)}
+                      Save ৳{pricing.offerValue.toFixed(2)} ({pricing.discountPercentage}% OFF)
                     </span>
                   </>
                 )}
               </div>
-             
+              <p className="text-sm text-gray-500 mt-2">
+                Price inclusive of all taxes
+              </p>
             </div>
+
+            {/* Price Breakdown (Optional - for transparency) */}
+            {pricing.hasDiscount && (
+              <div className="bg-blue-50 rounded-lg p-4 space-y-2">
+                <h4 className="text-sm font-semibold text-blue-900">Price Breakdown</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">MRP:</span>
+                    <span className="text-gray-900">৳{pricing.sellingPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Discount:</span>
+                    <span className="text-green-600">-৳{pricing.offerValue.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-semibold pt-1 border-t border-blue-200">
+                    <span className="text-gray-900">You Pay:</span>
+                    <span className="text-gray-900">৳{pricing.finalPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               {product.stock > 0 ? (
                 <div className="flex items-center text-green-600 space-x-2">
                   <Check className="w-5 h-5" />
-                  <span>In Stock ({product.stock})</span>
+                  <span>In Stock ({product.stock} available)</span>
                 </div>
               ) : (
                 <div className="flex items-center text-red-600 space-x-2">
@@ -328,20 +383,59 @@ const ProductPage = () => {
                 </div>
               )}
               {product.stock > 0 && product.stock <= 10 && (
-                <p className="text-orange-600 text-sm">
+                <p className="text-orange-600 text-sm font-medium">
                   ⚡ Only {product.stock} left - order soon!
                 </p>
               )}
             </div>
 
+            {/* Delivery Information */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <h4 className="font-semibold flex items-center">
+                <Truck className="w-5 h-5 mr-2 text-blue-600" />
+                Delivery Information
+              </h4>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Select Location:</span>
+                  <select
+                    value={selectedCity}
+                    onChange={(e) => setSelectedCity(e.target.value)}
+                    className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="dhaka">Inside Dhaka</option>
+                    <option value="outside">Outside Dhaka</option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Delivery Charge:</span>
+                  <span className="font-semibold">৳{deliveryCharge}</span>
+                </div>
+                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+                  <Info className="w-3 h-3 inline mr-1" />
+                  Delivery charge will be added at checkout
+                </div>
+              </div>
+              <div className="pt-2 border-t space-y-1">
+                <div className="flex items-center text-sm">
+                  <Clock className="w-4 h-4 mr-2 text-green-600" />
+                  <span>Standard Delivery: 2-3 business days</span>
+                </div>
+                <div className="flex items-center text-sm">
+                  <Package className="w-4 h-4 mr-2 text-blue-600" />
+                  <span>Express Delivery available at checkout</span>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4 border-y py-4 text-gray-600 text-sm">
               <div className="flex items-center space-x-2">
-                <Truck className="w-4 h-4 text-green-600" />
-                <span>Free Shipping</span>
+                <CreditCard className="w-4 h-4 text-green-600" />
+                <span>Secure Payment</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Shield className="w-4 h-4 text-green-600" />
-                <span>Secure Payment</span>
+                <span>100% Authentic</span>
               </div>
               <div className="flex items-center space-x-2">
                 <RotateCcw className="w-4 h-4 text-green-600" />
@@ -377,6 +471,26 @@ const ProductPage = () => {
                   <span className="text-sm text-gray-500">Max: {product.stock}</span>
                 </div>
 
+                {/* Total Price Display */}
+                {quantity > 1 && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Item Total ({quantity} items):</span>
+                      <span className="font-semibold text-gray-900">
+                        ৳{(pricing.finalPrice * quantity).toFixed(2)}
+                      </span>
+                    </div>
+                    {pricing.hasDiscount && (
+                      <div className="flex justify-between text-sm mt-1">
+                        <span className="text-gray-600">Total Savings:</span>
+                        <span className="font-semibold text-green-600">
+                          ৳{(pricing.offerValue * quantity).toFixed(2)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex space-x-4">
                   <button
                     onClick={handleAddToCart}
@@ -398,11 +512,11 @@ const ProductPage = () => {
                       {addingToCart
                         ? "Adding..."
                         : addedToCart
-                        ? "Added!"
+                        ? "Added to Cart!"
                         : "Add to Cart"}
                     </span>
                   </button>
-                  {/* <button
+                  <button
                     onClick={handleWishlistToggle}
                     className={`p-3 rounded-lg border-2 transition ${
                       isWishlisted
@@ -410,8 +524,8 @@ const ProductPage = () => {
                         : "border-gray-300 hover:border-red-300"
                     }`}
                   >
-                    <Heart className="w-5 h-5" />
-                  </button> */}
+                    <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-current' : ''}`} />
+                  </button>
                   <button
                     onClick={handleShare}
                     className="p-3 rounded-lg border border-gray-300 hover:border-gray-400"
@@ -424,7 +538,7 @@ const ProductPage = () => {
                   <div className="flex items-center space-x-2">
                     <Truck className="w-4 h-4 text-green-600" />
                     <span>
-                      <strong>Free delivery</strong> on orders over ৳50
+                      <strong>Free delivery</strong> on orders over ৳500
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -433,7 +547,7 @@ const ProductPage = () => {
                   </div>
                   <div className="flex items-center space-x-2">
                     <MapPin className="w-4 h-4 text-purple-600" />
-                    <span>Delivering to <strong>your location</strong></span>
+                    <span>Delivering to <strong>{selectedCity === 'dhaka' ? 'Dhaka' : 'your location'}</strong></span>
                   </div>
                 </div>
               </div>
@@ -472,8 +586,7 @@ const ProductPage = () => {
               {[
                 { id: "description", label: "Description" },
                 { id: "specifications", label: "Specifications" },
-                // { id: "reviews", label: `Reviews (${product.reviews?.length || 0})` },
-               
+                { id: "shipping", label: "Shipping & Returns" }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -520,53 +633,54 @@ const ProductPage = () => {
               </div>
             )}
 
-            {selectedTab === "reviews" && (
-              <div className="space-y-6">
-                {product.reviews?.length > 0 ? (
-                  product.reviews.map((rev, i) => (
-                    <div key={i} className="border-b pb-4 last:border-none">
-                      <div className="flex items-center">
-                        {[...Array(5)].map((_, starIdx) => (
-                          <Star
-                            key={starIdx}
-                            className={`w-4 h-4 ${
-                              starIdx < rev.rating
-                                ? "text-yellow-400"
-                                : "text-gray-300"
-                            }`}
-                          />
-                        ))}
-                        <span className="ml-2 text-sm text-gray-600">
-                          {rev.rating}.0
-                        </span>
+            {selectedTab === "shipping" && (
+              <div className="space-y-6 text-gray-700">
+                <div>
+                  <h4 className="font-semibold mb-3 text-lg">Shipping Information</h4>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <h5 className="font-medium mb-2">Inside Dhaka</h5>
+                        <ul className="space-y-1 text-sm">
+                          <li>• Delivery Charge: ৳60</li>
+                          <li>• Standard Delivery: 2-3 business days</li>
+                          <li>• Express Delivery: Next day (additional charge)</li>
+                        </ul>
                       </div>
-                      <p className="mt-2 text-gray-700">{rev.comment}</p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        {new Date(rev.date).toLocaleDateString()}
+                      <div>
+                        <h5 className="font-medium mb-2">Outside Dhaka</h5>
+                        <ul className="space-y-1 text-sm">
+                          <li>• Delivery Charge: ৳120</li>
+                          <li>• Standard Delivery: 3-5 business days</li>
+                          <li>• Express Delivery: 2-3 days (additional charge)</li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="border-t pt-3 mt-3">
+                      <p className="text-sm text-gray-600">
+                        <strong>Note:</strong> Delivery charges are calculated at checkout based on your shipping address.
+                        Free delivery available on orders above ৳500.
                       </p>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-gray-600">No reviews yet.</p>
-                )}
-              </div>
-            )}
-
-            {selectedTab === "shipping" && (
-              <div className="space-y-6 text-gray-700 text-sm">
-                <div>
-                  <h4 className="font-semibold mb-2">Shipping</h4>
-                  <p>
-                    Free standard shipping on orders over ৳500. Orders
-                    processed within 1–2 business days; delivery in 5–7 days.
-                  </p>
+                  </div>
                 </div>
+                
                 <div>
-                  <h4 className="font-semibold mb-2">Returns</h4>
-                  <p>
-                    Returns accepted within 30 days. Item must be unused and in
-                    original packaging. Contact support to initiate.
-                  </p>
+                  <h4 className="font-semibold mb-3 text-lg">Return Policy</h4>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                    <p>• Returns accepted within 7 days of delivery</p>
+                    <p>• Product must be unused and in original packaging</p>
+                    <p>• Original invoice/receipt required</p>
+                    <p>• Refund processed within 5-7 business days after inspection</p>
+                    <p>• Contact our support team to initiate a return</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-3 text-lg">Warranty Information</h4>
+                  <div className="bg-gray-50 rounded-lg p-4 text-sm">
+                    <p>Product comes with manufacturer's warranty. Please check product packaging for warranty details.</p>
+                  </div>
                 </div>
               </div>
             )}
