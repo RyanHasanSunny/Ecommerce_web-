@@ -26,15 +26,15 @@ const HeroPanel = ({ heroData }) => {
   const textSlides = [
     "🎉 Summer Sale - Up to 50% OFF on all products!",
     "🚚 Free Shipping on orders above $50",
-    
+
   ];
   // Use backend data if available, otherwise use default slides
-  const originalSlides = heroData && heroData.length > 0 
+  const originalSlides = heroData && heroData.length > 0
     ? heroData.map((item, index) => ({
-        id: index + 1,
-        image: item.imageUrl,
-        altText: item.altText || `Slide ${index + 1}`
-      }))
+      id: index + 1,
+      image: item.imageUrl,
+      altText: item.altText || `Slide ${index + 1}`
+    }))
     : defaultSlides;
 
   // Create infinite slides by duplicating first and last slides
@@ -44,7 +44,7 @@ const HeroPanel = ({ heroData }) => {
     originalSlides[0] // First slide at end
   ];
 
-  const [currentIndex, setCurrentIndex] = useState(0); // Start at first real slide
+  const [currentIndex, setCurrentIndex] = useState(1); // Start at first real slide
   const [currentIndex1, setCurrentIndex1] = useState(1); // Start at first real slide
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -53,7 +53,7 @@ const HeroPanel = ({ heroData }) => {
   const nextSlide = useCallback(() => {
     if (isTransitioning) return;
     setIsTransitioning(true);
-    
+
     setCurrentIndex((prev) => {
       const newIndex = prev + 1;
       if (newIndex === slides.length - 1) {
@@ -63,7 +63,7 @@ const HeroPanel = ({ heroData }) => {
       }
       return newIndex;
     });
-    
+
     setCurrentIndex1((prev) => {
       const newIndex = prev + 1;
       if (newIndex === slides.length - 1) {
@@ -73,7 +73,7 @@ const HeroPanel = ({ heroData }) => {
       }
       return newIndex;
     });
-    
+
     setTimeout(() => setIsTransitioning(false), 500);
   }, [slides.length, isTransitioning]);
 
@@ -109,65 +109,89 @@ const HeroPanel = ({ heroData }) => {
   const currentSlide = slides[currentIndex];
 
   return (
-    <div className="flex flex-wrap justify-center h-full">
-      {/* Hero Carousel */}
-      <div className="relative  overflow-hidden"
-      style={{ aspectRatio: "16 / 4" }}>
-        {/* Slides */}
-        <div
-          className="flex transition-transform duration-500 ease-in-out h-full"
-          style={{ 
-            transform: `translateX(-${currentIndex * 100}%)`,
-            transition: isTransitioning ? 'transform 0.5s ease-in-out' : 'none'
-          }}
-        >
-          {slides.map((slide, slideIndex) => (
-            <div key={`${slide.id}-${slideIndex}`} className="relative w-full h-full flex-shrink-0">
-              {/* Background Image */}
-              <img
-                src={slide.image}
-                alt={slide.altText}
-                className="w-full h-full object-cover"
-                loading="lazy"
-              />
-              
-              {/* Overlay Content */}
-            
-            </div>
-          ))}
-        </div>
+    <div className="w-full">
+      {/* Main container with grid layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-2 lg:gap-4 px-2 lg:px-5 mb-4">
+        {/* Main Hero Carousel - Takes 3 columns on large screens */}
+        <div className="lg:col-span-3 relative overflow-hidden rounded-lg"
+          style={{ aspectRatio: "16 / 6" }}>
+          {/* Slides */}
+          <div
+            className="flex transition-transform duration-500 ease-in-out h-full"
+            style={{
+              transform: `translateX(-${currentIndex * 100}%)`,
+              transition: isTransitioning ? 'transform 0.5s ease-in-out' : 'none'
+            }}
+          >
+            {slides.map((slide, slideIndex) => (
+              <div key={`${slide.id}-${slideIndex}`} className="relative w-full h-full flex-shrink-0">
+                {/* Background Image */}
+                <img
+                  src={slide.image}
+                  alt={slide.altText}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            ))}
+          </div>
 
-        {/* Slide Indicators */}
-        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {originalSlides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`w-1 h-1 rounded-full transition-all duration-200 ${
-                index === getRealIndex(currentIndex)
-                  ? 'bg-white scale-110' 
+          {/* Slide Indicators */}
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            {originalSlides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-2 h-2 rounded-full transition-all duration-200 ${index === getRealIndex(currentIndex)
+                  ? 'bg-white scale-110'
                   : 'bg-white/50 hover:bg-white/70'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
-      </div>
-       {/* Sliding Text Banner */}
-        <div className=" w-full bg-gray-200 py-2 overflow-hidden">
-          <div className="relative">
-            <div className="animate-slide-right-to-left whitespace-nowrap">
-              {textSlides.map((text, index) => (
-                <span key={index} className="inline-block px-8 text-black font-semibold text-sm m:text-lg ">
-                  {text}
-                </span>
-              ))}
-            
-            </div>
+                  }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
           </div>
         </div>
-      
-      <style jsx>{`
+
+        {/* Right side - 2 images stacked vertically, takes 1 column */}
+        <div className="lg:col-span-1 flex flex-col gap-2">
+          {/* First right side image */}
+          <div className="relative overflow-hidden rounded-lg flex-1"
+            style={{ aspectRatio: "16 / 6" }}>
+            <img
+              src={originalSlides[1]?.image || defaultSlides[1].image}
+              alt={originalSlides[1]?.altText || defaultSlides[1].altText}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+
+          {/* Second right side image */}
+          <div className="relative overflow-hidden rounded-lg flex-1"
+            style={{ aspectRatio: "16 / 6" }}>
+            <img
+              src={originalSlides[2]?.image || defaultSlides[2].image}
+              alt={originalSlides[2]?.altText || defaultSlides[2].altText}
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Sliding Text Banner */}
+      <div className="w-full bg-gray-200 py-2 overflow-hidden">
+        <div className="relative">
+          <div className="animate-slide-right-to-left whitespace-nowrap">
+            {textSlides.map((text, index) => (
+              <span key={index} className="inline-block px-8 text-black font-semibold text-sm lg:text-lg">
+                {text}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <style>{`
         @keyframes slide-right-to-left {
           0% {
             transform: translateX(100%);
