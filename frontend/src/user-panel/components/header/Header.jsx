@@ -1,4 +1,4 @@
-// src/user-panel/components/header/Header.jsx - FIXED VERSION
+// src/user-panel/components/header/Header.jsx - MOBILE UX FIXED
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -26,6 +26,7 @@ const Header = () => {
   
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
@@ -52,10 +53,21 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close mobile menu on route change
+  // Close mobile menu on route change, but keep search open if there's text
   useEffect(() => {
     setShowMobileMenu(false);
-  }, [location]);
+    // Only close search if there's no text in the search query
+    if (!searchQuery.trim()) {
+      setShowSearch(false);
+    }
+  }, [location, searchQuery]);
+
+  // Clear search query when it's empty to ensure consistent behavior
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchQuery("");
+    }
+  }, [searchQuery]);
 
   // TODO: Fetch cart count from API
   useEffect(() => {
@@ -75,6 +87,15 @@ const Header = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      // Keep search visible after search on both mobile and desktop if there's still text
+    }
+  };
+
+  const handleSearchToggle = () => {
+    // If search is hidden or there's no text, show it
+    // If search is visible and there's text, keep it open
+    if (!showSearch || !searchQuery.trim()) {
+      setShowSearch(!showSearch);
     }
   };
 
@@ -98,82 +119,82 @@ const Header = () => {
       {/* Main Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-            aria-label="Toggle mobile menu"
-          >
-            {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* Mobile: Menu Button (Left) */}
+          <div className="lg:hidden">
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+              aria-label="Toggle mobile menu"
+            >
+              {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center group">
+          {/* Logo - Centered on Mobile, Left on Desktop */}
+          <Link to="/" className="flex items-center group lg:flex-none">
             <div className="flex items-center">
               <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-purple-600 group-hover:to-blue-600 transition-all duration-300">
                 MAGIC MART
               </h1>
             </div>
           </Link>
-         <div className="hidden lg:flex items-center gap-4">
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.href;
-              
-              return (
-                <Link
-                  key={item.label}
-                  to={item.href}
-                  className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive 
-                      ? 'text-blue-600 bg-blue-50' 
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
 
-          {/* Search Bar - Desktop */}
-          <div className="hidden md:flex flex-1 max-w-lg mx-8">
-            <form onSubmit={handleSearch} className="relative w-full">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for products, brands and more..."
-                className="w-full px-4 py-2 pl-12 pr-4 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-              />
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-blue-600 text-white rounded-full text-xs hover:bg-blue-700 transition-colors"
-              >
-                Go
-              </button>
-            </form>
-          </div>
-
+          
           {/* Right Icons */}
           <div className="flex items-center space-x-3">
-            {/* Mobile Search */}
+            {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-4 flex-1">
+            <nav className="flex items-center space-x-8">
+              {navigationItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.href;
+                
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.href}
+                    className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      isActive 
+                        ? 'text-blue-600 bg-blue-50' 
+                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+            {/* Search Icon - Both Mobile and Desktop */}
             <button 
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-              onClick={() => navigate('/search')}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={handleSearchToggle}
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
             </button>
 
-            {/* Cart */}
+            {/* Mobile: Cart Icon */}
+            <div className="lg:hidden">
+              <Link
+                to="/cart"
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors relative"
+                aria-label="Shopping cart"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                    {cartItemCount > 99 ? '99+' : cartItemCount}
+                  </span>
+                )}
+              </Link>
+            </div>
+
+            {/* Desktop: Cart Icon */}
             <Link
               to="/cart"
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors relative"
+              className="hidden lg:block p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors relative"
               aria-label="Shopping cart"
             >
               <ShoppingCart className="w-5 h-5" />
@@ -184,9 +205,9 @@ const Header = () => {
               )}
             </Link>
 
-            {/* User Menu */}
+            {/* User Menu - Hidden on Mobile */}
             {isAuthenticated() ? (
-              <div className="relative" ref={profileMenuRef}>
+              <div className="relative hidden lg:block" ref={profileMenuRef}>
                 <button
                   onClick={() => setShowProfileMenu(!showProfileMenu)}
                   className="flex items-center space-x-2 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
@@ -271,26 +292,38 @@ const Header = () => {
               </div>
             )}
           </div>
-          </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {showMobileMenu && (
-        <div className="lg:hidden bg-white border-t border-gray-200">
-          <div className="px-4 py-4 space-y-4">
-            {/* Mobile Search */}
+      {/* Search Bar - Appears below main header for both mobile and desktop */}
+      {(showSearch || searchQuery.trim()) && (
+        <div className="bg-white border-t border-gray-200 px-4 py-3">
+          <div className="max-w-7xl mx-auto">
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products..."
-                className="w-full px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Search for products, brands and more..."
+                className="w-full px-4 py-2 pl-10 pr-16 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoFocus
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 px-3 py-1 bg-blue-600 text-white rounded-full text-xs hover:bg-blue-700 transition-colors"
+              >
+                Go
+              </button>
             </form>
+          </div>
+        </div>
+      )}
 
+      {/* Mobile Menu */}
+      {showMobileMenu && (
+        <div className="lg:hidden bg-white border-t border-gray-200">
+          <div className="px-4 py-4 space-y-4">
             {/* Mobile Navigation */}
             <nav className="space-y-2">
               {navigationItems.map((item) => {
@@ -340,6 +373,7 @@ const Header = () => {
                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
                   <div>
+                    <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
                   </div>
                 </div>
@@ -358,13 +392,6 @@ const Header = () => {
                 >
                   <Package className="w-4 h-4" />
                   <span>My Orders</span>
-                </Link>
-                <Link 
-                to="/cart"
-                className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                  <span>My Cart</span>
                 </Link>
                 
                 <button

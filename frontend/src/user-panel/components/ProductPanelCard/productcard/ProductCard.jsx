@@ -16,8 +16,7 @@ import {
   Loader,
   AlertCircle
 } from "lucide-react";
-
-
+import apiService from "../../../api/api";
 
 const ProductCard = ({ product, viewMode = 'grid' }) => {
   const navigate = useNavigate();
@@ -30,43 +29,37 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
     navigate(`/product/${product._id}`);
   };
 
-  const handleAddToCart = async (e) => {
-    e.stopPropagation();
+  // FIXED PRICING CALCULATIONS - Match ProductPage logic
+  const getPricing = () => {
+    const unitPrice = product.price || 0;
+    const profit = product.profit || 0;
+    const sellingPrice = product.sellingPrice || (unitPrice + profit);
+    const offerValue = product.offerValue || 0;
+    const finalPrice = product.finalPrice || (sellingPrice - offerValue);
     
-    if (!isAuthenticated()) {
-      navigate('/login');
-      return;
-    }
+    const hasDiscount = offerValue > 0;
+    const discountPercentage = hasDiscount && sellingPrice > 0
+      ? Math.round((offerValue / sellingPrice) * 100)
+      : 0;
 
-    setAddingToCart(true);
-    try {
-      await apiService.addToCart(product._id, 1);
-      // Show success notification (you can implement toast here)
-      alert('Added to cart successfully!');
-    } catch (error) {
-      console.error('Failed to add to cart:', error);
-      alert('Failed to add to cart. Please try again.');
-    } finally {
-      setAddingToCart(false);
-    }
+    return {
+      unitPrice,
+      profit,
+      sellingPrice,
+      offerValue,
+      finalPrice,
+      hasDiscount,
+      discountPercentage
+    };
   };
 
- 
-  const calculateDiscount = () => {
-    if (product.offerPrice && product.offerPrice < product.sellingPrice) {
-      return Math.round(((product.sellingPrice - product.offerPrice) / product.sellingPrice) * 100);
-    }
-    return 0;
-  };
-
-  const discount = calculateDiscount();
-  const finalPrice = product.offerPrice || product.sellingPrice;
+  const pricing = getPricing();
   const isOutOfStock = product.stock === 0;
 
   if (viewMode === 'list') {
     return (
       <div 
-        className="flex flex-wrap bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden  flex"
+        className="flex flex-wrap bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden flex"
         onClick={handleProductClick}
       >
         {/* Image */}
@@ -78,9 +71,9 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
             onError={() => setImageError(true)}
           />
           
-          {discount > 0 && (
+          {pricing.hasDiscount && (
             <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-              {discount}% OFF
+              {pricing.discountPercentage}% OFF
             </div>
           )}
 
@@ -107,34 +100,19 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
             <p className="text-sm text-gray-600 mb-4 line-clamp-2">
               {product.description}
             </p>
-
-          
           </div>
 
           <div className="flex flex-wrap items-center justify-between">
             {/* Price */}
             <div className="flex items-center space-x-2">
               <span className="text-xl font-bold text-gray-900">
-                ৳{finalPrice}
+                ৳{pricing.finalPrice.toFixed(2)}
               </span>
-              {discount > 0 && (
+              {pricing.hasDiscount && (
                 <span className="text-lg text-gray-500 line-through">
-                  ৳{product.sellingPrice}
+                  ৳{pricing.sellingPrice.toFixed(2)}
                 </span>
               )}
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center  space-x-2">
-          
-              <button
-                onClick={handleAddToCart}
-                disabled={addingToCart || isOutOfStock}
-                className="px-4 py-2 bg-blue-600 w-70 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-              >
-                <ShoppingCart className="w-4 h-4" />
-                <span>{addingToCart ? 'Adding...' : 'Add to Cart'}</span>
-              </button>
             </div>
           </div>
         </div>
@@ -145,7 +123,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
   // Grid view
   return (
     <div 
-      className="group bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden "
+      className="group bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden"
       onClick={handleProductClick}
     >
       {/* Image */}
@@ -157,9 +135,9 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
           onError={() => setImageError(true)}
         />
         
-        {discount > 0 && (
+        {pricing.hasDiscount && (
           <div className="absolute top-3 left-3 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-            {discount}% OFF
+            {pricing.discountPercentage}% OFF
           </div>
         )}
 
@@ -170,7 +148,6 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
             </span>
           </div>
         )}
-
       </div>
 
       {/* Product Info */}
@@ -187,18 +164,18 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="text-lg font-bold text-gray-900">
-              ৳{finalPrice}
+              ৳{pricing.finalPrice.toFixed(2)}
             </span>
-            {discount > 0 && (
+            {pricing.hasDiscount && (
               <span className="text-sm text-gray-500 line-through">
-                ৳{product.sellingPrice}
+                ৳{pricing.sellingPrice.toFixed(2)}
               </span>
             )}
           </div>
           
-          {discount > 0 && (
+          {pricing.hasDiscount && (
             <span className="text-xs font-semibold text-green-600">
-              Save ৳{(product.sellingPrice - finalPrice).toFixed(2)}
+              Save ৳{pricing.offerValue.toFixed(2)}
             </span>
           )}
         </div>

@@ -1,6 +1,17 @@
 const Cart = require('../models/cartModel');
 const Product = require('../models/productModel');
 
+// Helper function to calculate final price (same logic as ProductPage)
+const calculateFinalPrice = (product) => {
+  const unitPrice = product.price || 0;
+  const profit = product.profit || 0;
+  const sellingPrice = product.sellingPrice || (unitPrice + profit);
+  const offerValue = product.offerValue || 0;
+  const finalPrice = product.finalPrice || (sellingPrice - offerValue);
+  
+  return finalPrice;
+};
+
 // Create or update cart
 exports.addToCart = async (req, res) => {
   const userId = req.user.userId;
@@ -10,7 +21,9 @@ exports.addToCart = async (req, res) => {
     const product = await Product.findById(productId);
     if (!product) return res.status(404).json({ msg: 'Product not found' });
 
-    const itemTotal = product.price * quantity;
+    // Use final price instead of unit price
+    const finalPrice = calculateFinalPrice(product);
+    const itemTotal = finalPrice * quantity;
 
     let cart = await Cart.findOne({ userId: userId, status: 'active' });
 
@@ -21,7 +34,7 @@ exports.addToCart = async (req, res) => {
           productId,
           name: product.title,
           quantity,
-          price: product.price,
+          price: finalPrice, // Store final price, not unit price
           totalPrice: itemTotal
         }]
       });
@@ -35,7 +48,7 @@ exports.addToCart = async (req, res) => {
           productId,
           name: product.title,
           quantity,
-          price: product.price,
+          price: finalPrice, // Store final price, not unit price
           totalPrice: itemTotal
         });
       }
@@ -55,11 +68,11 @@ exports.getCart = async (req, res) => {
     // 1. extract the raw ObjectId string
     const userId = req.user.userId;
 
-    // 2. query by that string
+    // 2. query by that string - FIXED: Include all pricing fields
     const cart = await Cart.findOne({ userId, status: 'active' })
       .populate(
         'items.productId',
-        'title companyName description price image specifications stock thumbnail'
+        'title companyName description price profit sellingPrice offerValue finalPrice image specifications stock thumbnail'
       );
 
     // 3. if no cart yet, return an empty structure (optional)
@@ -75,7 +88,7 @@ exports.getCart = async (req, res) => {
   }
 };
 
-// Update item quantity in cart - NEW METHOD
+// Update item quantity in cart - FIXED METHOD
 exports.updateCartItemQuantity = async (req, res) => {
   const { itemId } = req.params;
   const { quantity } = req.body;
@@ -113,19 +126,22 @@ exports.updateCartItemQuantity = async (req, res) => {
       });
     }
 
+    // FIXED: Use final price instead of sellingPrice
+    const finalPrice = calculateFinalPrice(product);
+    
     // Update the quantity and total price
     cart.items[itemIndex].quantity = quantity;
-    cart.items[itemIndex].price = product.sellingPrice || product.price; // Update to current price
-    cart.items[itemIndex].totalPrice = (product.sellingPrice || product.price) * quantity;
+    cart.items[itemIndex].price = finalPrice; // Use final price
+    cart.items[itemIndex].totalPrice = finalPrice * quantity;
 
     // Save the cart
     await cart.save();
 
-    // Populate the updated cart before sending response
+    // Populate the updated cart before sending response - FIXED: Include all pricing fields
     const populatedCart = await Cart.findOne({ userId, status: 'active' })
       .populate(
         'items.productId',
-        'title companyName description price sellingPrice image specifications stock thumbnail'
+        'title companyName description price profit sellingPrice offerValue finalPrice image specifications stock thumbnail'
       );
 
     res.json({
@@ -140,7 +156,7 @@ exports.updateCartItemQuantity = async (req, res) => {
   }
 };
 
-// Remove an item from cart
+// Remove an item from cart - FIXED
 exports.removeItem = async (req, res) => {
   const { itemId } = req.params;
 
@@ -151,11 +167,11 @@ exports.removeItem = async (req, res) => {
     cart.items = cart.items.filter(item => item._id.toString() !== itemId);
     await cart.save();
 
-    // Return populated cart
+    // Return populated cart - FIXED: Include all pricing fields
     const populatedCart = await Cart.findOne({ userId: req.user.userId, status: 'active' })
       .populate(
         'items.productId',
-        'title companyName description price sellingPrice image specifications stock thumbnail'
+        'title companyName description price profit sellingPrice offerValue finalPrice image specifications stock thumbnail'
       );
 
     res.json(populatedCart || { items: [], total: 0 });

@@ -1,5 +1,4 @@
-// src/user-panel/pages/productlist.jsx - FIXED VERSION
-
+// src/user-panel/pages/productlist.jsx - FIXED VERSION WITH WORKING SEARCH
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -22,9 +21,9 @@ import {
   TrendingUp,
   ArrowUpDown,
   Loader,
-  AlertCircle
+  AlertCircle,
+  ShoppingBag
 } from "lucide-react";
-
 
 // Main Product List Component
 const ProductList = () => {
@@ -40,14 +39,14 @@ const ProductList = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Filters
+  // Filters - Initialize from URL params
   const [filters, setFilters] = useState({
-    category: searchParams.get('category') || '',
-    search: searchParams.get('search') || '',
-    minPrice: searchParams.get('minPrice') || '',
-    maxPrice: searchParams.get('maxPrice') || '',
-    sortBy: searchParams.get('sortBy') || 'featured',
-    inStock: searchParams.get('inStock') === 'true'
+    category: '',
+    search: '',
+    minPrice: '',
+    maxPrice: '',
+    sortBy: 'featured',
+    inStock: false
   });
 
   // Sort options
@@ -59,6 +58,18 @@ const ProductList = () => {
     { value: 'newest', label: 'Newest First' },
     { value: 'name', label: 'Name: A to Z' }
   ];
+
+  // Update filters when URL parameters change
+  useEffect(() => {
+    setFilters({
+      category: searchParams.get('category') || '',
+      search: searchParams.get('search') || '',
+      minPrice: searchParams.get('minPrice') || '',
+      maxPrice: searchParams.get('maxPrice') || '',
+      sortBy: searchParams.get('sortBy') || 'featured',
+      inStock: searchParams.get('inStock') === 'true'
+    });
+  }, [searchParams]);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -85,7 +96,7 @@ const ProductList = () => {
     fetchData();
   }, []);
 
-  // Update URL params when filters change
+  // Update URL params when filters change (but not on initial load from URL)
   useEffect(() => {
     const params = new URLSearchParams();
 
@@ -95,8 +106,14 @@ const ProductList = () => {
       }
     });
 
-    setSearchParams(params);
-  }, [filters, setSearchParams]);
+    // Only update URL if the current params are different
+    const currentParams = searchParams.toString();
+    const newParams = params.toString();
+    
+    if (currentParams !== newParams) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [filters]);
 
   // Filter and sort products
   const processedProducts = useMemo(() => {
@@ -106,14 +123,15 @@ const ProductList = () => {
         return false;
       }
 
-      // Search filter
+      // Search filter - improved search logic
       if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
-        const matchesTitle = product.title.toLowerCase().includes(searchTerm);
+        const searchTerm = filters.search.toLowerCase().trim();
+        const matchesTitle = product.title?.toLowerCase().includes(searchTerm);
         const matchesCompany = product.companyName?.toLowerCase().includes(searchTerm);
         const matchesDescription = product.description?.toLowerCase().includes(searchTerm);
+        const matchesCategoryName = product.category?.name?.toLowerCase().includes(searchTerm);
 
-        if (!matchesTitle && !matchesCompany && !matchesDescription) {
+        if (!matchesTitle && !matchesCompany && !matchesDescription && !matchesCategoryName) {
           return false;
         }
       }
@@ -159,11 +177,11 @@ const ProductList = () => {
         break;
       case 'rating':
         // TODO: Sort by actual rating when available
-        filtered.sort((a, b) => b.soldCount - a.soldCount);
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       default:
         // Featured - keep original order or sort by soldCount
-        filtered.sort((a, b) => b.soldCount - a.soldCount);
+        filtered.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
         break;
     }
 
@@ -245,18 +263,6 @@ const ProductList = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              {/* Search */}
-              <form onSubmit={handleSearchSubmit} className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
-                />
-              </form>
-
               {/* Sort */}
               <div className="relative">
                 <select
@@ -273,8 +279,14 @@ const ProductList = () => {
                 <ArrowUpDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
 
-              {/* Filter Toggle */}
-            
+              {/* Filter Toggle - Mobile */}
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="lg:hidden flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                <span>Filters</span>
+              </button>
             </div>
           </div>
         </div>
@@ -302,6 +314,21 @@ const ProductList = () => {
                   >
                     <X className="w-4 h-4" />
                   </button>
+                </div>
+              </div>
+
+              {/* Search Filter - Add search input in sidebar */}
+              <div className="mb-8">
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Search Products</h3>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={filters.search}
+                    onChange={(e) => handleFilterChange('search', e.target.value)}
+                    placeholder="Search products..."
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 </div>
               </div>
 
@@ -382,8 +409,6 @@ const ProductList = () => {
                   </div>
                 </div>
               </div>
-
-
 
               {/* Availability Filter */}
               <div>
@@ -492,17 +517,9 @@ const ProductList = () => {
               </div>
             ) : (
               <div className="flex flex-wrap justify-center gap-8">
-                {processedProducts.length === 0 ? (
-                  <div className="col-span-full text-center py-16">
-                    <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                    <p className="text-xl text-gray-500">No products available at the moment.</p>
-                    <p className="text-gray-400">Check back soon for amazing deals!</p>
-                  </div>
-                ) : (
-                  processedProducts.map((product) => (
-                    <ProductCard key={product._id} product={product} />
-                  ))
-                )}
+                {processedProducts.map((product) => (
+                  <ProductCard key={product._id} product={product} />
+                ))}
               </div>
             )}
 
@@ -518,8 +535,6 @@ const ProductList = () => {
           </div>
         </div>
       </div>
-
-
     </div>
   );
 };

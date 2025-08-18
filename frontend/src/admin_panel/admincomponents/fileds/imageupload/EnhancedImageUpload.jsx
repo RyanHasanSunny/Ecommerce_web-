@@ -65,7 +65,7 @@ const UploadZone = styled(Paper)(({ theme, isDragActive, isEmpty }) => ({
 
 const ImageCard = styled(Card)(({ theme }) => ({
   position: 'relative',
-  width: '100%',
+  width: '200px',
   aspectRatio: '1',
   transition: 'all 0.3s ease',
   '&:hover': {

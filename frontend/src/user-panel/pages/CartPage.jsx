@@ -57,16 +57,16 @@ const CartPage = () => {
   };
 
   const handleSelectItem = (itemId) => {
-  setSelectedItems((prevSelectedItems) => {
-    if (prevSelectedItems.includes(itemId)) {
-      // If item is already selected, remove it
-      return prevSelectedItems.filter(id => id !== itemId);
-    } else {
-      // If item is not selected, add it
-      return [...prevSelectedItems, itemId];
-    }
-  });
-};
+    setSelectedItems((prevSelectedItems) => {
+      if (prevSelectedItems.includes(itemId)) {
+        // If item is already selected, remove it
+        return prevSelectedItems.filter(id => id !== itemId);
+      } else {
+        // If item is not selected, add it
+        return [...prevSelectedItems, itemId];
+      }
+    });
+  };
 
   const updateQuantity = async (itemId, newQuantity) => {
     if (newQuantity < 1) return;
@@ -153,13 +153,44 @@ const CartPage = () => {
     setDiscount(0);
   };
 
+  // FIXED PRICING CALCULATION - Match ProductPage logic
+  const getProductPricing = (product) => {
+    const unitPrice = product.price || 0;
+    const profit = product.profit || 0;
+    const sellingPrice = product.sellingPrice || (unitPrice + profit);
+    const offerValue = product.offerValue || 0;
+    const finalPrice = product.finalPrice || (sellingPrice - offerValue);
+    
+    const hasDiscount = offerValue > 0;
+
+    console.log('Product pricing debug:', {
+      productId: product._id,
+      unitPrice,
+      profit,
+      sellingPrice,
+      offerValue,
+      finalPrice,
+      hasDiscount,
+      productData: product
+    });
+
+    return {
+      unitPrice,
+      profit,
+      sellingPrice,
+      offerValue,
+      finalPrice,
+      hasDiscount
+    };
+  };
+
   const calculateSubtotal = () => {
     return cartItems.reduce((total, item) => {
       if (selectedItems.includes(item._id)) {
         const product = item.productId || item.product || item;
-        const price = product?.offerPrice || product?.sellingPrice || item.price || 0;
+        const pricing = getProductPricing(product);
         const quantity = item.quantity || 1;
-        return total + (price * quantity);
+        return total + (pricing.finalPrice * quantity);
       }
       return total;
     }, 0);
@@ -241,7 +272,7 @@ const CartPage = () => {
   return (
     <div className="min-h-screen item-center bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center  justify-between  mb-8">
+        <div className="flex items-center justify-between mb-8">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
@@ -277,9 +308,7 @@ const CartPage = () => {
               <div className="divide-y divide-gray-200">
                 {cartItems.map((item) => {
                   const product = item.productId || item.product || item;
-                  const price = product?.offerPrice || product?.sellingPrice || item.price || 0;
-                  const originalPrice = product?.sellingPrice || item.originalPrice || price;
-                  const hasDiscount = product?.offerPrice && product.offerPrice < originalPrice;
+                  const pricing = getProductPricing(product);
                   const quantity = item.quantity || 1;
                   const itemId = item._id || item.id;
 
@@ -319,15 +348,15 @@ const CartPage = () => {
 
                               <div className="flex items-center space-x-2 mb-3">
                                 <span className="text-lg font-semibold text-gray-900">
-                                   ৳{price.toFixed(2)}
+                                   ৳{pricing.finalPrice.toFixed(2)} <span className="text-sm font-normal text-gray-500">per unit</span>
                                 </span>
-                                {hasDiscount && (
+                                {pricing.hasDiscount && (
                                   <>
                                     <span className="text-sm text-gray-500 line-through">
-                                      ৳{originalPrice.toFixed(2)}
+                                      ৳{pricing.sellingPrice.toFixed(2)}
                                     </span>
                                     <span className="text-sm text-green-600 font-medium">
-                                      Save ৳{(originalPrice - price).toFixed(2)}
+                                      Save ৳{pricing.offerValue.toFixed(2)}
                                     </span>
                                   </>
                                 )}
@@ -349,7 +378,7 @@ const CartPage = () => {
 
                             <div className="flex items-center space-x-2">
                               <button
-                                onClick={() => handleSelectItem(itemId)} // Add selection functionality here
+                                onClick={() => handleSelectItem(itemId)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                                   selectedItems.includes(itemId) 
                                     ? 'bg-green-500 text-white hover:bg-green-600' 
@@ -393,11 +422,14 @@ const CartPage = () => {
 
                             <div className="text-right">
                               <p className="text-lg font-semibold text-gray-900">
-                              ৳{(price * quantity).toFixed(2)}
+                                ৳{(pricing.finalPrice * quantity).toFixed(2)}
                               </p>
-                              {hasDiscount && (
-                                <p className="text-sm text-gray-500">
-                                  You save  ৳{((originalPrice - price) * quantity).toFixed(2)}
+                              <p className="text-sm text-gray-500">
+                                ৳{pricing.finalPrice.toFixed(2)} × {quantity}
+                              </p>
+                              {pricing.hasDiscount && (
+                                <p className="text-sm text-green-600">
+                                  Total saved: ৳{(pricing.offerValue * quantity).toFixed(2)}
                                 </p>
                               )}
                             </div>

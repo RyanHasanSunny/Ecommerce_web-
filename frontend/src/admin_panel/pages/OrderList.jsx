@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import {
   Table,
   TableHead,
@@ -726,6 +727,267 @@ const OrderList = () => {
     order.paymentDetails?.transactionId?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+
+    const cardStyle = {
+    backgroundColor: '#ffffff',
+    borderRadius: '16px',
+    padding: '24px',
+    boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+    border: '1px solid #f0f0f0',
+    transition: 'all 0.3s ease',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    position: 'relative',
+    overflow: 'hidden'
+  };
+
+  const cardHoverStyle = {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)'
+  };
+
+  const labelStyle = {
+    color: '#64748b',
+    fontSize: '14px',
+    fontWeight: '500',
+    marginBottom: '8px',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px'
+  };
+
+  const valueStyle = {
+    fontSize: '32px',
+    fontWeight: '700',
+    color: '#1e293b',
+    marginBottom: '4px',
+    lineHeight: '1.2'
+  };
+
+  const successValueStyle = {
+    ...valueStyle,
+    color: '#059669'
+  };
+
+  const captionStyle = {
+    color: '#94a3b8',
+    fontSize: '12px',
+    fontWeight: '400'
+  };
+
+  const containerStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+    gap: '20px',
+    marginBottom: '24px',
+    padding: '0 8px'
+  };
+
+  const gradientOverlayStyle = {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: '60px',
+    height: '60px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    opacity: '0.1',
+    borderRadius: '0 16px 0 50px'
+  };
+
+  const iconContainerStyle = {
+    position: 'absolute',
+    top: '16px',
+    right: '16px',
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '18px'
+  };
+
+  const Card = ({ children, icon, iconBg, iconColor }) => {
+    const [isHovered, setIsHovered] = React.useState(false);
+    
+    return (
+      <div
+        style={{
+          ...cardStyle,
+          ...(isHovered ? cardHoverStyle : {})
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div style={gradientOverlayStyle}></div>
+        {icon && (
+          <div style={{
+            ...iconContainerStyle,
+            backgroundColor: iconBg,
+            color: iconColor
+          }}>
+            {icon}
+          </div>
+        )}
+        {children}
+      </div>
+    );
+  };
+
+
+
+
+
+
+
+
+  const gridStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '20px',
+    alignItems: 'end'
+  };
+
+  const inputGroupStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  };
+
+
+
+  const inputStyle = {
+    width: '100%',
+    height: '48px',
+    padding: '12px 16px',
+    border: '2px solid #e5e7eb',
+    borderRadius: '12px',
+    fontSize: '16px',
+    backgroundColor: '#ffffff',
+    transition: 'all 0.2s ease',
+    outline: 'none',
+    fontFamily: 'inherit'
+  };
+
+  const inputFocusStyle = {
+    borderColor: '#3b82f6',
+    boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
+  };
+
+  const selectStyle = {
+    ...inputStyle,
+    cursor: 'pointer',
+    appearance: 'none',
+    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+    backgroundPosition: 'right 12px center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: '16px',
+    paddingRight: '40px'
+  };
+
+  const searchContainerStyle = {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center'
+  };
+
+  const searchIconStyle = {
+    position: 'absolute',
+    left: '16px',
+    color: '#6b7280',
+    fontSize: '20px',
+    pointerEvents: 'none',
+    zIndex: 1
+  };
+
+  const clearIconStyle = {
+    position: 'absolute',
+    right: '16px',
+    color: '#6b7280',
+    fontSize: '20px',
+    cursor: 'pointer',
+    padding: '4px',
+    borderRadius: '50%',
+    transition: 'all 0.2s ease',
+    zIndex: 1
+  };
+
+  const clearIconHoverStyle = {
+    backgroundColor: '#f3f4f6',
+    color: '#374151'
+  };
+
+  const searchInputStyle = {
+    ...inputStyle,
+    paddingLeft: '48px',
+    paddingRight: searchTerm ? '48px' : '16px'
+  };
+
+  const buttonStyle = {
+    height: '48px',
+    padding: '12px 24px',
+    borderRadius: '12px',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    border: 'none',
+    outline: 'none',
+    fontFamily: 'inherit'
+  };
+
+  const primaryButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: '#3b82f6',
+    color: '#ffffff',
+    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
+  };
+
+  const primaryButtonHoverStyle = {
+    backgroundColor: '#2563eb',
+    transform: 'translateY(-1px)',
+    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)'
+  };
+
+  const secondaryButtonStyle = {
+    ...buttonStyle,
+    backgroundColor: 'transparent',
+    color: '#6b7280',
+    border: '2px solid #e5e7eb',
+    height: '44px'
+  };
+
+  const secondaryButtonHoverStyle = {
+    backgroundColor: '#f9fafb',
+    borderColor: '#d1d5db',
+    color: '#374151'
+  };
+
+  const disabledButtonStyle = {
+    opacity: '0.5',
+    cursor: 'not-allowed'
+  };
+
+  const buttonGroupStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    minWidth: '120px'
+  };
+
+  const [hoveredRefresh, setHoveredRefresh] = React.useState(false);
+  const [hoveredClear, setHoveredClear] = React.useState(false);
+  const [hoveredClearIcon, setHoveredClearIcon] = React.useState(false);
+  const [focusedInput, setFocusedInput] = React.useState('');
+
+  const isFiltersActive = searchTerm || statusFilter || paymentFilter;
+
+
+
+
+
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'delivered': return 'success';
@@ -772,192 +1034,176 @@ const OrderList = () => {
       </Box>
 
       {/* Stats Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>Total Orders</Typography>
-              <Typography variant="h5">{stats.totalOrders || 0}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>Today's Orders</Typography>
-              <Typography variant="h5">{stats.todayOrders || 0}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>Total Revenue</Typography>
-              <Typography variant="h5">৳{stats.totalRevenue?.toLocaleString() || 0}</Typography>
-              <Typography variant="caption" color="text.secondary">Customer Payments</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>Total Profit</Typography>
-              <Typography variant="h5" color="success.main">৳{stats.totalProfit?.toLocaleString() || 0}</Typography>
-              <Typography variant="caption" color="text.secondary">Net Earnings</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={2.4}>
-          <Card>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>Pending Orders</Typography>
-              <Typography variant="h5">{stats.pendingOrders || 0}</Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+<div style={containerStyle}>
+      <Card 
+        icon="📦"
+        iconBg="#eff6ff"
+        iconColor="#2563eb"
+      >
+        <div>
+          <div style={labelStyle}>Total Orders</div>
+          <div style={valueStyle}>{stats.totalOrders || 0}</div>
+        </div>
+      </Card>
 
-      {/* UPDATED Revenue Breakdown Cards */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={3}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h6" gutterBottom color="primary">
-                💰 Selling Price Revenue
-              </Typography>
-              <Typography variant="h4" color="primary.main">
-                ৳{stats.totalSellingPrice?.toLocaleString() || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total from all selling prices (before discounts)
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h6" gutterBottom color="error">
-                🎯 Total Discounts
-              </Typography>
-              <Typography variant="h4" color="error.main">
-                ৳{stats.totalOfferValue?.toLocaleString() || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total discount amount given to customers
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h6" gutterBottom color="info">
-                🚚 Product Delivery Charges
-              </Typography>
-              <Typography variant="h4" color="info.main">
-                ৳{stats.totalProductDeliveryCharge?.toLocaleString() || 0}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Product-specific delivery charges
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card variant="outlined">
-            <CardContent>
-              <Typography variant="h6" gutterBottom color="success">
-                📈 Profit Margin
-              </Typography>
-              <Typography variant="h4" color="success.main">
-                {stats.profitMargin ? `${stats.profitMargin.toFixed(1)}%` : '0%'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Average profit percentage
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      <Card 
+        icon="🎯"
+        iconBg="#f0fdf4"
+        iconColor="#16a34a"
+      >
+        <div>
+          <div style={labelStyle}>Today's Orders</div>
+          <div style={valueStyle}>{stats.todayOrders || 0}</div>
+        </div>
+      </Card>
+
+      <Card 
+        icon="💰"
+        iconBg="#fefce8"
+        iconColor="#ca8a04"
+      >
+        <div>
+          <div style={labelStyle}>Total Revenue</div>
+          <div style={valueStyle}>৳{stats.totalRevenue?.toLocaleString() || 0}</div>
+          <div style={captionStyle}>Customer Payments</div>
+        </div>
+      </Card>
+
+      <Card 
+        icon="📈"
+        iconBg="#f0fdf4"
+        iconColor="#059669"
+      >
+        <div>
+          <div style={labelStyle}>Total Profit</div>
+          <div style={successValueStyle}>৳{stats.totalProfit?.toLocaleString() || 0}</div>
+          <div style={captionStyle}>Net Earnings</div>
+        </div>
+      </Card>
+
+      <Card 
+        icon="⏳"
+        iconBg="#fef3c7"
+        iconColor="#d97706"
+      >
+        <div>
+          <div style={labelStyle}>Pending Orders</div>
+          <div style={valueStyle}>{stats.pendingOrders || 0}</div>
+        </div>
+      </Card>
+    </div>
+
 
       {/* Filters (no changes) */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={4}>
-            <TextField
-              fullWidth
-              label="Search Orders"
+       <div style={containerStyle}>
+      <div style={gridStyle}>
+        {/* Search Field */}
+        <div style={inputGroupStyle}>
+          <label style={labelStyle}>Search Orders</label>
+          <div style={searchContainerStyle}>
+            <span style={searchIconStyle}>🔍</span>
+            <input
+              type="text"
               placeholder="Search by Order ID, Customer Name, Email, or Transaction ID"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: <SearchIcon sx={{ mr: 1, color: 'action.active' }} />,
-                endAdornment: searchTerm && (
-                  <IconButton size="small" onClick={() => setSearchTerm('')}>
-                    <ClearIcon />
-                  </IconButton>
-                ),
+              style={{
+                ...searchInputStyle,
+                ...(focusedInput === 'search' ? inputFocusStyle : {})
               }}
+              onFocus={() => setFocusedInput('search')}
+              onBlur={() => setFocusedInput('')}
             />
-          </Grid>
+            {searchTerm && (
+              <span
+                style={{
+                  ...clearIconStyle,
+                  ...(hoveredClearIcon ? clearIconHoverStyle : {})
+                }}
+                onClick={() => setSearchTerm('')}
+                onMouseEnter={() => setHoveredClearIcon(true)}
+                onMouseLeave={() => setHoveredClearIcon(false)}
+              >
+                ✕
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Order Status Filter */}
+        <div style={inputGroupStyle}>
+          <label style={labelStyle}>Order Status</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{
+              ...selectStyle,
+              ...(focusedInput === 'status' ? inputFocusStyle : {})
+            }}
+            onFocus={() => setFocusedInput('status')}
+            onBlur={() => setFocusedInput('')}
+          >
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        {/* Payment Status Filter */}
+        <div style={inputGroupStyle}>
+          <label style={labelStyle}>Payment Status</label>
+          <select
+            value={paymentFilter}
+            onChange={(e) => setPaymentFilter(e.target.value)}
+            style={{
+              ...selectStyle,
+              ...(focusedInput === 'payment' ? inputFocusStyle : {})
+            }}
+            onFocus={() => setFocusedInput('payment')}
+            onBlur={() => setFocusedInput('')}
+          >
+            <option value="">All Payments</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+            <option value="refunded">Refunded</option>
+          </select>
+        </div>
+
+        {/* Action Buttons */}
+        <div style={buttonGroupStyle}>
+          <button
+            onClick={fetchOrders}
+            disabled={loading}
+            style={{
+              ...primaryButtonStyle,
+              ...(hoveredRefresh && !loading ? primaryButtonHoverStyle : {}),
+              ...(loading ? disabledButtonStyle : {})
+            }}
+            onMouseEnter={() => setHoveredRefresh(true)}
+            onMouseLeave={() => setHoveredRefresh(false)}
+          >
+            {loading ? '🔄 Loading...' : '🔄 Refresh'}
+          </button>
           
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Order Status</InputLabel>
-              <Select
-                value={statusFilter}
-                label="Order Status"
-                onChange={(e) => setStatusFilter(e.target.value)}
-              >
-                <MenuItem value="">All Statuses</MenuItem>
-                <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="processing">Processing</MenuItem>
-                <MenuItem value="shipped">Shipped</MenuItem>
-                <MenuItem value="delivered">Delivered</MenuItem>
-                <MenuItem value="cancelled">Cancelled</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} md={3}>
-            <FormControl fullWidth>
-              <InputLabel>Payment Status</InputLabel>
-              <Select
-                value={paymentFilter}
-                label="Payment Status"
-                onChange={(e) => setPaymentFilter(e.target.value)}
-              >
-                <MenuItem value="">All Payments</MenuItem>
-                <MenuItem value="paid">Paid</MenuItem>
-                <MenuItem value="unpaid">Unpaid</MenuItem>
-                <MenuItem value="refunded">Refunded</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          
-          <Grid item xs={12} md={2}>
-            <Stack spacing={1}>
-              <Button
-                variant="outlined"
-                onClick={fetchOrders}
-                disabled={loading}
-                sx={{ height: 56 }}
-              >
-                Refresh
-              </Button>
-              <Button
-                variant="text"
-                onClick={handleClearFilters}
-                size="small"
-                disabled={!searchTerm && !statusFilter && !paymentFilter}
-              >
-                Clear Filters
-              </Button>
-            </Stack>
-          </Grid>
-        </Grid>
-      </Paper>
+          <button
+            onClick={handleClearFilters}
+            disabled={!isFiltersActive}
+            style={{
+              ...secondaryButtonStyle,
+              ...(hoveredClear && isFiltersActive ? secondaryButtonHoverStyle : {}),
+              ...((!isFiltersActive) ? disabledButtonStyle : {})
+            }}
+            onMouseEnter={() => setHoveredClear(true)}
+            onMouseLeave={() => setHoveredClear(false)}
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </div>
 
       {/* UPDATED Orders Table */}
       <TableContainer component={Paper}>
@@ -970,10 +1216,12 @@ const OrderList = () => {
               <TableCell>Status</TableCell>
               <TableCell>Payment</TableCell>
               <TableCell>Transaction ID</TableCell>
-              <TableCell>Final Total</TableCell>
-              <TableCell>Selling Price</TableCell>
-              <TableCell>Profit</TableCell>
-              <TableCell>Discount</TableCell>
+             
+              <TableCell>Price</TableCell>
+              {/* <TableCell>Profit</TableCell>
+              <TableCell>Discount</TableCell> */}
+               <TableCell>Delivery Charge</TableCell>
+               <TableCell>Total</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -1039,36 +1287,42 @@ const OrderList = () => {
                       />
                     )}
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="medium">
-                      ৳{order.totalAmount?.toLocaleString()}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Customer Paid
-                    </Typography>
-                  </TableCell>
+                 
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium" color="primary.main">
-                      ৳{order.totalSellingPrice?.toLocaleString() || 'N/A'}
+                      ৳{order.subtotal?.toLocaleString() || 'N/A'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      Before Discount
+                      With Discount
                     </Typography>
                   </TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     <Typography variant="body2" fontWeight="medium" color="success.main">
                       ৳{order.totalProfit?.toLocaleString() || 'N/A'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       Net Profit
                     </Typography>
-                  </TableCell>
-                  <TableCell>
+                  </TableCell> */}
+                  {/* <TableCell>
                     <Typography variant="body2" fontWeight="medium" color="error.main">
                       ৳{order.totalOfferValue?.toLocaleString() || '0'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       Discount Given
+                    </Typography>
+                  </TableCell> */}
+                   <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      ৳{order.deliveryCharge?.toLocaleString()}
+                    </Typography>
+                  </TableCell>
+                   <TableCell>
+                    <Typography variant="body2" fontWeight="medium">
+                      ৳{order.totalAmount?.toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Customer Paid
                     </Typography>
                   </TableCell>
                   <TableCell align="center">

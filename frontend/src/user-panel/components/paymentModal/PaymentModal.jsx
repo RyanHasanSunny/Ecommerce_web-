@@ -214,7 +214,7 @@ const handleConfirmOrder = async () => {
       .filter(item => selectedItems.includes(item._id))
       .reduce((total, item) => {
         const product = item.productId || item.product || item;
-        const price = product?.offerPrice || product?.sellingPrice || item.price || 0;
+        const price = product?.finalPrice || product?.sellingPrice || item.price || 0;
         const quantity = item.quantity || 1;
         return total + (price * quantity);
       }, 0);
@@ -286,7 +286,7 @@ const handleConfirmOrder = async () => {
                   .filter(item => selectedItems.includes(item._id))
                   .map((item) => {
                     const product = item.productId || item.product || item;
-                    const price = product?.offerPrice || product?.sellingPrice || item.price || 0;
+                    const price = product?.finalPrice || product?.sellingPrice || item.price || 0;
                     const quantity = item.quantity || 1;
 
                     return (
@@ -306,11 +306,11 @@ const handleConfirmOrder = async () => {
                             {product.title}
                           </h4>
                           <p className="text-sm text-gray-500">
-                            {quantity} × ${price.toFixed(2)}
+                            {quantity} × ৳{price.toFixed(2)}
                           </p>
                         </div>
                         <div className="text-sm font-semibold text-gray-900">
-                          ${(price * quantity).toFixed(2)}
+                          ৳{(price * quantity).toFixed(2)}
                         </div>
                       </div>
                     );
@@ -321,7 +321,7 @@ const handleConfirmOrder = async () => {
               <div className="space-y-3 pt-4 border-t border-gray-200">
                 <div className="flex justify-between text-gray-600">
                   <span>{t.subtotal} ({selectedItems.length} {t.items})</span>
-                  <span>${calculateSubtotal().toFixed(2)}</span>
+                  <span>৳{calculateSubtotal().toFixed(2)}</span>
                 </div>
                 
                 <div className="flex justify-between text-gray-600">
@@ -332,7 +332,7 @@ const handleConfirmOrder = async () => {
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-xl font-bold text-gray-900">
                     <span>{t.total}</span>
-                    <span>${totalAmount?.toFixed(2) || calculateSubtotal().toFixed(2)}</span>
+                    <span>৳{totalAmount?.toFixed(2) || calculateSubtotal().toFixed(2)}</span>
                   </div>
                 </div>
               </div>

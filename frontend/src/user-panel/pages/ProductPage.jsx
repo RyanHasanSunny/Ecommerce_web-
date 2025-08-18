@@ -389,44 +389,7 @@ const ProductPage = () => {
               )}
             </div>
 
-            {/* Delivery Information */}
-            <div className="border rounded-lg p-4 space-y-3">
-              <h4 className="font-semibold flex items-center">
-                <Truck className="w-5 h-5 mr-2 text-blue-600" />
-                Delivery Information
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Select Location:</span>
-                  <select
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
-                    className="px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="dhaka">Inside Dhaka</option>
-                    <option value="outside">Outside Dhaka</option>
-                  </select>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Delivery Charge:</span>
-                  <span className="font-semibold">৳{deliveryCharge}</span>
-                </div>
-                <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-                  <Info className="w-3 h-3 inline mr-1" />
-                  Delivery charge will be added at checkout
-                </div>
-              </div>
-              <div className="pt-2 border-t space-y-1">
-                <div className="flex items-center text-sm">
-                  <Clock className="w-4 h-4 mr-2 text-green-600" />
-                  <span>Standard Delivery: 2-3 business days</span>
-                </div>
-                <div className="flex items-center text-sm">
-                  <Package className="w-4 h-4 mr-2 text-blue-600" />
-                  <span>Express Delivery available at checkout</span>
-                </div>
-              </div>
-            </div>
+      
 
             <div className="grid grid-cols-2 gap-4 border-y py-4 text-gray-600 text-sm">
               <div className="flex items-center space-x-2">
