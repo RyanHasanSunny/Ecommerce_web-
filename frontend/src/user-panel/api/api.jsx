@@ -11,41 +11,48 @@ class APIError extends Error {
 const apiService = {
 baseURL: import.meta.env.BACKEND_URL || '/api',
 
-  async request(endpoint, options = {}) {
-    const url = `${this.baseURL}${endpoint}`;
-    // merge default headers with any passed headers
-    // Only set JSON header when we're not sending a FormData
-    const headers = { ...(options.headers || {}) };
-    if (options.body && !(options.body instanceof FormData)) {
-  headers['Content-Type'] = 'application/json';
-    }
-    const config = {
-      ...options,
-      headers
-    };
+async request(endpoint, options = {}) {
+  const url = `${this.baseURL}${endpoint}`;
+  const headers = { ...(options.headers || {}) };
+  if (options.body && !(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
 
-    // Add auth token if available
-    const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-    if (token) {
-      config.headers['x-auth-token'] = token;
-    }
+  const config = { ...options, headers };
 
-    try {
-      const response = await fetch(url, config);
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new APIError(
-          errorData.msg || errorData.message || `HTTP ${response.status}`,
-          response.status,
-          errorData
-        );
+  // Add auth token if available
+  const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+  if (token) {
+    config.headers['x-auth-token'] = token;
+  }
+
+  try {
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+
+      // 🔥 handle invalid/expired token
+      if (response.status === 401 || response.status === 403) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('adminToken');
+        window.location.href = '/login'; // redirect
       }
-      return await response.json();
-    } catch (err) {
-      if (err instanceof APIError) throw err;
-      throw new APIError('Network error', 0, { originalError: err.message });
+
+      throw new APIError(
+        errorData.msg || errorData.message || `HTTP ${response.status}`,
+        response.status,
+        errorData
+      );
     }
-  },
+
+    return await response.json();
+  } catch (err) {
+    if (err instanceof APIError) throw err;
+    throw new APIError('Network error', 0, { originalError: err.message });
+  }
+},
+
 
   // Authentication APIs
   async login(email, password) {

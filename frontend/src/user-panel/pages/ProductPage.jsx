@@ -479,6 +479,9 @@ const ProductPage = () => {
                         : "Add to Cart"}
                     </span>
                   </button>
+
+                  
+
                   <button
                     onClick={handleWishlistToggle}
                     className={`p-3 rounded-lg border-2 transition ${
@@ -496,6 +499,46 @@ const ProductPage = () => {
                     <Share2 className="w-5 h-5" />
                   </button>
                 </div>
+                <div>
+                  <h3>For more informatons.</h3>
+                </div>
+                <div className="flex flex-wrap space-x-4 mt-4">
+                  {/* WhatsApp */}
+                  <a
+                    href={`https://wa.me/8801XXXXXXXXX?text=I'm%20interested%20in%20${encodeURIComponent(product.title)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center py-3 rounded-lg font-semibold bg-green-500 text-white hover:bg-green-600 transition"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 32 32"
+                      className="w-5 h-5 mr-2 fill-current"
+                    >
+                      <path d="M16 .593c-8.838 0-16 6.708-16 14.969 0 2.646.77 5.219 2.208 7.458l-1.458 5.312 5.5-1.437c2.146 1.146 4.562 1.75 7.125 1.75 8.838 0 16-6.708 16-14.969s-7.162-14.969-16-14.969zM16 27.406c-2.25 0-4.438-.562-6.354-1.625l-.458-.25-3.25.854.875-3.125-.271-.479c-1.354-2.125-2.062-4.542-2.062-7.063 0-7.292 6.271-13.229 14-13.229 7.729 0 14 5.938 14 13.229s-6.271 13.229-14 13.229z" />
+                      <path d="M24.354 19.146c-.396-.198-2.354-1.167-2.719-1.292-.365-.135-.635-.198-.906.198s-1.042 1.292-1.281 1.563c-.229.25-.479.281-.875.094-.396-.198-1.667-.604-3.177-1.917-1.167-1.042-1.958-2.313-2.188-2.708-.229-.396-.021-.604.177-.802.188-.187.417-.479.625-.729.198-.25.271-.417.417-.688.135-.281.073-.521-.042-.729-.104-.198-.906-2.188-1.24-2.979-.323-.781-.646-.667-.906-.667-.229 0-.5-.031-.771-.031s-.729.104-1.104.5c-.375.396-1.479 1.438-1.479 3.5s1.521 4.063 1.729 4.354c.198.281 3 4.813 7.271 6.75 1.021.438 1.813.698 2.438.896 1.021.323 1.958.281 2.688.167.823-.125 2.354-.958 2.688-1.875.323-.917.323-1.708.229-1.875-.094-.167-.354-.271-.75-.469z" />
+                    </svg>
+                    WhatsApp
+                  </a>
+
+                  {/* Messenger */}
+                  <a
+                    href={`https://m.me/yourpageid`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center py-3 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 transition"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 512 512"
+                      className="w-5 h-5 mr-2 fill-current"
+                    >
+                      <path d="M256 0C114.836 0 0 110.744 0 247.446c0 77.841 38.942 147.061 99.578 192.016V512l91.13-50.237c20.844 5.756 42.996 8.882 65.292 8.882 141.164 0 256-110.744 256-247.446S397.164 0 256 0zm23.623 334.276l-60.494-64.445-115.552 64.445 127.541-136.083 61.535 64.445 114.514-64.445-127.544 136.083z" />
+                    </svg>
+                    Messenger
+                  </a>
+                </div>
+
 
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                   <div className="flex items-center space-x-2">
