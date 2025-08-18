@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
 import { CreditCard, CheckCircle, Shield, Truck, Globe, ArrowLeft, Package, MapPin } from "lucide-react";
-import { placeOrder } from "../../api/api"; // Assuming you have an API function to place the order
-import CustomAlert from "../Confirmationpopup/Alert"; // Import your custom alert
+import { placeOrder, getHomePage } from "../../api/api";
+import CustomAlert from "../Confirmationpopup/Alert";
 
 const PaymentPage = () => {
   const location = useLocation();
@@ -11,11 +11,12 @@ const PaymentPage = () => {
   const { cartItems, totalAmount, selectedItems } = location.state || {};
 
   const [selectedTab, setSelectedTab] = useState(0);
-  const [paymentMethod, setPaymentMethod] = useState("bkash");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethods, setPaymentMethods] = useState([]);
   const [transactionId, setTransactionId] = useState("");
   const [isCOD, setIsCOD] = useState(false);
   const [advancePaymentRequired, setAdvancePaymentRequired] = useState(false);
-  const [language, setLanguage] = useState("english"); // Language state
+  const [language, setLanguage] = useState("english");
   const [shippingAddress, setShippingAddress] = useState({
     fullName: "",
     phone: "",
@@ -25,14 +26,28 @@ const PaymentPage = () => {
   });
   const [showCustomAlert, setShowCustomAlert] = useState(false);
 
-  // Redirect if no cart data
   useEffect(() => {
     if (!cartItems || !selectedItems || selectedItems.length === 0) {
       navigate('/cart');
     }
+
+    const fetchPaymentMethods = async () => {
+      try {
+        const response = await getHomePage();
+        if (response && response.paymentInfo && response.paymentInfo.method) {
+          setPaymentMethods(response.paymentInfo.method);
+          if (response.paymentInfo.method.length > 0) {
+            setPaymentMethod(response.paymentInfo.method[0].getway);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching payment methods:", error);
+      }
+    };
+
+    fetchPaymentMethods();
   }, [cartItems, selectedItems, navigate]);
 
-  // Language content
   const content = {
     english: {
       title: "Payment & Checkout",
@@ -65,16 +80,9 @@ const PaymentPage = () => {
       paymentMethods: {
         bkash: "Bkash",
         nagad: "Nagad",
-        rocket: "Rocket"
-      },
-      instructions: {
-        manual: "Send money to our mobile banking accounts and provide the transaction ID.",
-        card: "Use your debit/credit card for secure online payment."
-      },
-      accountNumbers: {
-        bkash: "Bkash: 01712-345678",
-        nagad: "Nagad: 01812-345678", 
-        rocket: "Rocket: 01912-345678"
+        rocket: "Rocket",
+        bank: "Bank Transfer",
+        card: "Credit/Debit Card"
       }
     },
     bangla: {
@@ -108,16 +116,9 @@ const PaymentPage = () => {
       paymentMethods: {
         bkash: "বিকাশ",
         nagad: "নগদ",
-        rocket: "রকেট"
-      },
-      instructions: {
-        manual: "আমাদের মোবাইল ব্যাংকিং অ্যাকাউন্টে টাকা পাঠান এবং লেনদেনের আইডি প্রদান করুন।",
-        card: "নিরাপদ অনলাইন পেমেন্টের জন্য আপনার ডেবিট/ক্রেডিট কার্ড ব্যবহার করুন।"
-      },
-      accountNumbers: {
-        bkash: "বিকাশ: ০১৭১২-৩৪৫৬৭৮",
-        nagad: "নগদ: ০১৮১২-৩৪৫৬৭৮",
-        rocket: "রকেট: ০১৯১২-৩৪৫৬৭৮"
+        rocket: "রকেট",
+        bank: "ব্যাংক ট্রান্সফার",
+        card: "ক্রেডিট/ডেবিট কার্ড"
       }
     }
   };
@@ -142,70 +143,45 @@ const PaymentPage = () => {
     setShippingAddress((prev) => ({ ...prev, [name]: value }));
   };
 
-const handleConfirmOrder = async () => {
-  if (
-    !shippingAddress.fullName ||
-    !shippingAddress.phone ||
-    !shippingAddress.address ||
-    !shippingAddress.city
-  ) {
-    alert("Please provide a complete shipping address.");
-    return;
-  }
-
-  // Ensure selectedItems is defined and not empty
-  if (!selectedItems || selectedItems.length === 0) {
-    alert("Please select at least one item to proceed.");
-    return;
-  }
-
-  console.log("Selected items:", selectedItems); // For debugging
-
-  const orderData = {
-    items: cartItems.filter((item) => selectedItems.includes(item._id)), // Only the selected items
-    shippingAddress,
-    paymentMethod: selectedTab === 0 ? (isCOD ? 'cod' : paymentMethod) : 'card', // Set payment method properly
-    extraCharge: 0,
-    fromCart: true,
-  };
-
-  // Add transactionId directly to orderData (not nested in paymentDetails)
-  if (selectedTab === 0 && !isCOD) { // Manual payment and not COD
-    if (!transactionId.trim()) {
-      alert("Please provide a transaction ID for manual payment.");
+  const handleConfirmOrder = async () => {
+    if (!shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city) {
+      alert("Please provide a complete shipping address.");
       return;
     }
-    orderData.transactionId = transactionId; // Add transactionId directly
-  }
 
-  // For COD, no transaction ID is needed
-  if (isCOD) {
-    orderData.paymentMethod = 'cod';
-  }
+    if (!selectedItems || selectedItems.length === 0) {
+      alert("Please select at least one item to proceed.");
+      return;
+    }
 
-  console.log("Order data being sent:", orderData); // Debug log
+    const orderData = {
+      items: cartItems.filter((item) => selectedItems.includes(item._id)),
+      shippingAddress,
+      paymentMethod: selectedTab === 0 ? (isCOD ? 'cod' : paymentMethod) : 'card',
+      extraCharge: 0,
+      fromCart: true,
+    };
 
-  try {
-    // Sending the order data to backend via the placeOrder API
-    const response = await placeOrder(orderData);
-    console.log("Order placed:", response);
+    if (selectedTab === 0 && !isCOD) {
+      if (!transactionId.trim()) {
+        alert("Please provide a transaction ID for manual payment.");
+        return;
+      }
+      orderData.transactionId = transactionId;
+    }
 
-    // Show custom alert instead of the default confirm
-    setShowCustomAlert(true); // Trigger the custom alert
-
-  } catch (error) {
-    console.error("Error placing order:", error);
-    alert("Error placing order. Please try again.");
-  }
-};
-
-  const handleAlertConfirm = () => {
-    navigate('/'); // Navigate to home page
-    setShowCustomAlert(false); // Close the custom alert
+    try {
+      const response = await placeOrder(orderData);
+      setShowCustomAlert(true);
+    } catch (error) {
+      console.error("Error placing order:", error);
+      alert("Error placing order. Please try again.");
+    }
   };
 
-  const handleAlertCancel = () => {
-    setShowCustomAlert(false); // Close the custom alert
+  const handleAlertConfirm = () => {
+    navigate('/');
+    setShowCustomAlert(false);
   };
 
   const calculateSubtotal = () => {
@@ -236,24 +212,32 @@ const handleConfirmOrder = async () => {
     );
   }
 
+  const getMethodColor = (method) => {
+    const methodKey = method.toLowerCase();
+    switch(methodKey) {
+      case 'bkash': return { bg: 'bg-pink-500', border: 'border-pink-500', bgLight: 'bg-pink-50' };
+      case 'nagad': return { bg: 'bg-orange-500', border: 'border-orange-500', bgLight: 'bg-orange-50' };
+      case 'rocket': return { bg: 'bg-purple-500', border: 'border-purple-500', bgLight: 'bg-purple-50' };
+      case 'bank': return { bg: 'bg-blue-500', border: 'border-blue-500', bgLight: 'bg-blue-50' };
+      case 'card': return { bg: 'bg-green-500', border: 'border-green-500', bgLight: 'bg-green-50' };
+      default: return { bg: 'bg-gray-500', border: 'border-gray-500', bgLight: 'bg-gray-50' };
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl p-6 mb-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-          
-              <h3 className=" lg:text-3xl font-bold">{t.title}</h3>
+              <h3 className="lg:text-3xl font-bold">{t.title}</h3>
             </div>
-            
-            {/* Language Toggle */}
             <div className="flex items-center space-x-3">
               <Globe className="w-5 h-5" />
               <div className="flex item-center gap-4 justify-center">
                 <button
                   onClick={() => setLanguage(language === "english" ? "bangla" : "english")}
-                  className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors focus:outline-none   ${
+                  className={`relative inline-flex h-4 w-8 items-center rounded-full transition-colors focus:outline-none ${
                     language === "english" ? "bg-blue-800" : "bg-green-600"
                   }`}
                 >
@@ -263,7 +247,7 @@ const handleConfirmOrder = async () => {
                     }`}
                   />
                 </button>
-                <div className="  left-0 text-xs font-medium">
+                <div className="left-0 text-xs font-medium">
                   {language === "english" ? "EN" : "বাং"}
                 </div>
               </div>
@@ -272,7 +256,6 @@ const handleConfirmOrder = async () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Order Summary - Left Side */}
           <div className="lg:col-span-1 order-2 lg:order-1">
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-4">
               <h3 className="font-semibold text-xl mb-6 flex items-center text-gray-800">
@@ -280,7 +263,6 @@ const handleConfirmOrder = async () => {
                 {t.orderSummary}
               </h3>
 
-              {/* Order Items */}
               <div className="space-y-4 mb-6 max-h-60 overflow-y-auto">
                 {cartItems
                   .filter(item => selectedItems.includes(item._id))
@@ -317,7 +299,6 @@ const handleConfirmOrder = async () => {
                   })}
               </div>
 
-              {/* Order Total */}
               <div className="space-y-3 pt-4 border-t border-gray-200">
                 <div className="flex justify-between text-gray-600">
                   <span>{t.subtotal} ({selectedItems.length} {t.items})</span>
@@ -350,7 +331,6 @@ const handleConfirmOrder = async () => {
             </div>
           </div>
 
-          {/* Payment Form - Right Side */}
           <div className="lg:col-span-2 order-1 lg:order-2">
             <div className="bg-white rounded-2xl shadow-lg p-8">
               <Tabs selectedIndex={selectedTab} onSelect={(index) => setSelectedTab(index)}>
@@ -373,66 +353,75 @@ const handleConfirmOrder = async () => {
                   </Tab>
                 </TabList>
 
-                {/* Manual Payment Tab */}
                 <TabPanel>
                   <div className="space-y-8">
                     <div className="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
                       <h3 className="font-semibold text-lg text-blue-800 mb-3">{t.manualInstructions}</h3>
-                      <p className="text-blue-700 mb-4">{t.instructions.manual}</p>
+                      <p className="text-blue-700 mb-4">{t.manualDesc}</p>
+
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                      {['bkash', 'nagad', 'rocket'].map((method) => (
-                        <div 
-                          key={method}
-                          className={`p-6 border-2 rounded-xl cursor-pointer transition-all ${
-                            paymentMethod === method 
-                              ? method === 'bkash' 
-                                ? 'border-pink-500 bg-pink-50' 
-                                : method === 'nagad' 
-                                ? 'border-orange-500 bg-orange-50'
-                                : 'border-purple-500 bg-purple-50'
-                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            id={method}
-                            name="payment-method"
-                            value={method}
-                            checked={paymentMethod === method}
-                            onChange={handlePaymentMethodChange}
-                            className="sr-only"
-                          />
-                          <label htmlFor={method} className="cursor-pointer block text-center">
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 font-bold text-white text-xl ${
-                              method === 'bkash' ? 'bg-pink-500' :
-                              method === 'nagad' ? 'bg-orange-500' : 'bg-purple-500'
-                            }`}>
-                              {method === 'bkash' ? 'bK' : method === 'nagad' ? 'N' : 'R'}
+                    {paymentMethods.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        {paymentMethods.map((method) => {
+                          const color = getMethodColor(method.getway);
+                          const methodKey = method.getway.toLowerCase();
+                          return (
+                            <div 
+                              key={method._id || method.getway}
+                              className={`p-6 border-2 rounded-xl cursor-pointer transition-all ${
+                                paymentMethod === method.getway 
+                                  ? `${color.border} ${color.bgLight}`
+                                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                id={method.getway}
+                                name="payment-method"
+                                value={method.getway}
+                                checked={paymentMethod === method.getway}
+                                onChange={handlePaymentMethodChange}
+                                className="sr-only"
+                              />
+                              <label htmlFor={method.getway} className="cursor-pointer block text-center">
+                                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 font-bold text-white text-xl ${color.bg}`}>
+                                  {method.getway.charAt(0).toUpperCase()}
+                                </div>
+                                <h4 className="font-semibold text-gray-800 mb-2">
+                                  {t.paymentMethods[methodKey] || method.getway}
+                                </h4>
+                                <p className="text-xs text-gray-600">
+                                  {method.getwaynumber}
+                                </p>
+                              </label>
                             </div>
-                            <h4 className="font-semibold text-gray-800 mb-2">{t.paymentMethods[method]}</h4>
-                            <p className="text-xs text-gray-600">{t.accountNumbers[method]}</p>
-                          </label>
-                        </div>
-                      ))}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-center">
+                        <p className="text-yellow-700">No payment methods available. Please contact support.</p>
+                      </div>
+                    )}
 
                     <div className="space-y-4">
-                      <div>
-                        <label htmlFor="transaction-id" className="block text-sm font-medium text-gray-700 mb-3">
-                          {t.transactionId} *
-                        </label>
-                        <input
-                          type="text"
-                          id="transaction-id"
-                          value={transactionId}
-                          onChange={handleTransactionIdChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                          placeholder={t.transactionIdPlaceholder}
-                          required
-                        />
-                      </div>
+                      {paymentMethod && !isCOD && (
+                        <div>
+                          <label htmlFor="transaction-id" className="block text-sm font-medium text-gray-700 mb-3">
+                            {t.transactionId} *
+                          </label>
+                          <input
+                            type="text"
+                            id="transaction-id"
+                            value={transactionId}
+                            onChange={handleTransactionIdChange}
+                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            placeholder={t.transactionIdPlaceholder}
+                            required
+                          />
+                        </div>
+                      )}
 
                       <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
                         <label className="flex items-center cursor-pointer">
@@ -454,12 +443,12 @@ const handleConfirmOrder = async () => {
                   </div>
                 </TabPanel>
 
-                {/* Card Payment Tab */}
                 <TabPanel>
                   <div className="space-y-8">
                     <div className="bg-green-50 p-6 rounded-xl border-l-4 border-green-500">
                       <h3 className="font-semibold text-lg text-green-800 mb-3">{t.cardInstructions}</h3>
-                      <p className="text-green-700">{t.instructions.card}</p>
+                     <p className="text-green-700">{t.cardDesc}</p>
+
                     </div>
 
                     <div className="text-center">
@@ -475,7 +464,6 @@ const handleConfirmOrder = async () => {
                 </TabPanel>
               </Tabs>
 
-              {/* Shipping Address */}
               <div className="mt-10 bg-gray-50 p-6 rounded-xl">
                 <h3 className="font-semibold text-xl mb-6 flex items-center text-gray-800">
                   <MapPin className="w-6 h-6 mr-3 text-blue-600" />
@@ -525,7 +513,6 @@ const handleConfirmOrder = async () => {
                 </div>
               </div>
 
-              {/* Footer Buttons */}
               <div className="mt-10 flex flex-col sm:flex-row gap-6">
                 <button
                   onClick={() => navigate('/cart')}

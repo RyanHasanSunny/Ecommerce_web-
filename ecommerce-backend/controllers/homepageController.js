@@ -15,7 +15,7 @@ exports.getHomePage = async (req, res) => {
 
 // Update homepage data
 exports.updateHomePage = async (req, res) => {
-  const { heroPanel, offerPanel, contactInfo } = req.body;
+  const { heroPanel, offerPanel, contactInfo, paymentInfo } = req.body;
 
   try {
     let homePageData = await HomePage.findOne();
@@ -24,8 +24,9 @@ exports.updateHomePage = async (req, res) => {
       homePageData.heroPanel = heroPanel || homePageData.heroPanel;
       homePageData.offerPanel = offerPanel || homePageData.offerPanel;
       homePageData.contactInfo = contactInfo || homePageData.contactInfo;
+      homePageData.paymentInfo = paymentInfo || homePageData.paymentInfo;
     } else {
-      homePageData = new HomePage({ heroPanel, offerPanel, contactInfo });
+      homePageData = new HomePage({ heroPanel, offerPanel, contactInfo, paymentInfo });
     }
 
     await homePageData.save();

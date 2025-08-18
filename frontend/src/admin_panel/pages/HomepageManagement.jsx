@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronRight, Plus, Trash2, Save, Image, Share2, Info, Phone, Mail, MapPin, Facebook, Twitter, Instagram, Linkedin, Youtube, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { CreditCard } from 'lucide-react';
 
 // Mock API service - replace with your actual API
 const apiService = {
@@ -8,7 +9,7 @@ const apiService = {
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
     const headers = { ...(options.headers || {}) };
-    
+
     if (options.body && !(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
     }
@@ -83,7 +84,7 @@ const EnhancedImageUpload = ({ images = [], onImagesChange, maxImages = 5, title
         fileName: img.mainImage.fileName,
         altText: img.originalName
       }));
-      
+
       onImagesChange([...images, ...uploadedImages]);
     } catch (error) {
       console.error('Upload error:', error);
@@ -97,7 +98,7 @@ const EnhancedImageUpload = ({ images = [], onImagesChange, maxImages = 5, title
   };
 
   const handleAltTextChange = (index, altText) => {
-    const newImages = images.map((img, i) => 
+    const newImages = images.map((img, i) =>
       i === index ? { ...img, altText } : img
     );
     onImagesChange(newImages);
@@ -117,7 +118,7 @@ const EnhancedImageUpload = ({ images = [], onImagesChange, maxImages = 5, title
         <h3 className="text-lg font-semibold">{title}</h3>
         <span className="text-sm text-gray-500">{images.length}/{maxImages}</span>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {images.map((image, index) => (
           <div key={index} className="relative group bg-white rounded-lg shadow-md overflow-hidden border">
@@ -143,12 +144,11 @@ const EnhancedImageUpload = ({ images = [], onImagesChange, maxImages = 5, title
             </button>
           </div>
         ))}
-        
+
         {images.length < maxImages && (
           <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
-            }`}
+            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+              }`}
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             onDragEnter={() => setDragActive(true)}
@@ -171,7 +171,7 @@ const EnhancedImageUpload = ({ images = [], onImagesChange, maxImages = 5, title
           </div>
         )}
       </div>
-      
+
       <input
         id="imageInput"
         type="file"
@@ -195,11 +195,10 @@ const AccordionSection = ({ title, icon: Icon, isExpanded, onToggle, badge, chil
           <Icon size={20} className="text-blue-600" />
           <h3 className="text-lg font-semibold">{title}</h3>
           {badge && (
-            <span className={`px-2 py-1 text-xs rounded-full ${
-              badge.type === 'success' ? 'bg-green-100 text-green-800' : 
-              badge.type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-gray-100 text-gray-800'
-            }`}>
+            <span className={`px-2 py-1 text-xs rounded-full ${badge.type === 'success' ? 'bg-green-100 text-green-800' :
+                badge.type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-gray-100 text-gray-800'
+              }`}>
               {badge.text}
             </span>
           )}
@@ -243,7 +242,7 @@ const SocialMediaField = ({ link, index, onUpdate, onRemove }) => {
             ))}
           </select>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">URL</label>
           <input
@@ -255,7 +254,7 @@ const SocialMediaField = ({ link, index, onUpdate, onRemove }) => {
           />
         </div>
       </div>
-      
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <selectedPlatform.icon size={20} className={selectedPlatform.color} />
@@ -272,13 +271,73 @@ const SocialMediaField = ({ link, index, onUpdate, onRemove }) => {
   );
 };
 
+
+const PaymentMethodField = ({ method, index, onUpdate, onRemove }) => {
+  const paymentMethods = [
+    { value: 'bkash', label: 'bKash' },
+    { value: 'nagad', label: 'Nagad' },
+    { value: 'rocket', label: 'Rocket' },
+    { value: 'bank', label: 'Bank Transfer' },
+    { value: 'card', label: 'Credit/Debit Card' },
+  ];
+
+  const selectedMethod = paymentMethods.find(p => p.value === method.getway) || paymentMethods[0];
+
+  return (
+    <div className="bg-green-50 p-4 rounded-lg space-y-4 border border-green-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+          <select
+            value={method.getway}
+            onChange={(e) => onUpdate(index, 'getway', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          >
+            {paymentMethods.map(method => (
+              <option key={method.value} value={method.value}>
+                {method.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+          <input
+            type="text"
+            value={method.getwaynumber}
+            onChange={(e) => onUpdate(index, 'getwaynumber', e.target.value)}
+            placeholder="Enter account/number"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium">{selectedMethod.label}</span>
+        </div>
+        <button
+          onClick={() => onRemove(index)}
+          className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-colors"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+
+
+
 const Alert = ({ type, message, onClose }) => {
   const icons = {
     success: CheckCircle,
     error: AlertCircle,
     info: Info
   };
-  
+
   const colors = {
     success: 'bg-green-100 text-green-800 border-green-200',
     error: 'bg-red-100 text-red-800 border-red-200',
@@ -318,6 +377,9 @@ const HomepageManagement = () => {
       contactNumber: '',
       socialLinks: [],
       location: ''
+    },
+    paymentInfo: {
+      method: []
     }
   });
 
@@ -328,7 +390,8 @@ const HomepageManagement = () => {
   const [expandedPanels, setExpandedPanels] = useState({
     hero: true,
     offer: false,
-    contact: false
+    contact: false,
+
   });
 
   useEffect(() => {
@@ -384,7 +447,7 @@ const HomepageManagement = () => {
       imageUrl: img.url || img.imageUrl,
       altText: img.altText
     }));
-    
+
     setHomePageData(prev => ({
       ...prev,
       heroPanel
@@ -419,12 +482,50 @@ const HomepageManagement = () => {
       ...prev,
       contactInfo: {
         ...prev.contactInfo,
-        socialLinks: prev.contactInfo.socialLinks.map((link, i) => 
+        socialLinks: prev.contactInfo.socialLinks.map((link, i) =>
           i === index ? { ...link, [field]: value } : link
         )
       }
     }));
   };
+
+
+  const addPaymentMethod = () => {
+    setHomePageData(prev => ({
+      ...prev,
+      paymentInfo: {
+        method: [
+          ...prev.paymentInfo.method,
+          { getway: 'bkash', getwaynumber: '' }
+        ]
+      }
+    }));
+  };
+
+  const removePaymentMethod = (index) => {
+    setHomePageData(prev => ({
+      ...prev,
+      paymentInfo: {
+        method: prev.paymentInfo.method.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const updatePaymentMethod = (index, field, value) => {
+    setHomePageData(prev => ({
+      ...prev,
+      paymentInfo: {
+        method: prev.paymentInfo.method.map((method, i) =>
+          i === index ? { ...method, [field]: value } : method
+        )
+      }
+    }));
+  };
+
+
+
+
+
 
   const updateOfferPanel = (field, value) => {
     setHomePageData(prev => ({
@@ -474,8 +575,8 @@ const HomepageManagement = () => {
       {/* Alert */}
       {alert.show && (
         <div className="mb-6">
-          <Alert 
-            type={alert.type} 
+          <Alert
+            type={alert.type}
             message={alert.message}
             onClose={() => setAlert({ show: false, message: '', type: 'info' })}
           />
@@ -488,9 +589,9 @@ const HomepageManagement = () => {
         icon={Image}
         isExpanded={expandedPanels.hero}
         onToggle={() => handlePanelToggle('hero')}
-        badge={{ 
-          text: `${homePageData.heroPanel.length} Image${homePageData.heroPanel.length !== 1 ? 's' : ''}`, 
-          type: 'info' 
+        badge={{
+          text: `${homePageData.heroPanel.length} Image${homePageData.heroPanel.length !== 1 ? 's' : ''}`,
+          type: 'info'
         }}
       >
         <div className="space-y-6">
@@ -501,7 +602,7 @@ const HomepageManagement = () => {
             title="Hero Banner Images"
             uploading={uploading}
           />
-          
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-medium text-blue-900 mb-2">Hero Panel Tips:</h4>
             <ul className="text-sm text-blue-700 space-y-1">
@@ -519,9 +620,9 @@ const HomepageManagement = () => {
         icon={Share2}
         isExpanded={expandedPanels.offer}
         onToggle={() => handlePanelToggle('offer')}
-        badge={{ 
-          text: homePageData.offerPanel.isEnabled ? 'Enabled' : 'Disabled', 
-          type: homePageData.offerPanel.isEnabled ? 'success' : 'warning' 
+        badge={{
+          text: homePageData.offerPanel.isEnabled ? 'Enabled' : 'Disabled',
+          type: homePageData.offerPanel.isEnabled ? 'success' : 'warning'
         }}
       >
         <div className="space-y-6">
@@ -536,7 +637,7 @@ const HomepageManagement = () => {
                 className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -545,12 +646,10 @@ const HomepageManagement = () => {
                   onChange={(e) => updateOfferPanel('isEnabled', e.target.checked)}
                   className="sr-only"
                 />
-                <div className={`relative w-10 h-6 rounded-full transition-colors ${
-                  homePageData.offerPanel.isEnabled ? 'bg-blue-600' : 'bg-gray-300'
-                }`}>
-                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                    homePageData.offerPanel.isEnabled ? 'translate-x-4' : 'translate-x-0'
-                  }`} />
+                <div className={`relative w-10 h-6 rounded-full transition-colors ${homePageData.offerPanel.isEnabled ? 'bg-blue-600' : 'bg-gray-300'
+                  }`}>
+                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${homePageData.offerPanel.isEnabled ? 'translate-x-4' : 'translate-x-0'
+                    }`} />
                 </div>
                 <span className="ml-3 text-sm font-medium text-gray-700">Enable Offer Panel</span>
               </label>
@@ -576,9 +675,9 @@ const HomepageManagement = () => {
         icon={Info}
         isExpanded={expandedPanels.contact}
         onToggle={() => handlePanelToggle('contact')}
-        badge={{ 
-          text: `${homePageData.contactInfo.socialLinks.length} Social Link${homePageData.contactInfo.socialLinks.length !== 1 ? 's' : ''}`, 
-          type: 'info' 
+        badge={{
+          text: `${homePageData.contactInfo.socialLinks.length} Social Link${homePageData.contactInfo.socialLinks.length !== 1 ? 's' : ''}`,
+          type: 'info'
         }}
       >
         <div className="space-y-6">
@@ -660,6 +759,52 @@ const HomepageManagement = () => {
                 />
               ))}
             </div>
+          </div>
+        </div>
+      </AccordionSection>
+
+
+      <AccordionSection
+        title="Payment Information"
+        icon={CreditCard} // Make sure to import CreditCard from lucide-react
+        isExpanded={expandedPanels.payment}
+        onToggle={() => handlePanelToggle('payment')}
+        badge={{
+          text: `${homePageData.paymentInfo.method.length} Method${homePageData.paymentInfo.method.length !== 1 ? 's' : ''}`,
+          type: 'info'
+        }}
+      >
+        <div className="space-y-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <CreditCard size={20} className="text-green-600" />
+              <h3 className="text-lg font-semibold">Payment Methods</h3>
+            </div>
+            <button
+              onClick={addPaymentMethod}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            >
+              <Plus size={16} />
+              <span>Add Payment Method</span>
+            </button>
+          </div>
+
+          {homePageData.paymentInfo.method.length === 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+              <p className="text-green-600">No payment methods added yet. Click "Add Payment Method" to get started.</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {homePageData.paymentInfo.method.map((method, index) => (
+              <PaymentMethodField
+                key={index}
+                method={method}
+                index={index}
+                onUpdate={updatePaymentMethod}
+                onRemove={removePaymentMethod}
+              />
+            ))}
           </div>
         </div>
       </AccordionSection>

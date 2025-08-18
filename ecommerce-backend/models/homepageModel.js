@@ -19,6 +19,12 @@ const HomePageSchema = new mongoose.Schema({
       url: { type: String, required: true }
     }],
     location: { type: String, required: true }
+  },
+  paymentInfo: {
+    method: [{
+      getway: {type: String, required: true},
+      getwaynumber: {type: String, required: true}
+    }]
   }
 });
 
