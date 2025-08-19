@@ -38,18 +38,39 @@ const OrderDetailPage = () => {
       navigate('/login');
       return;
     }
-    fetchOrderDetail();
+    if (orderId) {
+      fetchOrderDetail();
+    }
   }, [orderId, isAuthenticated, navigate]);
 
   const fetchOrderDetail = async () => {
     try {
       setLoading(true);
       setError('');
+      console.log('Fetching order with ID:', orderId);
+      
       const response = await apiService.getUserOrderById(orderId);
-      setOrder(response);
+      console.log('Order API response:', response);
+      
+      // Handle different response structures
+      let orderData = null;
+      if (response.order) {
+        orderData = response.order;
+      } else if (response.data) {
+        orderData = response.data;
+      } else if (response._id || response.orderId) {
+        orderData = response;
+      }
+      
+      if (!orderData) {
+        throw new Error('Order data not found in response');
+      }
+      
+      setOrder(orderData);
     } catch (err) {
       console.error('Error fetching order:', err);
-      setError('Order not found');
+      setError(err.message || 'Order not found');
+      setOrder(null);
     } finally {
       setLoading(false);
     }
@@ -94,10 +115,11 @@ const OrderDetailPage = () => {
         step: 0
       }
     };
-    return configs[status] || configs.pending;
+    return configs[status?.toLowerCase()] || configs.pending;
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     try {
       return new Date(dateString).toLocaleDateString('en-US', {
         weekday: 'long',
@@ -146,6 +168,7 @@ const OrderDetailPage = () => {
   };
 
   const copyToClipboard = (text) => {
+    if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
       alert('Copied to clipboard!');
     }).catch(() => {
@@ -154,9 +177,17 @@ const OrderDetailPage = () => {
   };
 
   const handleReorder = async () => {
+    if (!order?.items || !Array.isArray(order.items)) {
+      alert('No items found to reorder');
+      return;
+    }
+
     try {
       for (const item of order.items) {
-        await apiService.addToCart(item.product._id, item.quantity);
+        const productId = item.product?._id || item.productId || item.product;
+        if (productId) {
+          await apiService.addToCart(productId, item.quantity || 1);
+        }
       }
       alert('Items added to cart successfully!');
       navigate('/cart');
@@ -167,7 +198,7 @@ const OrderDetailPage = () => {
   };
 
   const downloadInvoice = () => {
-    console.log('Downloading invoice for order:', order._id);
+    console.log('Downloading invoice for order:', order?._id || order?.orderId);
     alert('Invoice download feature will be implemented with backend integration.');
   };
 
@@ -240,9 +271,11 @@ const OrderDetailPage = () => {
           </button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Order #{order?.orderId || order?._id?.slice(-8) || 'Loading...'}
+              Order #{order?.orderId || order?._id?.slice(-8) || 'N/A'}
             </h1>
-            <p className="text-gray-600">Placed on {order?.createdAt ? formatDate(order.createdAt) : 'Loading...'}</p>
+            <p className="text-gray-600">
+              Placed on {formatDate(order?.createdAt)}
+            </p>
           </div>
         </div>
 
@@ -257,8 +290,8 @@ const OrderDetailPage = () => {
                     <StatusIcon className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      {order?.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Loading...'}
+                    <h2 className="text-xl font-semibold text-gray-900 capitalize">
+                      {order?.status || 'Pending'}
                     </h2>
                     <p className="text-gray-600">{statusConfig.description}</p>
                   </div>
@@ -285,28 +318,29 @@ const OrderDetailPage = () => {
               {/* Progress Steps */}
               {order?.status !== 'cancelled' && (
                 <div className="mt-8">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between relative">
                     {orderSteps.map((step, index) => (
-                      <div key={index} className="flex flex-col items-center flex-1">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      <div key={index} className="flex flex-col items-center flex-1 relative">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium z-10 ${
                           step.status === 'completed'
                             ? 'bg-green-600 text-white'
                             : 'bg-gray-200 text-gray-600'
                         }`}>
                           {step.status === 'completed' ? '✓' : index + 1}
                         </div>
-                        <span className={`mt-2 text-sm font-medium ${
+                        <span className={`mt-2 text-sm font-medium text-center ${
                           step.status === 'completed' ? 'text-green-600' : 'text-gray-400'
                         }`}>
                           {step.name}
                         </span>
-                        {index < orderSteps.length - 1 && (
-                          <div className={`hidden md:block absolute h-0.5 w-full mt-4 ${
-                            step.status === 'completed' ? 'bg-green-600' : 'bg-gray-200'
-                          }`} style={{ left: '50%', zIndex: -1 }} />
-                        )}
                       </div>
                     ))}
+                    {/* Progress Line */}
+                    <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 -z-0" />
+                    <div 
+                      className="absolute top-4 left-0 h-0.5 bg-green-600 -z-0 transition-all duration-500"
+                      style={{ width: `${((statusConfig.step - 1) / (orderSteps.length - 1)) * 100}%` }}
+                    />
                   </div>
                 </div>
               )}
@@ -332,62 +366,86 @@ const OrderDetailPage = () => {
               </div>
               
               <div className="divide-y divide-gray-200">
-                {order?.items?.map((item, index) => (
-                  <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                        <img
-                          src={item.product?.thumbnail || '/placeholder-product.jpg'}
-                          alt={item.product?.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.src = '/placeholder-product.jpg';
-                          }}
-                        />
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <Link
-                          to={`/product/${item.product?._id}`}
-                          className="text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors"
-                        >
-                          {item.product?.title}
-                        </Link>
-                        {item.product?.companyName && (
-                          <p className="text-sm text-gray-600 mt-1">{item.product.companyName}</p>
-                        )}
-                        
-                        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                          <span>Quantity: {item.quantity}</span>
-                          <span>Price: ${item.price}</span>
-                        </div>
+                {order?.items && Array.isArray(order.items) && order.items.length > 0 ? (
+                  order.items.map((item, index) => {
+                    const product = item.product || item.productId || {};
+                    const productId = product._id || product.id;
+                    const productTitle = product.title || product.name || 'Unknown Product';
+                    const productThumbnail = product.thumbnail || product.image || '/placeholder-product.jpg';
+                    const productCompany = product.companyName || product.company;
+                    const itemQuantity = item.quantity || 1;
+                    const itemPrice = item.price || item.finalPrice || product.finalPrice || 0;
 
-                        {order?.status === 'delivered' && (
-                          <div className="mt-3">
-                            <button className="flex items-center text-sm text-yellow-600 hover:text-yellow-700 font-medium">
-                              <Star className="w-4 h-4 mr-1" />
-                              Rate & Review
-                            </button>
+                    return (
+                      <div key={index} className="p-6 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start space-x-4">
+                          <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                            <img
+                              src={productThumbnail}
+                              alt={productTitle}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.src = '/placeholder-product.jpg';
+                              }}
+                            />
                           </div>
-                        )}
+                          
+                          <div className="flex-1 min-w-0">
+                            {productId ? (
+                              <Link
+                                to={`/product/${productId}`}
+                                className="text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors block"
+                              >
+                                {productTitle}
+                              </Link>
+                            ) : (
+                              <h3 className="text-lg font-medium text-gray-900">
+                                {productTitle}
+                              </h3>
+                            )}
+                            
+                            {productCompany && (
+                              <p className="text-sm text-gray-600 mt-1">{productCompany}</p>
+                            )}
+                            
+                            <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                              <span>Quantity: {itemQuantity}</span>
+                              <span>Price: ৳{Number(itemPrice).toFixed(2)}</span>
+                            </div>
+
+                            {order?.status === 'delivered' && (
+                              <div className="mt-3">
+                                <button className="flex items-center text-sm text-yellow-600 hover:text-yellow-700 font-medium">
+                                  <Star className="w-4 h-4 mr-1" />
+                                  Rate & Review
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="text-right">
+                            <p className="text-lg font-semibold text-gray-900">
+                              ৳{(itemQuantity * itemPrice).toFixed(2)}
+                            </p>
+                            {order?.status === 'delivered' && productId && (
+                              <button
+                                onClick={() => apiService.addToCart(productId, itemQuantity)}
+                                className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                              >
+                                Buy Again
+                              </button>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      
-                      <div className="text-right">
-                        <p className="text-lg font-semibold text-gray-900">
-                          ${(item.quantity * item.price).toFixed(2)}
-                        </p>
-                        {order?.status === 'delivered' && (
-                          <button
-                            onClick={() => apiService.addToCart(item.product._id, item.quantity)}
-                            className="mt-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            Buy Again
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                    );
+                  })
+                ) : (
+                  <div className="p-6 text-center text-gray-500">
+                    <Package className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                    <p>No items found in this order</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
 
@@ -421,32 +479,32 @@ const OrderDetailPage = () => {
               <div className="space-y-3">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({order?.items?.length || 0} items)</span>
-                  <span>${((order?.totalAmount || 0) - (order?.shippingCost || 0) - (order?.tax || 0)).toFixed(2)}</span>
+                  <span>৳{((order?.totalAmount || 0) - (order?.deliveryCharge || 0) - (order?.tax || 0)).toFixed(2)}</span>
                 </div>
                 
                 {(order?.discount || 0) > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount</span>
-                    <span>-${(order?.discount || 0).toFixed(2)}</span>
+                    <span>-৳{(order?.discount || 0).toFixed(2)}</span>
                   </div>
                 )}
                 
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span>{(order?.shippingCost || 0) > 0 ? `${(order?.shippingCost || 0).toFixed(2)}` : 'Free'}</span>
+                  <span>{(order?.deliveryCharge || 0) > 0 ? `৳${(order?.deliveryCharge || 0).toFixed(2)}` : 'Free'}</span>
                 </div>
                 
                 {(order?.tax || 0) > 0 && (
                   <div className="flex justify-between text-gray-600">
                     <span>Tax</span>
-                    <span>${(order?.tax || 0).toFixed(2)}</span>
+                    <span>৳{(order?.tax || 0).toFixed(2)}</span>
                   </div>
                 )}
                 
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-lg font-semibold text-gray-900">
                     <span>Total</span>
-                    <span>${(order?.totalAmount || 0).toFixed(2)}</span>
+                    <span>৳{(order?.totalAmount || 0).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -489,30 +547,14 @@ const OrderDetailPage = () => {
                     Cancel Order
                   </button>
                 )}
-
-                <Link
-                  to="/contact"
-                  className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  Contact Support
-                </Link>
               </div>
 
               {/* Need Help */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="font-medium text-gray-900 mb-3">Need Help?</h3>
                 <div className="space-y-2 text-sm text-gray-600">
-                  <p>• Track your package</p>
-                  <p>• Return or exchange items</p>
-                  <p>• Report a problem</p>
+    
                 </div>
-                <div className="mt-3 text-sm">
-                  <p className="text-gray-600">Customer Service</p>
-                  <div className="flex items-center text-blue-600">
-                    <Phone className="w-4 h-4 mr-1" />
-                    <span>1-800-123-4567</span>
-                  </div>
                 </div>
               </div>
             </div>
@@ -616,7 +658,6 @@ const OrderDetailPage = () => {
           </div>
         </div>
       </div>
-    </div>
   );
 };
 

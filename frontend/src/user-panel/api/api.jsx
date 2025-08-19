@@ -1,4 +1,4 @@
-// src/user-panel/api/api.js - UPDATED WITH ORDER MANAGEMENT
+// src/user-panel/api/api.js - UPDATED WITH ORDER MANAGEMENT AND COD PARTIAL PAYMENT
 
 class APIError extends Error {
   constructor(message, status, data) {
@@ -193,6 +193,14 @@ async request(endpoint, options = {}) {
     return this.request(`/orders/my/${orderId}`);
   },
 
+  // NEW: Pay due amount for COD orders
+  async payDueAmount(orderId, paymentData) {
+    return this.request(`/orders/${orderId}/pay-due`, {
+      method: 'PUT',
+      body: JSON.stringify(paymentData)
+    });
+  },
+
   // Order APIs - Admin
   async getAllOrders(params = {}) {
     const queryString = new URLSearchParams(params).toString();
@@ -219,6 +227,12 @@ async request(endpoint, options = {}) {
 
   async getOrderStats() {
     return this.request('/orders/admin/stats');
+  },
+
+  // NEW: Get orders with due payments (Admin)
+  async getDuePayments(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/orders/admin/due-payments${queryString ? `?${queryString}` : ''}`);
   },
 
   // User APIs
@@ -341,6 +355,7 @@ export const clearCart = () => apiService.clearCart();
 export const placeOrder = (orderData) => apiService.placeOrder(orderData);
 export const getUserOrders = () => apiService.getUserOrders();
 export const getUserOrderById = (orderId) => apiService.getUserOrderById(orderId);
+export const payDueAmount = (orderId, paymentData) => apiService.payDueAmount(orderId, paymentData); // NEW
 
 // Order exports - Admin
 export const getAllOrders = (params) => apiService.getAllOrders(params);
@@ -348,6 +363,7 @@ export const getOrderById = (orderId) => apiService.getOrderById(orderId);
 export const updateOrderStatus = (orderId, statusData) => apiService.updateOrderStatus(orderId, statusData);
 export const updatePaymentStatus = (orderId, paymentData) => apiService.updatePaymentStatus(orderId, paymentData);
 export const getOrderStats = () => apiService.getOrderStats();
+export const getDuePayments = (params) => apiService.getDuePayments(params); // NEW
 
 // Image exports
 export const uploadSingleImage = (imageFile) => apiService.uploadSingleImage(imageFile);

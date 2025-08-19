@@ -71,6 +71,15 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true // subtotal + deliveryCharge + extraCharge
   },
+  paidAmount: {
+    type: Number,
+    required: true
+  },
+
+  dueAmount: {
+    type: Number,
+    required: true
+  },
   
   // NEW REVENUE TRACKING FIELDS FOR THE ENTIRE ORDER
   totalUnitPrice: {
@@ -125,12 +134,12 @@ const orderSchema = new mongoose.Schema({
   // Payment information
   paymentMethod: {
     type: String,
-    enum: ['cod', 'bkash', 'nagad', 'rocket', 'bank_transfer', 'card'],
+    enum: [ 'cod', 'bkash', 'nagad', 'rocket', 'bank_transfer', 'card'],
     required: true
   },
   paymentStatus: {
     type: String,
-    enum: ['unpaid', 'paid', 'refunded', 'failed'],
+    enum: ['cod','unpaid', 'paid', 'refunded', 'failed'],
     default: 'unpaid'
   },
   paymentDetails: {

@@ -16,11 +16,12 @@ const calculateDeliveryCharge = (city, subtotal) => {
   // if (subtotal > 5000) return 0;
 };
 
+// Updated placeOrder function with corrected pricing structure and COD partial payment
+// Fixed placeOrder function in orderController.js
 
-// Updated placeOrder function with corrected pricing structure
 exports.placeOrder = async (req, res) => {
   try {
-    const { items, shippingAddress, paymentMethod, transactionId, notes, extraCharge = 0 } = req.body;
+    const { items, shippingAddress, paymentMethod, transactionId, notes, extraCharge = 0, paidAmount, isCOD } = req.body;
     const userId = req.user.userId;
 
     // Validation (existing code remains same)
@@ -40,7 +41,7 @@ exports.placeOrder = async (req, res) => {
     let totalSellingPrice = 0;
     const orderItems = [];
 
-    // Process each item with NEW pricing structure
+    // Process each item with NEW pricing structure (existing code remains same)
     for (const item of items) {
       const product = await Product.findById(item.productId);
       if (!product) {
@@ -51,63 +52,92 @@ exports.placeOrder = async (req, res) => {
         return res.status(400).json({ msg: `Insufficient stock for ${product.title}` });
       }
 
-      // Use the finalPrice (which is already calculated in the model)
       const itemTotal = product.finalPrice * item.quantity;
       subtotal += itemTotal;
 
-      // Calculate totals for revenue tracking
       totalUnitPrice += product.price * item.quantity;
       totalProfit += product.profit * item.quantity;
       totalDeliveryCharge += (product.deliveryCharge || 0) * item.quantity;
       totalOfferValue += (product.offerValue || 0) * item.quantity;
       totalSellingPrice += product.sellingPrice * item.quantity;
 
-      // Store detailed item information
       orderItems.push({
         productId: product._id,
         title: product.title,
         thumbnail: product.thumbnail,
         quantity: item.quantity,
-        unitPrice: product.price,              // Unit price
-        profit: product.profit,                // Profit per item
-        deliveryCharge: product.deliveryCharge || 0,  // Delivery charge per item
-        sellingPrice: product.sellingPrice,    // Calculated selling price
-        offerValue: product.offerValue || 0,   // Discount per item
-        finalPrice: product.finalPrice,        // Final price charged
-        totalPrice: itemTotal                  // Total for this item
+        unitPrice: product.price,
+        profit: product.profit,
+        deliveryCharge: product.deliveryCharge || 0,
+        sellingPrice: product.sellingPrice,
+        offerValue: product.offerValue || 0,
+        finalPrice: product.finalPrice,
+        totalPrice: itemTotal
       });
 
-      // Update product stock
       product.stock -= item.quantity;
       product.soldCount += item.quantity;
       await product.save();
     }
 
-    // Calculate delivery charge using existing function
     const deliveryCharge = calculateDeliveryCharge(shippingAddress.city, subtotal);
     const totalAmount = subtotal + deliveryCharge + extraCharge;
 
-    // Create order with detailed revenue data
+    // FIXED: Calculate paidAmount and payment status based on order type
+    let calculatedPaidAmount;
+    let calculatedDueAmount;
+    let paymentStatus;
+
+    if (isCOD) {
+      // COD Order: Can have partial advance payment
+      calculatedPaidAmount = paidAmount || 0;
+      calculatedDueAmount = totalAmount - calculatedPaidAmount;
+      
+      // Payment status is 'cod' for COD orders (regardless of advance payment)
+      paymentStatus = 'cod';
+      
+      // Validation for COD
+      if (calculatedPaidAmount > totalAmount) {
+        return res.status(400).json({ 
+          msg: 'Paid amount cannot be greater than total amount',
+          totalAmount,
+          paidAmount: calculatedPaidAmount 
+        });
+      }
+      
+      if (calculatedPaidAmount < 0) {
+        return res.status(400).json({ msg: 'Paid amount cannot be negative' });
+      }
+    } else {
+      // Regular Payment: Full payment required
+      calculatedPaidAmount = totalAmount;
+      calculatedDueAmount = 0;
+      paymentStatus = 'paid';
+    }
+
+    // Create order with corrected logic
     const newOrder = new Order({
       userId,
       items: orderItems,
-      subtotal,                    // Total of all items (finalPrice * quantity)
-      deliveryCharge,              // Order-level delivery charge
+      subtotal,
+      deliveryCharge,
       extraCharge,
       totalAmount,
-      // Revenue tracking fields
-      totalUnitPrice,              // Sum of all unit prices
-      totalProfit,                 // Sum of all profits
-      totalProductDeliveryCharge: totalDeliveryCharge,  // Product-level delivery charges
-      totalSellingPrice,           // Sum of all selling prices
-      totalOfferValue,             // Sum of all discounts
+      paidAmount: calculatedPaidAmount,
+      dueAmount: calculatedDueAmount,
+      totalUnitPrice,
+      totalProfit,
+      totalProductDeliveryCharge: totalDeliveryCharge,
+      totalSellingPrice,
+      totalOfferValue,
       shippingAddress,
-      paymentMethod,
-      paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'paid',
+      paymentMethod, // This will be the actual gateway: bkash, nagad, rocket, card, or 'cod' for pure COD
+      paymentStatus, // This will be 'cod' for COD orders, 'paid' for full payments
       paymentDetails: {
         transactionId,
-        paidAt: new Date(),
-        amount: totalAmount
+        paidAt: calculatedPaidAmount > 0 ? new Date() : null,
+        amount: calculatedPaidAmount,
+        method: paymentMethod
       },
       notes
     });
@@ -128,7 +158,15 @@ exports.placeOrder = async (req, res) => {
     res.status(201).json({
       success: true,
       msg: 'Order placed successfully',
-      order: newOrder
+      order: newOrder,
+      paymentSummary: {
+        totalAmount,
+        paidAmount: calculatedPaidAmount,
+        dueAmount: calculatedDueAmount,
+        paymentMethod,
+        paymentStatus,
+        isCOD: isCOD || false
+      }
     });
   } catch (err) {
     console.error('Error placing order:', err);
@@ -136,8 +174,81 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
+// New function to handle due amount payment
+exports.payDueAmount = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { amount, paymentMethod, transactionId } = req.body;
+    const userId = req.user.userId;
 
+    // Find the order
+    const order = await Order.findOne({ _id: orderId, userId });
+    if (!order) {
+      return res.status(404).json({ msg: 'Order not found' });
+    }
 
+    // Check if there's any due amount
+    if (order.dueAmount <= 0) {
+      return res.status(400).json({ msg: 'No due amount remaining for this order' });
+    }
+
+    // Validate payment amount
+    if (amount <= 0 || amount > order.dueAmount) {
+      return res.status(400).json({ 
+        msg: 'Invalid payment amount',
+        dueAmount: order.dueAmount,
+        providedAmount: amount
+      });
+    }
+
+    // Update payment details
+    order.paidAmount += amount;
+    order.dueAmount -= amount;
+
+    // Update payment status if fully paid
+    if (order.dueAmount <= 0) {
+      order.paymentStatus = 'paid';
+      order.dueAmount = 0; // Ensure it's exactly 0
+    }
+
+    // Add payment transaction to history
+    order.paymentDetails = {
+      ...order.paymentDetails,
+      lastPayment: {
+        transactionId,
+        amount,
+        method: paymentMethod,
+        paidAt: new Date()
+      }
+    };
+
+    // Add to status history
+    order.statusHistory.push({
+      status: order.status,
+      note: `Payment of ৳${amount} received. ${order.dueAmount > 0 ? `Remaining due: ৳${order.dueAmount}` : 'Fully paid'}`,
+      updatedBy: userId,
+      updatedAt: new Date()
+    });
+
+    await order.save();
+
+    res.json({
+      success: true,
+      msg: 'Payment received successfully',
+      paymentSummary: {
+        totalAmount: order.totalAmount,
+        paidAmount: order.paidAmount,
+        dueAmount: order.dueAmount,
+        paymentStatus: order.paymentStatus
+      },
+      order
+    });
+
+  } catch (err) {
+    console.error('Error processing due payment:', err);
+    res.status(500).json({ msg: 'Server error while processing payment', error: err.message });
+  }
+};
 
 // Updated calculateOrderRevenue function
 const calculateOrderRevenue = (order) => {
@@ -173,7 +284,7 @@ const calculateOrderRevenue = (order) => {
 };
 
 // @route   GET /api/orders/my
-// @desc    Get current user's orders
+// @desc    Get current user's orders with payment summary
 // @access  Private (User)
 exports.getUserOrders = async (req, res) => {
   try {
@@ -181,10 +292,22 @@ exports.getUserOrders = async (req, res) => {
       .populate('items.productId', 'title thumbnail')
       .sort({ createdAt: -1 });
 
+    // Add payment summary to each order
+    const ordersWithPaymentInfo = orders.map(order => ({
+      ...order.toObject(),
+      paymentSummary: {
+        totalAmount: order.totalAmount,
+        paidAmount: order.paidAmount,
+        dueAmount: order.dueAmount,
+        paymentStatus: order.paymentStatus,
+        hasDue: order.dueAmount > 0
+      }
+    }));
+
     res.json({
       success: true,
       count: orders.length,
-      orders
+      orders: ordersWithPaymentInfo
     });
   } catch (err) {
     console.error(err);
@@ -208,9 +331,21 @@ exports.getUserOrderById = async (req, res) => {
       return res.status(404).json({ msg: 'Order not found' });
     }
 
+    // Add payment summary
+    const orderWithPaymentInfo = {
+      ...order.toObject(),
+      paymentSummary: {
+        totalAmount: order.totalAmount,
+        paidAmount: order.paidAmount,
+        dueAmount: order.dueAmount,
+        paymentStatus: order.paymentStatus,
+        hasDue: order.dueAmount > 0
+      }
+    };
+
     res.json({
       success: true,
-      order
+      order: orderWithPaymentInfo
     });
   } catch (err) {
     console.error(err);
@@ -243,18 +378,27 @@ exports.getAllOrders = async (req, res) => {
       .limit(limit * 1)
       .skip((page - 1) * limit);
 
-    // Calculate revenue for orders that might not have it stored
+    // Calculate revenue for orders that might not have it stored and add payment info
     const ordersWithRevenue = orders.map(order => {
-      if (!order.sellingPriceTotal || !order.profitTotal) {
+      const orderObj = order.toObject();
+      
+      if (!order.totalSellingPrice || !order.totalProfit) {
         const revenue = calculateOrderRevenue(order);
-        return {
-          ...order.toObject(),
-          sellingPriceTotal: revenue.sellingPriceTotal,
-          offerPriceTotal: revenue.offerPriceTotal,
-          profitTotal: revenue.profitTotal
-        };
+        orderObj.totalSellingPrice = revenue.totalSellingPrice;
+        orderObj.totalOfferValue = revenue.totalOfferValue;
+        orderObj.totalProfit = revenue.totalProfit;
       }
-      return order;
+      
+      // Add payment summary
+      orderObj.paymentSummary = {
+        totalAmount: order.totalAmount,
+        paidAmount: order.paidAmount,
+        dueAmount: order.dueAmount,
+        paymentStatus: order.paymentStatus,
+        hasDue: order.dueAmount > 0
+      };
+      
+      return orderObj;
     });
 
     const count = await Order.countDocuments(filter);
@@ -291,9 +435,21 @@ exports.getOrderById = async (req, res) => {
       return res.status(404).json({ msg: 'Order not found' });
     }
 
+    // Add payment summary
+    const orderWithPaymentInfo = {
+      ...order.toObject(),
+      paymentSummary: {
+        totalAmount: order.totalAmount,
+        paidAmount: order.paidAmount,
+        dueAmount: order.dueAmount,
+        paymentStatus: order.paymentStatus,
+        hasDue: order.dueAmount > 0
+      }
+    };
+
     res.json({
       success: true,
-      order
+      order: orderWithPaymentInfo
     });
   } catch (err) {
     console.error(err);
@@ -306,7 +462,7 @@ exports.getOrderById = async (req, res) => {
 // @access  Private (Admin)
 exports.updateOrderStatus = async (req, res) => {
   const { orderId } = req.params;
-  const { status, note, trackingNumber, estimatedDelivery } = req.body;
+  const { status, note, trackingNumber, estimatedDelivery, collectDueAmount } = req.body;
 
   try {
     // Check if user is admin
@@ -331,13 +487,38 @@ exports.updateOrderStatus = async (req, res) => {
     });
 
     // Update payment status based on order status
-    if (status === 'delivered' && order.paymentMethod === 'cod') {
-      order.paymentStatus = 'paid';
-      order.paymentDetails = {
-        paidAt: new Date(),
-        amount: order.totalAmount
-      };
+    if (status === 'delivered') {
       order.actualDelivery = new Date();
+      
+      // If COD and there's due amount, either collect it or mark as needed
+      if (order.paymentMethod === 'cod' && order.dueAmount > 0) {
+        if (collectDueAmount === true) {
+          // Mark as fully paid if due amount was collected on delivery
+          const collectedAmount = order.dueAmount;
+          order.paidAmount = order.totalAmount;
+          order.dueAmount = 0;
+          order.paymentStatus = 'paid';
+          order.paymentDetails = {
+            ...order.paymentDetails,
+            deliveryPayment: {
+              amount: collectedAmount,
+              collectedAt: new Date(),
+              method: 'cod'
+            }
+          };
+          
+          // Add payment note to status history
+          order.statusHistory.push({
+            status,
+            note: `Due amount of ৳${collectedAmount} collected on delivery`,
+            updatedBy: req.user.userId
+          });
+        }
+        // If collectDueAmount is false or not provided, keep as partial payment
+      } else if (order.paymentMethod === 'cod' && order.dueAmount <= 0) {
+        // Already fully paid COD order
+        order.paymentStatus = 'paid';
+      }
     }
 
     if (status === 'cancelled') {
@@ -350,14 +531,7 @@ exports.updateOrderStatus = async (req, res) => {
             soldCount: -item.quantity
           }
         });
-        // await Sell.findByIdAndUpdate(order.sellId, {
-        //   $inc: {
-        //     totalSell: -order.totalAmount
-        //   }
-        // });
       }
-      // Restore sell revienew 
-
     }
 
     // Update tracking info if provided
@@ -369,7 +543,13 @@ exports.updateOrderStatus = async (req, res) => {
     res.json({
       success: true,
       msg: 'Order status updated successfully',
-      order
+      order,
+      paymentSummary: {
+        totalAmount: order.totalAmount,
+        paidAmount: order.paidAmount,
+        dueAmount: order.dueAmount,
+        paymentStatus: order.paymentStatus
+      }
     });
   } catch (err) {
     console.error(err);
@@ -395,20 +575,31 @@ exports.updatePaymentStatus = async (req, res) => {
       return res.status(404).json({ msg: 'Order not found' });
     }
 
-    order.paymentStatus = paymentStatus;
-
+    // Handle different payment status updates
     if (paymentStatus === 'paid') {
+      const paymentAmount = amount || order.dueAmount;
+      order.paidAmount += paymentAmount;
+      order.dueAmount = Math.max(0, order.dueAmount - paymentAmount);
+      
+      if (order.dueAmount <= 0) {
+        order.paymentStatus = 'paid';
+        order.dueAmount = 0;
+      }
+
       order.paymentDetails = {
+        ...order.paymentDetails,
         transactionId: transactionId || 'MANUAL',
         paidAt: new Date(),
-        amount: amount || order.totalAmount
+        amount: order.paidAmount
       };
+    } else {
+      order.paymentStatus = paymentStatus;
     }
 
     // Add to status history
     order.statusHistory.push({
       status: order.status,
-      note: `Payment status updated to ${paymentStatus}`,
+      note: `Payment status updated to ${paymentStatus}${amount ? ` with amount ৳${amount}` : ''}`,
       updatedBy: req.user.userId
     });
 
@@ -417,7 +608,13 @@ exports.updatePaymentStatus = async (req, res) => {
     res.json({
       success: true,
       msg: 'Payment status updated successfully',
-      order
+      order,
+      paymentSummary: {
+        totalAmount: order.totalAmount,
+        paidAmount: order.paidAmount,
+        dueAmount: order.dueAmount,
+        paymentStatus: order.paymentStatus
+      }
     });
   } catch (err) {
     console.error(err);
@@ -440,9 +637,11 @@ exports.getOrderStats = async (req, res) => {
           _id: null,
           totalOrders: { $sum: 1 },
           totalRevenue: { $sum: '$totalAmount' },
-          totalSellingPriceRevenue: { $sum: '$sellingPriceTotal' },
-          totalOfferPriceRevenue: { $sum: '$offerPriceTotal' },
-          totalProfit: { $sum: '$profitTotal' },
+          totalPaidAmount: { $sum: '$paidAmount' },
+          totalDueAmount: { $sum: '$dueAmount' },
+          totalSellingPriceRevenue: { $sum: '$totalSellingPrice' },
+          totalOfferPriceRevenue: { $sum: '$totalOfferValue' },
+          totalProfit: { $sum: '$totalProfit' },
           averageOrderValue: { $avg: '$totalAmount' },
           pendingOrders: {
             $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] }
@@ -464,6 +663,12 @@ exports.getOrderStats = async (req, res) => {
           },
           unpaidOrders: {
             $sum: { $cond: [{ $eq: ['$paymentStatus', 'unpaid'] }, 1, 0] }
+          },
+          codOrders: {
+            $sum: { $cond: [{ $eq: ['$paymentStatus', 'cod'] }, 1, 0] }
+          },
+          ordersWithDue: {
+            $sum: { $cond: [{ $gt: ['$dueAmount', 0] }, 1, 0] }
           }
         }
       }
@@ -480,15 +685,16 @@ exports.getOrderStats = async (req, res) => {
     const todayRevenue = await Order.aggregate([
       {
         $match: {
-          createdAt: { $gte: today },
-          paymentStatus: 'paid'
+          createdAt: { $gte: today }
         }
       },
       {
         $group: {
           _id: null,
           total: { $sum: '$totalAmount' },
-          profit: { $sum: '$profitTotal' }
+          paid: { $sum: '$paidAmount' },
+          due: { $sum: '$dueAmount' },
+          profit: { $sum: '$totalProfit' }
         }
       }
     ]);
@@ -501,6 +707,11 @@ exports.getOrderStats = async (req, res) => {
       ? (baseStats.totalProfit / baseStats.totalRevenue) * 100
       : 0;
 
+    // Calculate collection rate
+    const collectionRate = baseStats.totalRevenue > 0
+      ? (baseStats.totalPaidAmount / baseStats.totalRevenue) * 100
+      : 0;
+
     res.json({
       success: true,
       stats: {
@@ -508,13 +719,61 @@ exports.getOrderStats = async (req, res) => {
         sellingPriceRevenue: baseStats.totalSellingPriceRevenue || 0,
         offerPriceRevenue: baseStats.totalOfferPriceRevenue || 0,
         profitMargin,
+        collectionRate,
         todayOrders,
         todayRevenue: todayData.total || 0,
+        todayPaidAmount: todayData.paid || 0,
+        todayDueAmount: todayData.due || 0,
         todayProfit: todayData.profit || 0
       }
     });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error while fetching stats' });
+  }
+};
+
+// @route   GET /api/orders/due-payments
+// @desc    Get orders with pending due amounts
+// @access  Private (Admin)
+exports.getDuePayments = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ msg: 'Access denied. Admin only.' });
+    }
+
+    const { page = 1, limit = 10 } = req.query;
+
+    const ordersWithDue = await Order.find({ dueAmount: { $gt: 0 } })
+      .populate('userId', 'name email phone')
+      .populate('items.productId', 'title thumbnail')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const count = await Order.countDocuments({ dueAmount: { $gt: 0 } });
+
+    // Add payment summary to each order
+    const ordersWithPaymentInfo = ordersWithDue.map(order => ({
+      ...order.toObject(),
+      paymentSummary: {
+        totalAmount: order.totalAmount,
+        paidAmount: order.paidAmount,
+        dueAmount: order.dueAmount,
+        paymentStatus: order.paymentStatus,
+        hasDue: order.dueAmount > 0
+      }
+    }));
+
+    res.json({
+      success: true,
+      count,
+      currentPage: page,
+      totalPages: Math.ceil(count / limit),
+      orders: ordersWithPaymentInfo
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error while fetching due payments' });
   }
 };

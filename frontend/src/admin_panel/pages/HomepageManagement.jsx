@@ -253,6 +253,17 @@ const SocialMediaField = ({ link, index, onUpdate, onRemove }) => {
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Contact Link</label>
+          <input
+            type="contactLink"
+            value={link.contactLink}
+            onChange={(e) => onUpdate(index, 'contactLink', e.target.value)}
+            placeholder={`https://${link.platform}.com/yourprofile`}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
       </div>
 
       <div className="flex items-center justify-between">

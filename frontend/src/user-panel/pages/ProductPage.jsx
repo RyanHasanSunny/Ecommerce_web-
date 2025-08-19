@@ -1,5 +1,5 @@
 // src/user-panel/pages/ProductPage.jsx
-// CORRECTED VERSION WITH PROPER PRICING STRUCTURE
+// COMPLETE VERSION WITH DYNAMIC SOCIAL LINKS FROM BACKEND
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -25,7 +25,10 @@ import {
   MapPin,
   Package,
   CreditCard,
-  Info
+  Info,
+  MessageCircle,
+  Phone,
+  Mail
 } from "lucide-react";
 
 const ProductPage = () => {
@@ -43,7 +46,9 @@ const ProductPage = () => {
   const [addingToCart, setAddingToCart] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [selectedCity, setSelectedCity] = useState('dhaka'); // For delivery charge calculation
+  const [selectedCity, setSelectedCity] = useState('dhaka');
+  const [contactInfo, setContactInfo] = useState(null);
+  const [contactLoading, setContactLoading] = useState(true);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -61,6 +66,25 @@ const ProductPage = () => {
     };
     if (productId) fetchProduct();
   }, [productId]);
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        setContactLoading(true);
+        const response = await apiService.getHomePage();
+        const homePageData = response.data || response;
+        if (homePageData?.contactInfo) {
+          setContactInfo(homePageData.contactInfo);
+        }
+      } catch (error) {
+        console.error('Error fetching contact info:', error);
+      } finally {
+        setContactLoading(false);
+      }
+    };
+
+    fetchContactInfo();
+  }, []);
 
   const images = [product?.thumbnail, ...(product?.images || [])].filter(Boolean);
 
@@ -106,9 +130,101 @@ const ProductPage = () => {
     };
   };
 
-  // Calculate delivery charge based on location (ORDER LEVEL, not product)
+  // Calculate delivery charge based on location
   const getDeliveryCharge = () => {
     return selectedCity === 'dhaka' ? 60 : 120;
+  };
+
+  // Get social links from backend data
+  const getSocialLinks = () => {
+    if (!contactInfo?.socialLinks) return [];
+    
+    return contactInfo.socialLinks.map(link => {
+      const platform = link.platform.toLowerCase();
+      let icon, bgColor, hoverColor;
+      
+      switch (platform) {
+        case 'whatsapp':
+          icon = MessageCircle;
+          bgColor = 'bg-green-500';
+          hoverColor = 'hover:bg-green-600';
+          break;
+        case 'messenger':
+        case 'facebook':
+          icon = MessageCircle;
+          bgColor = 'bg-blue-500';
+          hoverColor = 'hover:bg-blue-600';
+          break;
+        case 'telegram':
+          icon = MessageCircle;
+          bgColor = 'bg-blue-400';
+          hoverColor = 'hover:bg-blue-500';
+          break;
+        case 'viber':
+          icon = Phone;
+          bgColor = 'bg-purple-500';
+          hoverColor = 'hover:bg-purple-600';
+          break;
+        default:
+          icon = MessageCircle;
+          bgColor = 'bg-gray-500';
+          hoverColor = 'hover:bg-gray-600';
+      }
+
+      return {
+        platform: link.platform,
+        url: link.contactLink,
+        icon,
+        bgColor,
+        hoverColor
+      };
+    });
+  };
+
+  // Get additional social media contacts
+  const getSocialMediaContacts = () => {
+    if (!contactInfo?.socialmediaContact) return [];
+    
+    return contactInfo.socialmediaContact.map(social => {
+      const platform = social.socialMedia.toLowerCase();
+      let icon, bgColor, hoverColor;
+      
+      switch (platform) {
+        case 'whatsapp':
+          icon = MessageCircle;
+          bgColor = 'bg-green-500';
+          hoverColor = 'hover:bg-green-600';
+          break;
+        case 'messenger':
+        case 'facebook':
+          icon = MessageCircle;
+          bgColor = 'bg-blue-500';
+          hoverColor = 'hover:bg-blue-600';
+          break;
+        case 'telegram':
+          icon = MessageCircle;
+          bgColor = 'bg-blue-400';
+          hoverColor = 'hover:bg-blue-500';
+          break;
+        case 'instagram':
+          icon = MessageCircle;
+          bgColor = 'bg-pink-500';
+          hoverColor = 'hover:bg-pink-600';
+          break;
+        default:
+          icon = MessageCircle;
+          bgColor = 'bg-gray-500';
+          hoverColor = 'hover:bg-gray-600';
+      }
+
+      return {
+        platform: social.socialMedia,
+        url: social.socialmediaLink,
+        icon,
+        bgColor,
+        hoverColor
+      };
+    });
   };
 
   const handleAddToCart = async () => {
@@ -213,6 +329,11 @@ const ProductPage = () => {
   const pricing = getPricing();
   const isOutOfStock = product.stock === 0;
   const deliveryCharge = getDeliveryCharge();
+  const socialLinks = getSocialLinks();
+  const socialMediaContacts = getSocialMediaContacts();
+  
+  // Combine both social link sources
+  const allSocialContacts = [...socialLinks, ...socialMediaContacts];
 
   return (
     <div className="min-h-screen bg-white">
@@ -220,21 +341,21 @@ const ProductPage = () => {
       <div className="bg-gray-50 border-b">
         <div className="container mx-auto px-4 py-3">
           <nav className="flex items-center space-x-2 text-sm">
-            <Link to="/" className="text-gray-500 hover:text-blue-600">
+            <Link to="/" className="text-gray-500 text-xs md:text-sm hover:text-blue-600">
               Home
             </Link>
             <ChevronRight className="w-4 h-4 text-gray-400" />
-            <Link to="/products" className="text-gray-500 hover:text-blue-600">
+            <Link to="/products" className="text-gray-500 text-xs md:text-sm hover:text-blue-600">
               Products
             </Link>
             <ChevronRight className="w-4 h-4 text-gray-400" />
             {product.category && (
               <>
-                <span className="text-gray-500">{product.category.name}</span>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-500 text-xs md:text-sm">{product.category.name}</span>
+                <ChevronRight className="w-4 h-4 text-sm md:text-base text-gray-400" />
               </>
             )}
-            <span className="text-gray-900 font-medium truncate max-w-xs">
+            <span className="text-gray-900 font-medium text-xs md:text-sm truncate max-w-xs">
               {product.title}
             </span>
           </nav>
@@ -321,16 +442,16 @@ const ProductPage = () => {
           {/* Details & Actions */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold">{product.title}</h1>
+              <h3 className="text-xl md:text-base lg:text-lg font-medium text-gray-900">{product.title}</h3>
               {product.companyName && (
-                <p className="text-lg text-gray-600">{product.companyName}</p>
+                <p className="text-sm md:text-sm font-normal text-gray-600">{product.companyName}</p>
               )}
             </div>
 
             {/* CORRECTED PRICING DISPLAY */}
             <div>
               <div className="flex items-center space-x-4">
-                <span className="text-3xl font-bold text-gray-900">
+                <span className="text-xl font-bold text-gray-900">
                   ৳{pricing.finalPrice.toFixed(2)}
                 </span>
                 {pricing.hasDiscount && (
@@ -388,8 +509,6 @@ const ProductPage = () => {
                 </p>
               )}
             </div>
-
-      
 
             <div className="grid grid-cols-2 gap-4 border-y py-4 text-gray-600 text-sm">
               <div className="flex items-center space-x-2">
@@ -480,8 +599,6 @@ const ProductPage = () => {
                     </span>
                   </button>
 
-                  
-
                   <button
                     onClick={handleWishlistToggle}
                     className={`p-3 rounded-lg border-2 transition ${
@@ -499,46 +616,66 @@ const ProductPage = () => {
                     <Share2 className="w-5 h-5" />
                   </button>
                 </div>
-                <div>
-                  <h3>For more informatons.</h3>
-                </div>
-                <div className="flex flex-wrap space-x-4 mt-4">
-                  {/* WhatsApp */}
-                  <a
-                    href={`https://wa.me/8801XXXXXXXXX?text=I'm%20interested%20in%20${encodeURIComponent(product.title)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center py-3 rounded-lg font-semibold bg-green-500 text-white hover:bg-green-600 transition"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 32 32"
-                      className="w-5 h-5 mr-2 fill-current"
-                    >
-                      <path d="M16 .593c-8.838 0-16 6.708-16 14.969 0 2.646.77 5.219 2.208 7.458l-1.458 5.312 5.5-1.437c2.146 1.146 4.562 1.75 7.125 1.75 8.838 0 16-6.708 16-14.969s-7.162-14.969-16-14.969zM16 27.406c-2.25 0-4.438-.562-6.354-1.625l-.458-.25-3.25.854.875-3.125-.271-.479c-1.354-2.125-2.062-4.542-2.062-7.063 0-7.292 6.271-13.229 14-13.229 7.729 0 14 5.938 14 13.229s-6.271 13.229-14 13.229z" />
-                      <path d="M24.354 19.146c-.396-.198-2.354-1.167-2.719-1.292-.365-.135-.635-.198-.906.198s-1.042 1.292-1.281 1.563c-.229.25-.479.281-.875.094-.396-.198-1.667-.604-3.177-1.917-1.167-1.042-1.958-2.313-2.188-2.708-.229-.396-.021-.604.177-.802.188-.187.417-.479.625-.729.198-.25.271-.417.417-.688.135-.281.073-.521-.042-.729-.104-.198-.906-2.188-1.24-2.979-.323-.781-.646-.667-.906-.667-.229 0-.5-.031-.771-.031s-.729.104-1.104.5c-.375.396-1.479 1.438-1.479 3.5s1.521 4.063 1.729 4.354c.198.281 3 4.813 7.271 6.75 1.021.438 1.813.698 2.438.896 1.021.323 1.958.281 2.688.167.823-.125 2.354-.958 2.688-1.875.323-.917.323-1.708.229-1.875-.094-.167-.354-.271-.75-.469z" />
-                    </svg>
-                    WhatsApp
-                  </a>
 
-                  {/* Messenger */}
-                  <a
-                    href={`https://m.me/yourpageid`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center py-3 rounded-lg font-semibold bg-blue-500 text-white hover:bg-blue-600 transition"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 512 512"
-                      className="w-5 h-5 mr-2 fill-current"
-                    >
-                      <path d="M256 0C114.836 0 0 110.744 0 247.446c0 77.841 38.942 147.061 99.578 192.016V512l91.13-50.237c20.844 5.756 42.996 8.882 65.292 8.882 141.164 0 256-110.744 256-247.446S397.164 0 256 0zm23.623 334.276l-60.494-64.445-115.552 64.445 127.541-136.083 61.535 64.445 114.514-64.445-127.544 136.083z" />
-                    </svg>
-                    Messenger
-                  </a>
-                </div>
+                {/* Contact Information Section */}
+                <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Info className="w-5 h-5 text-blue-600" />
+                    <h3 className="font-semibold text-blue-900">For more information</h3>
+                  </div>
+                  
+                  {contactLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader className="w-5 h-5 animate-spin text-blue-600" />
+                      <span className="ml-2 text-blue-600">Loading contact options...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {contactInfo?.email && (
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Mail className="w-4 h-4 mr-2 text-blue-600" />
+                          <span>{contactInfo.email}</span>
+                        </div>
+                      )}
+                      
+                      {contactInfo?.contactNumber && (
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Phone className="w-4 h-4 mr-2 text-blue-600" />
+                          <span>{contactInfo.contactNumber}</span>
+                        </div>
+                      )}
 
+                      {allSocialContacts.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-700 font-medium">Contact us directly:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {allSocialContacts.map((social, index) => {
+                              const Icon = social.icon;
+                              return (
+                                <a
+                                  key={index}
+                                  href={social.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center justify-center px-3 py-2 rounded-lg font-medium text-white text-sm transition-colors duration-200 ${social.bgColor} ${social.hoverColor}`}
+                                >
+                                  <Icon className="w-4 h-4 mr-1" />
+                                  {social.platform}
+                                </a>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {(!contactInfo || (allSocialContacts.length === 0 && !contactInfo.email && !contactInfo.contactNumber)) && (
+                        <div className="text-center py-4">
+                          <p className="text-gray-500 text-sm">Contact information will be available soon.</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
 
                 <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                   <div className="flex items-center space-x-2">
@@ -588,7 +725,7 @@ const ProductPage = () => {
         {/* Tabs */}
         <div className="mt-16">
           <div className="border-b">
-            <nav className="flex space-x-8 overflow-x-auto">
+            <nav className="flex space-x-8 text-sm overflow-x-auto">
               {[
                 { id: "description", label: "Description" },
                 { id: "specifications", label: "Specifications" },
@@ -600,7 +737,7 @@ const ProductPage = () => {
                   className={`py-4 px-1 border-b-2 font-medium ${
                     selectedTab === tab.id
                       ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      : "border-transparent text-sm lg:text-xl text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
                   {tab.label}

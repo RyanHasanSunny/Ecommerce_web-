@@ -1,4 +1,4 @@
-// src/user-panel/pages/OrdersPage.jsx
+// src/user-panel/pages/OrdersPage.jsx - FIXED VERSION
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -64,7 +64,22 @@ const OrdersPage = () => {
       setLoading(true);
       setError('');
       const response = await apiService.getUserOrders();
-      const ordersList = response.orders || response || [];
+      
+      // Handle different response structures
+      let ordersList = [];
+      if (Array.isArray(response)) {
+        ordersList = response;
+      } else if (response?.orders && Array.isArray(response.orders)) {
+        ordersList = response.orders;
+      } else if (response?.data && Array.isArray(response.data)) {
+        ordersList = response.data;
+      } else if (response && typeof response === 'object' && response.orders) {
+        ordersList = response.orders;
+      }
+
+      console.log('Orders API response:', response);
+      console.log('Processed orders list:', ordersList);
+      
       setOrders(ordersList);
     } catch (err) {
       console.error('Error fetching orders:', err);
@@ -84,7 +99,8 @@ const OrdersPage = () => {
         order.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order._id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         order.items?.some(item => 
-          item.product?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+          item?.product?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item?.productId?.title?.toLowerCase().includes(searchTerm.toLowerCase())
         )
       );
     }
@@ -202,11 +218,19 @@ const OrdersPage = () => {
     return 'N/A';
   };
 
+  // Helper function to get product data from item
+  const getProductFromItem = (item) => {
+    return item?.product || item?.productId || item;
+  };
+
   const handleReorder = async (order) => {
     try {
       // Add all items from the order back to cart
-      for (const item of order.items) {
-        await apiService.addToCart(item.product._id, item.quantity);
+      for (const item of order.items || []) {
+        const product = getProductFromItem(item);
+        if (product?._id) {
+          await apiService.addToCart(product._id, item.quantity || 1);
+        }
       }
       
       alert('Items added to cart successfully!');
@@ -244,7 +268,7 @@ const OrdersPage = () => {
         {/* Header */}
         <div className="flex items-center mb-8">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/profile')}
             className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
@@ -345,7 +369,7 @@ const OrdersPage = () => {
                 </div>
               ) : (
                 filteredOrders.map((order) => {
-                  const statusConfig = getStatusConfig(order.status);
+                  const statusConfig = getStatusConfig(order.status || 'pending');
                   const StatusIcon = statusConfig.icon;
 
                   return (
@@ -355,22 +379,22 @@ const OrdersPage = () => {
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-4">
                             <h3 className="text-lg font-semibold text-gray-900">
-                              Order #{order.orderId || order._id.slice(-8)}
+                              Order #{order.orderId || order._id?.slice(-8) || 'N/A'}
                             </h3>
                             <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${statusConfig.color}`}>
                               <StatusIcon className="w-4 h-4 mr-1" />
-                              {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                              {(order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1)}
                             </div>
                           </div>
                           
                           <div className="flex items-center space-x-2">
-                            {/* <button
+                            <button
                               onClick={() => navigate(`/order/${order._id}`)}
                               className="flex items-center px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium"
                             >
                               <Eye className="w-4 h-4 mr-1" />
                               View Details
-                            </button> */}
+                            </button>
                             
                             {order.status === 'delivered' && (
                               <button
@@ -382,13 +406,13 @@ const OrdersPage = () => {
                               </button>
                             )}
                             
-                            {/* <button
+                            <button
                               onClick={() => downloadInvoice(order._id)}
                               className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm font-medium"
                             >
                               <Download className="w-4 h-4 mr-1" />
                               Invoice
-                            </button> */}
+                            </button>
                           </div>
                         </div>
 
@@ -399,7 +423,7 @@ const OrdersPage = () => {
                           </div>
                           <div>
                             <span className="text-gray-500">Total Amount:</span>
-                            <p className="font-medium text-gray-900">${order.totalAmount}</p>
+                            <p className="font-medium text-gray-900">৳{(order.totalAmount || 0).toFixed(2)}</p>
                           </div>
                           <div>
                             <span className="text-gray-500">Items:</span>
@@ -426,41 +450,45 @@ const OrdersPage = () => {
                       <div className="p-6">
                         <h4 className="text-sm font-medium text-gray-700 mb-3">Order Items</h4>
                         <div className="space-y-3">
-                          {order.items?.slice(0, 3).map((item, index) => (
-                            <div key={index} className="flex items-center space-x-4">
-                              <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                <img
-                                  src={item.product?.thumbnail || '/placeholder-product.jpg'}
-                                  alt={item.product?.title}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    e.target.src = '/placeholder-product.jpg';
-                                  }}
-                                />
+                          {order.items?.slice(0, 3).map((item, index) => {
+                            const product = getProductFromItem(item);
+                            
+                            return (
+                              <div key={index} className="flex items-center space-x-4">
+                                <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                  <img
+                                    src={product?.thumbnail || product?.image || '/placeholder-product.jpg'}
+                                    alt={product?.title || 'Product'}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      e.target.src = '/placeholder-product.jpg';
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 truncate">
+                                    {product?.title || 'Unknown Product'}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    Qty: {item?.quantity || 1} × ৳{(item?.finalPrice || 0).toFixed(2)}
+                                  </p>
+                                </div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  ৳{((item?.quantity || 1) * (item?.finalPrice || 0)).toFixed(2)}
+                                </div>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">
-                                  {item.product?.title}
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  Qty: {item.quantity} × ${item.price}
-                                </p>
-                              </div>
-                              <div className="text-sm font-medium text-gray-900">
-                                ${(item.quantity * item.price).toFixed(2)}
-                              </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                           
-                          {/* {order.items?.length > 3 && (
+                          {(order.items?.length || 0) > 3 && (
                             <button
                               onClick={() => navigate(`/order/${order._id}`)}
                               className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
                             >
-                              View all {order.items.length} items
+                              View all {order.items?.length} items
                               <ChevronRight className="w-4 h-4 ml-1" />
                             </button>
-                          )} */}
+                          )}
                         </div>
 
                         {/* Delivery Address */}
@@ -479,14 +507,14 @@ const OrdersPage = () => {
                         {/* Order Actions */}
                         <div className="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between">
                           <div className="flex items-center space-x-4">
-                            {/* {order.status === 'delivered' && (
+                            {order.status === 'delivered' && (
                               <button className="flex items-center text-sm text-yellow-600 hover:text-yellow-700 font-medium">
                                 <Star className="w-4 h-4 mr-1" />
                                 Rate & Review
                               </button>
-                            )} */}
+                            )}
                             
-                            {['pending', 'confirmed'].includes(order.status) && (
+                            {['pending', 'confirmed'].includes(order.status || 'pending') && (
                               <button className="flex items-center text-sm text-red-600 hover:text-red-700 font-medium">
                                 <XCircle className="w-4 h-4 mr-1" />
                                 Cancel Order

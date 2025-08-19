@@ -16,14 +16,19 @@ const HomePageSchema = new mongoose.Schema({
     contactNumber: { type: String, required: true },
     socialLinks: [{
       platform: { type: String, required: true },
-      url: { type: String, required: true }
+      url: { type: String, required: true },
+      contactLink: { type: String, required: true }
+    }],
+    socialmediaContact: [{
+      socialMedia: { type: String, required: true },
+      socialmediaLink: { type: String, required: true }
     }],
     location: { type: String, required: true }
   },
   paymentInfo: {
     method: [{
-      getway: {type: String, required: true},
-      getwaynumber: {type: String, required: true}
+      getway: { type: String, required: true },
+      getwaynumber: { type: String, required: true }
     }]
   }
 });

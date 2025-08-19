@@ -25,6 +25,7 @@ exports.updateHomePage = async (req, res) => {
       homePageData.offerPanel = offerPanel || homePageData.offerPanel;
       homePageData.contactInfo = contactInfo || homePageData.contactInfo;
       homePageData.paymentInfo = paymentInfo || homePageData.paymentInfo;
+      
     } else {
       homePageData = new HomePage({ heroPanel, offerPanel, contactInfo, paymentInfo });
     }
