@@ -153,10 +153,9 @@ const HeroPanel = ({ heroData }) => {
         </div>
 
         {/* Right side - 2 images stacked vertically, takes 1 column */}
-        <div className="lg:col-span-1 flex flex-col gap-2">
+        <div className="lg:col-span-1 flex flex-col gap-2"  style={{ aspectRatio: "13 / 15" }}>
           {/* First right side image */}
-          <div className="relative overflow-hidden rounded-lg flex-1"
-            style={{ aspectRatio: "16 / 6" }}>
+          <div className="relative overflow-hidden rounded-lg flex-1">
             <img
               src={originalSlides[1]?.image || defaultSlides[1].image}
               alt={originalSlides[1]?.altText || defaultSlides[1].altText}
@@ -166,7 +165,7 @@ const HeroPanel = ({ heroData }) => {
           </div>
 
           {/* Second right side image */}
-          <div className="relative overflow-hidden rounded-lg flex-1"
+          {/* <div className="relative overflow-hidden rounded-lg flex-1"
             style={{ aspectRatio: "16 / 6" }}>
             <img
               src={originalSlides[2]?.image || defaultSlides[2].image}
@@ -174,7 +173,7 @@ const HeroPanel = ({ heroData }) => {
               className="w-full h-full object-cover"
               loading="lazy"
             />
-          </div>
+          </div> */}
         </div>
       </div>
 

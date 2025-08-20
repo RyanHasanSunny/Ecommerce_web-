@@ -26,12 +26,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const stats = [
-    { icon: Users, label: "Happy Customers", value: "50K+", color: "text-blue-600" },
-    { icon: ShoppingBag, label: "Products Sold", value: "100K+", color: "text-green-600" },
-    { icon: Star, label: "5-Star Reviews", value: "25K+", color: "text-yellow-600" },
-    { icon: TrendingUp, label: "Years Experience", value: "10+", color: "text-purple-600" }
-  ];
+
 
   const [categories, setCategories] = useState([]);
 
@@ -90,9 +85,9 @@ const HomePage = () => {
   return (
     <div className=" min-h-screen bg-white">
       {/* Hero Section */}
-    
-        <HeroPanel heroData={homePageData?.heroPanel} />
-     
+
+      <HeroPanel heroData={homePageData?.heroPanel} />
+
 
       {/* Welcome Banner */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-10">
@@ -138,6 +133,19 @@ const HomePage = () => {
         </div>
       </section>
 
+      
+      {/* Featured Products Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <FeaturedProducts
+            title="Featured Products"
+            subtitle="Discover our handpicked selection of amazing products"
+          />
+        </div>
+      </section>
+
+
+
       {/* Special Offers Section - Show only if enabled */}
       {homePageData?.offerPanel?.isEnabled && (
         <section className="py-20 bg-gradient-to-r from-orange-500 to-red-600 text-white">
@@ -166,15 +174,6 @@ const HomePage = () => {
         </section>
       )}
 
-      {/* Featured Products Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <FeaturedProducts
-            title="Featured Products"
-            subtitle="Discover our handpicked selection of amazing products"
-          />
-        </div>
-      </section>
     </div>
   );
 };

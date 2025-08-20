@@ -1,4 +1,4 @@
-// src/user-panel/components/header/Header.jsx - MOBILE UX FIXED
+// src/user-panel/components/header/Header.jsx - MOBILE UX FIXED - Search Always Visible on Mobile
 
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -26,7 +26,7 @@ const Header = () => {
   
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showSearch, setShowSearch] = useState(false);
+  const [showDesktopSearch, setShowDesktopSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
@@ -53,12 +53,12 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close mobile menu on route change, but keep search open if there's text
+  // Close mobile menu on route change, but keep desktop search open if there's text
   useEffect(() => {
     setShowMobileMenu(false);
-    // Only close search if there's no text in the search query
+    // Only close desktop search if there's no text in the search query
     if (!searchQuery.trim()) {
-      setShowSearch(false);
+      setShowDesktopSearch(false);
     }
   }, [location, searchQuery]);
 
@@ -87,15 +87,15 @@ const Header = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-      // Keep search visible after search on both mobile and desktop if there's still text
+      // Keep search visible after search on desktop if there's still text
     }
   };
 
-  const handleSearchToggle = () => {
+  const handleDesktopSearchToggle = () => {
     // If search is hidden or there's no text, show it
     // If search is visible and there's text, keep it open
-    if (!showSearch || !searchQuery.trim()) {
-      setShowSearch(!showSearch);
+    if (!showDesktopSearch || !searchQuery.trim()) {
+      setShowDesktopSearch(!showDesktopSearch);
     }
   };
 
@@ -105,14 +105,14 @@ const Header = () => {
   ];
 
   return (
-    <header className={` top-0 z-10 transition-all duration-300 ${
+    <header className={`top-0 z-10 transition-all duration-300 ${
       isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white shadow-sm'
     }`}>
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-blue-600  to-purple-600 text-white text-sm py-2 px-4 text-center">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm py-2 px-4 text-center">
         <div className="flex items-center justify-center gap-2">
           <MapPin className="w-4 h-4" />
-          <span> 24/7 Support Available</span>
+          <span>24/7 Support Available</span>
         </div>
       </div>
 
@@ -133,43 +133,43 @@ const Header = () => {
           {/* Logo - Centered on Mobile, Left on Desktop */}
           <Link to="/" className="flex items-center group lg:flex-none">
             <div className="flex items-center">
-              <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-purple-600 group-hover:to-blue-600 transition-all duration-300">
+              <h1 className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-purple-600 group-hover:to-blue-600 transition-all duration-300">
                 MAGIC MART
               </h1>
             </div>
           </Link>
 
-          
           {/* Right Icons */}
           <div className="flex items-center space-x-3">
             {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-4 flex-1">
-            <nav className="flex items-center space-x-8">
-              {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.href;
-                
-                return (
-                  <Link
-                    key={item.label}
-                    to={item.href}
-                    className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      isActive 
-                        ? 'text-blue-600 bg-blue-50' 
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-          </div>
-            {/* Search Icon - Both Mobile and Desktop */}
+            <div className="hidden lg:flex items-center gap-4 flex-1">
+              <nav className="flex items-center space-x-8">
+                {navigationItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.href;
+                  
+                  return (
+                    <Link
+                      key={item.label}
+                      to={item.href}
+                      className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        isActive 
+                          ? 'text-blue-600 bg-blue-50' 
+                          : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+
+            {/* Desktop Only: Search Icon */}
             <button 
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-              onClick={handleSearchToggle}
+              className="hidden lg:block p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={handleDesktopSearchToggle}
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
@@ -260,7 +260,6 @@ const Header = () => {
                         <Package className="w-4 h-4" />
                         My Orders
                       </Link>
-                   
                       
                       <div className="border-t border-gray-100 mt-1 pt-1">
                         <button
@@ -295,9 +294,25 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Search Bar - Appears below main header for both mobile and desktop */}
-      {(showSearch || searchQuery.trim()) && (
-        <div className="bg-white border-t border-gray-200 px-4 py-3">
+      {/* Mobile Search Bar - Always Visible */}
+      <div className="lg:hidden bg-white border-t border-gray-200 px-4 py-3">
+        <div className="max-w-7xl mx-auto">
+          <form onSubmit={handleSearch} className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for products, brands and more..."
+              className="w-full px-4 py-2 pl-10 pr-4 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          </form>
+        </div>
+      </div>
+
+      {/* Desktop Search Bar - Appears below main header only when toggled */}
+      {(showDesktopSearch || searchQuery.trim()) && (
+        <div className="hidden lg:block bg-white border-t border-gray-200 px-4 py-3">
           <div className="max-w-7xl mx-auto">
             <form onSubmit={handleSearch} className="relative">
               <input
