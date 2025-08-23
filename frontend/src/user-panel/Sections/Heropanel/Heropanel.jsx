@@ -182,9 +182,9 @@ const HeroPanel = ({ heroData }) => {
         <div className="relative">
           <div className="animate-slide-right-to-left whitespace-nowrap">
             {textSlides.map((text, index) => (
-              <span key={index} className="inline-block px-8 text-black font-semibold text-sm lg:text-lg">
+              <p key={index} className="inline-block px-8 text-black font-semibold text-sm lg:text-lg">
                 {text}
-              </span>
+              </p>
             ))}
           </div>
         </div>

@@ -94,7 +94,7 @@ const HomePage = () => {
         <div className=" mx-auto px-4 text-center">
           <div className="flex items-center justify-center mb-6">
             <Sparkles className="w-8 h-8 mr-3" />
-            <h1 className="text-2xl md:text-2xl font-bold">
+            <h1 className="text-[20px] md:text-[20px] font-bold">
               Discover Amazing Products
             </h1>
             <Sparkles className="w-8 h-8 ml-3" />
@@ -109,9 +109,9 @@ const HomePage = () => {
       <section className="py-20 bg-gray-50">
         <div className="container flex flex-col mx-auto  px-4">
           <div className="text-center mb-5">
-            <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-6">
+            <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-6">
               Shop by Category
-            </h2>
+            </h1>
             <p className="text-sm md:text-xl text-gray-600 max-w-2xl mx-auto">
               Explore our carefully curated collections designed to meet all your needs
             </p>
@@ -125,7 +125,7 @@ const HomePage = () => {
                 className="group relative bg-white rounded-xl py-2 px-5 justify-center text-center overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 no-underline"
               >
                 <div className="overflow-hidden">
-                  <h3 className="font-semibold">{category.name}</h3>
+                  <h2 className="font-semibold">{category.name}</h2>
                 </div>
               </Link>
             ))}

@@ -66,9 +66,9 @@ const FeaturedProducts = ({ title, subtitle }) => {
     <div className="w-full">
       {/* Header */}
       <div className="text-center mb-12">
-        <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4">
+        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-4">
           {title}
-        </h2>
+        </h1>
         <p className="text-sm md:text-xl text-gray-600 max-w-2xl mx-auto mb-8">
           {subtitle}
         </p>

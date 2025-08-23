@@ -106,7 +106,7 @@ const Header = () => {
 
   return (
     <header className={`top-0 z-10 transition-all duration-300 ${
-      isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-white shadow-sm'
+      isScrolled ? 'bg-white/95 backdrop-blur-md ' : 'bg-white '
     }`}>
       {/* Top Banner */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm py-2 px-4 text-center">
