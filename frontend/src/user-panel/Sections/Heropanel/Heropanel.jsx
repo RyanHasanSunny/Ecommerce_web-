@@ -109,9 +109,9 @@ const HeroPanel = ({ heroData }) => {
   const currentSlide = slides[currentIndex];
 
   return (
-    <div className="w-full">
+    <div className="flex flex-col w-full justify-center items-center">
       {/* Main container with grid layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-2 lg:gap-4 px-2 lg:px-5 mb-4">
+      <div className="  px-2 lg:px-5 mb-4 mt-4">
         {/* Main Hero Carousel - Takes 3 columns on large screens */}
         <div className="lg:col-span-3 relative overflow-hidden rounded-lg"
           style={{ aspectRatio: "16 / 6" }}>
@@ -153,8 +153,8 @@ const HeroPanel = ({ heroData }) => {
         </div>
 
         {/* Right side - 2 images stacked vertically, takes 1 column */}
-        <div className="lg:col-span-1 flex flex-col gap-2"  style={{ aspectRatio: "13 / 15" }}>
-          {/* First right side image */}
+         {/*<div className="lg:col-span-1 flex flex-col gap-2"  style={{ aspectRatio: "13 / 15" }}>
+        
           <div className="relative overflow-hidden rounded-lg flex-1">
             <img
               src={originalSlides[1]?.image || defaultSlides[1].image}
@@ -162,10 +162,10 @@ const HeroPanel = ({ heroData }) => {
               className="w-full h-full object-cover"
               loading="lazy"
             />
-          </div>
+          </div> 
 
-          {/* Second right side image */}
-          {/* <div className="relative overflow-hidden rounded-lg flex-1"
+         
+         <div className="relative overflow-hidden rounded-lg flex-1"
             style={{ aspectRatio: "16 / 6" }}>
             <img
               src={originalSlides[2]?.image || defaultSlides[2].image}
@@ -173,8 +173,8 @@ const HeroPanel = ({ heroData }) => {
               className="w-full h-full object-cover"
               loading="lazy"
             />
-          </div> */}
-        </div>
+          </div> 
+        </div>*/}
       </div>
 
       {/* Sliding Text Banner */}
