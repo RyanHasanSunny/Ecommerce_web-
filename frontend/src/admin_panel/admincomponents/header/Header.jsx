@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import { FaUserCircle } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
    const handleLogout = () => {
     localStorage.removeItem('adminToken');
@@ -68,7 +70,7 @@ const Header = () => {
                 cursor: "pointer",
                 fontSize: "1rem",
               }}
-              onClick={() => alert("Go to settings")}
+              onClick={() => navigate("/admin/settings")}
             >
               Settings
             </button>

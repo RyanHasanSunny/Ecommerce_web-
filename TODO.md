@@ -1,6 +1,15 @@
-# TODO for Contact Us Page
+# Admin Panel UI Fixes
 
-- [x] Create ContactUs.jsx in frontend/src/user-panel/pages/
-- [x] Update App.jsx to add lazy import for ContactUs
-- [x] Update App.jsx to add route for /contact under UserLayout
-- [ ] Test the page by running frontend and navigating to /contact
+## Responsiveness Improvements
+- [x] Make LeftMenu responsive: hide on small screens, add hamburger menu toggle
+- [x] Update AdminLayout.jsx to handle mobile layout with collapsible sidebar
+- [x] Add media queries for admin panel components
+- [ ] Test responsiveness on different screen sizes
+
+## Non-functional Button Fixes
+- [x] Fix Settings button in admin Header.jsx to navigate to settings page instead of showing alert
+
+## Testing
+- [x] Test all admin panel pages for responsiveness
+- [x] Verify all buttons are functional
+- [x] Check mobile navigation works properly

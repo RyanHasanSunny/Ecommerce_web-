@@ -14,14 +14,14 @@ const menuItems = [
 
 const LeftMenu = ({ onMenuItemClick }) => {
   return (
-    <aside className="w-64 text-white flex flex-col shadow-lg" style={{ backgroundColor: "#061a3fff", height: "100%" }}>
+    <aside className="w-64 text-white flex flex-col shadow-lg md:shadow-none" style={{ backgroundColor: "#061a3fff", height: "100vh", minHeight: "100%" }}>
       <nav className="flex-1 py-4">
-        <ul>
+        <ul className="space-y-2">
           {menuItems.map((item) => (
             <li key={item.name}>
               <a
                 onClick={() => onMenuItemClick(item.name, item.path)} // Pass both name and path
-                className="flex items-center gap-3 px-6 py-3 hover:bg-gray-800 transition-colors rounded-md cursor-pointer"
+                className="flex items-center gap-3 px-6 py-3 hover:bg-gray-800 transition-colors rounded-md cursor-pointer mx-2"
               >
                 <span className="text-lg">{item.icon}</span>
                 <span className="font-medium">{item.name}</span>
