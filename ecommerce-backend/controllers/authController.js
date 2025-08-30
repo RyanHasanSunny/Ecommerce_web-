@@ -119,18 +119,83 @@ exports.addAddress = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(404).json({ msg: 'User not found' });
-    
+
     // Add address to user's addresses array
     user.addresses.push(address);
     await user.save();
-    
+
     // Return the newly added address with an id
     const newAddress = {
       id: user.addresses.length - 1,
       address: address
     };
-    
+
     res.json(newAddress);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/forgot-password
+// @desc    Send password reset email
+// @access  Public
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ msg: 'User with this email does not exist' });
+    }
+
+    // Generate reset token
+    const crypto = require('crypto');
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    // Hash token and save to user
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    await user.save();
+
+    // For now, log the reset link (replace with email sending)
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    console.log('Password reset link:', resetUrl);
+
+    res.json({ msg: 'Password reset link sent to your email' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/reset-password
+// @desc    Reset password with token
+// @access  Public
+exports.resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+
+  try {
+    // Hash the token
+    const crypto = require('crypto');
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ msg: 'Invalid or expired token' });
+    }
+
+    // Update password
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.json({ msg: 'Password reset successful' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });

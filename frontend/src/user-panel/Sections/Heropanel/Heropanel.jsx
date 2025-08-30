@@ -22,12 +22,25 @@ const HeroPanel = ({ heroData }) => {
     }
   ];
 
-  // Text slides for continuous animation
-  const textSlides = [
-    "🎉 Summer Sale - Up to 50% OFF on all products!",
-    "🚚 Free Shipping on orders above $50",
+  // Text slides for continuous animation - will be fetched from API
+  const [textSlides, setTextSlides] = useState([]);
 
-  ];
+  // Fetch sliding text from API
+  useEffect(() => {
+    const fetchSlidingText = async () => {
+      try {
+        const response = await apiService.getHomePage();
+        if (response && response.slidingText && response.slidingText.length > 0) {
+          setTextSlides(response.slidingText.map(item => item.text));
+        }
+      } catch (error) {
+        console.error('Error fetching sliding text:', error);
+        // Keep default text if API fails
+      }
+    };
+
+    fetchSlidingText();
+  }, []);
   // Use backend data if available, otherwise use default slides
   const originalSlides = heroData && heroData.length > 0
     ? heroData.map((item, index) => ({

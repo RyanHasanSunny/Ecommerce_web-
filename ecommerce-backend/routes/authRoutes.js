@@ -4,13 +4,17 @@ const {
   registerUser,
   loginUser,
   getUserProfile,
-  updatePassword
+  updatePassword,
+  forgotPassword,
+  resetPassword
 } = require('../controllers/authController');
 const authMiddleware = require('../middleware/authMiddleware');
 
 // Public routes
-router.post('/register', registerUser);
-router.post('/login',    loginUser);
+router.post('/register',       registerUser);
+router.post('/login',          loginUser);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password',  resetPassword);
 
 // Protected routes
 router.get('/profile',          authMiddleware, getUserProfile);

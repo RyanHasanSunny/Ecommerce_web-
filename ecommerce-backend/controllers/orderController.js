@@ -631,11 +631,14 @@ exports.getOrderStats = async (req, res) => {
       return res.status(403).json({ msg: 'Access denied. Admin only.' });
     }
 
-    const stats = await Order.aggregate([
+// Get revenue stats only for delivered orders
+const revenueStats = await Order.aggregate([
+      {
+        $match: { status: 'delivered' }
+      },
       {
         $group: {
           _id: null,
-          totalOrders: { $sum: 1 },
           totalRevenue: { $sum: '$totalAmount' },
           totalPaidAmount: { $sum: '$paidAmount' },
           totalDueAmount: { $sum: '$dueAmount' },
@@ -643,26 +646,9 @@ exports.getOrderStats = async (req, res) => {
           totalOfferPriceRevenue: { $sum: '$totalOfferValue' },
           totalProfit: { $sum: '$totalProfit' },
           averageOrderValue: { $avg: '$totalAmount' },
-          pendingOrders: {
-            $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] }
-          },
-          processingOrders: {
-            $sum: { $cond: [{ $eq: ['$status', 'processing'] }, 1, 0] }
-          },
-          shippedOrders: {
-            $sum: { $cond: [{ $eq: ['$status', 'shipped'] }, 1, 0] }
-          },
-          deliveredOrders: {
-            $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, 1, 0] }
-          },
-          cancelledOrders: {
-            $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] }
-          },
+          deliveredOrders: { $sum: 1 },
           paidOrders: {
             $sum: { $cond: [{ $eq: ['$paymentStatus', 'paid'] }, 1, 0] }
-          },
-          unpaidOrders: {
-            $sum: { $cond: [{ $eq: ['$paymentStatus', 'unpaid'] }, 1, 0] }
           },
           codOrders: {
             $sum: { $cond: [{ $eq: ['$paymentStatus', 'cod'] }, 1, 0] }
@@ -674,6 +660,36 @@ exports.getOrderStats = async (req, res) => {
       }
     ]);
 
+// Get order counts for all orders
+const orderCounts = await Order.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalOrders: { $sum: 1 },
+          pendingOrders: {
+            $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] }
+          },
+          processingOrders: {
+            $sum: { $cond: [{ $eq: ['$status', 'processing'] }, 1, 0] }
+          },
+          shippedOrders: {
+            $sum: { $cond: [{ $eq: ['$status', 'shipped'] }, 1, 0] }
+          },
+          cancelledOrders: {
+            $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] }
+          },
+          unpaidOrders: {
+            $sum: { $cond: [{ $eq: ['$paymentStatus', 'unpaid'] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+// Combine the results
+const revenueData = revenueStats[0] || {};
+const countData = orderCounts[0] || {};
+const baseStats = { ...revenueData, ...countData };
+
     // Today's stats
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -682,9 +698,10 @@ exports.getOrderStats = async (req, res) => {
       createdAt: { $gte: today }
     });
 
-    const todayRevenue = await Order.aggregate([
+const todayRevenue = await Order.aggregate([
       {
         $match: {
+          status: 'delivered',
           createdAt: { $gte: today }
         }
       },
@@ -698,8 +715,6 @@ exports.getOrderStats = async (req, res) => {
         }
       }
     ]);
-
-    const baseStats = stats[0] || {};
     const todayData = todayRevenue[0] || {};
 
     // Calculate profit margin

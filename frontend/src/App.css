@@ -2,6 +2,7 @@
 #root {
   margin: 0 auto;
   height: 100%;
+  width: 100%;
  text-decoration: none;
 }
 
@@ -47,7 +48,7 @@
 
 
 @media (min-width: 1024px) { /* lg */
-  #root { width: 80%; }
+  #root { width: 100%; }
 }
 
 @media (max-width: 768px) { /* lg */

@@ -3,15 +3,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { 
-  ShoppingCart, 
-  Search, 
-  User, 
-  LogOut, 
-  Settings, 
-  Menu, 
-  X, 
-  Heart, 
+import apiService from "../../api/api";
+import {
+  ShoppingCart,
+  Search,
+  User,
+  LogOut,
+  Settings,
+  Menu,
+  X,
+  Heart,
   MapPin,
   Package,
   Home,
@@ -30,6 +31,7 @@ const Header = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [topHeaderText, setTopHeaderText] = useState("24/7 Support Available");
   
   const profileMenuRef = useRef(null);
 
@@ -77,6 +79,23 @@ const Header = () => {
     }
   }, [isAuthenticated]);
 
+  // Fetch top header text from API
+  useEffect(() => {
+    const fetchTopHeaderText = async () => {
+      try {
+        const response = await apiService.getHomePage();
+        if (response && response.topHeaderText) {
+          setTopHeaderText(response.topHeaderText);
+        }
+      } catch (error) {
+        console.error('Error fetching top header text:', error);
+        // Keep default text if API fails
+      }
+    };
+
+    fetchTopHeaderText();
+  }, []);
+
   const handleLogout = () => {
     logout();
     setShowProfileMenu(false);
@@ -112,7 +131,7 @@ const Header = () => {
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm py-2 px-4 text-center">
         <div className="flex items-center justify-center gap-2">
           <MapPin className="w-4 h-4" />
-          <span>24/7 Support Available</span>
+          <span>{topHeaderText}</span>
         </div>
       </div>
 

@@ -23,11 +23,17 @@ const UserProductList = lazy(() => import('./user-panel/pages/productlist'));
 const ProductPage     = lazy(() => import('./user-panel/pages/ProductPage'));
 const LoginPage       = lazy(() => import('./user-panel/pages/Login-page'));
 const SignupPage      = lazy(() => import('./user-panel/pages/Signup_page'));
+const ForgotPassword  = lazy(() => import('./user-panel/pages/ForgotPassword'));
+const ResetPassword   = lazy(() => import('./user-panel/pages/ResetPassword'));
 const ProfilePage     = lazy(() => import('./user-panel/pages/profile_page'));
 const CartPage        = lazy(() => import('./user-panel/pages/CartPage'));
 const CheckoutPage    = lazy(() => import('./user-panel/components/paymentModal/PaymentModal'));
 const OrdersPage      = lazy(() => import('./user-panel/pages/OrderPage'));
 const OrderDetailPage = lazy(() => import('./user-panel/pages/OrderDetailPage'));
+const TermsandConditions = lazy(() => import('./user-panel/pages/TermsandConditions'));
+const PrivacyPolicy = lazy(() => import('./user-panel/pages/PrivacyPolicy'));
+const ContactUs = lazy(() => import('./user-panel/pages/ContactUs'));
+const NotFound = lazy(() => import('./user-panel/pages/NotFound'));
 
 // -- lazily imported admin-panel pages
 const AdminLogin        = lazy(() => import('./admin_panel/pages/Login'));
@@ -51,9 +57,11 @@ function App() {
           <Suspense fallback={<RouteLoader />}>     {/* also fallback on initial chunk-load */}
             <Routes>
               {/* Public Authentication Routes */}
-              <Route path="/login"   element={<LoginPage />} />
-              <Route path="/signup"  element={<SignupPage />} />
-              <Route path="/adminlogin" element={<AdminLogin />} />
+              <Route path="/login"           element={<LoginPage />} />
+              <Route path="/signup"          element={<SignupPage />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password"  element={<ResetPassword />} />
+              <Route path="/adminlogin"      element={<AdminLogin />} />
 
               {/* User Panel */}
               <Route path="/" element={<UserLayout />}>
@@ -65,6 +73,9 @@ function App() {
                 <Route path="checkout" element={<CheckoutPage />} />
                 <Route path="orders"   element={<OrdersPage />} />
                 <Route path="order/:orderId" element={<OrderDetailPage />} />
+                <Route path="terms" element={<TermsandConditions />} />
+                <Route path="privacy" element={<PrivacyPolicy />} />
+                <Route path="contact" element={<ContactUs />} />
                 <Route path="wishlist" element={<div className="p-8 text-center">Wishlist coming soon!</div>} />
                 <Route path="search"   element={<Navigate to="/products" replace />} />
               </Route>
@@ -161,36 +172,7 @@ function App() {
               </Route>
 
               {/* 404 */}
-              <Route
-                path="*"
-                element={
-                  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                    <div className="text-center">
-                      <h1 className="text-6xl font-bold text-gray-900 mb-4">404</h1>
-                      <h2 className="text-2xl font-semibold text-gray-700 mb-4">
-                        Page Not Found
-                      </h2>
-                      <p className="text-gray-600 mb-8">
-                        The page you're looking for doesn't exist.
-                      </p>
-                      <div className="space-x-4">
-                        <button
-                          onClick={() => window.history.back()}
-                          className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-                        >
-                          Go Back
-                        </button>
-                        <button
-                          onClick={() => (window.location.href = '/')}
-                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                        >
-                          Go Home
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                }
-              />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </Router>

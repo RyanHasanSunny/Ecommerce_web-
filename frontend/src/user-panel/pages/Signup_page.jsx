@@ -139,9 +139,11 @@ const SignupPage = () => {
         <div className="max-w-md w-full space-y-8">
           {/* Header */}
           <div className="text-center">
-            <div className="mx-auto h-12 w-12 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
-              <User className="h-6 w-6 text-white" />
-            </div>
+           
+              <h1 className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-purple-600 group-hover:to-blue-600 transition-all duration-300">
+                MAGIC MART
+              </h1>
+            
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
               Create your account
             </h2>

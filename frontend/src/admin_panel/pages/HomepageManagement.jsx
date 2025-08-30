@@ -378,6 +378,12 @@ const HomepageManagement = () => {
       imageUrl: '',
       altText: ''
     }],
+    slidingText: [{
+      text: '🎉 Summer Sale - Up to 50% OFF on all products!'
+    }, {
+      text: '🚚 Free Shipping on orders above $50'
+    }],
+    topHeaderText: '24/7 Support Available',
     offerPanel: {
       title: '',
       description: '',
@@ -400,9 +406,13 @@ const HomepageManagement = () => {
   const [alert, setAlert] = useState({ show: false, message: '', type: 'info' });
   const [expandedPanels, setExpandedPanels] = useState({
     hero: true,
+    sliding: false,
+    header: false,
     offer: false,
     contact: false,
-
+    payment: false,
+    terms: false,
+    privacy: false
   });
 
   useEffect(() => {
@@ -625,6 +635,132 @@ const HomepageManagement = () => {
         </div>
       </AccordionSection>
 
+      {/* Sliding Text Section */}
+      <AccordionSection
+        title="Sliding Text"
+        icon={Share2}
+        isExpanded={expandedPanels.sliding}
+        onToggle={() => handlePanelToggle('sliding')}
+        badge={{
+          text: `${homePageData.slidingText.length} Text${homePageData.slidingText.length !== 1 ? 's' : ''}`,
+          type: 'info'
+        }}
+      >
+        <div className="space-y-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <Share2 size={20} className="text-purple-600" />
+              <h3 className="text-lg font-semibold">Sliding Text Messages</h3>
+            </div>
+            <button
+              onClick={() => {
+                setHomePageData(prev => ({
+                  ...prev,
+                  slidingText: [...prev.slidingText, { text: '' }]
+                }));
+              }}
+              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+            >
+              <Plus size={16} />
+              <span>Add Text</span>
+            </button>
+          </div>
+
+          {homePageData.slidingText.length === 0 && (
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 text-center">
+              <p className="text-purple-600">No sliding text added yet. Click "Add Text" to get started.</p>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {homePageData.slidingText.map((item, index) => (
+              <div key={index} className="bg-purple-50 p-4 rounded-lg space-y-4 border border-purple-200">
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-gray-700">Text Message {index + 1}</label>
+                  <button
+                    onClick={() => {
+                      setHomePageData(prev => ({
+                        ...prev,
+                        slidingText: prev.slidingText.filter((_, i) => i !== index)
+                      }));
+                    }}
+                    className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={item.text}
+                  onChange={(e) => {
+                    setHomePageData(prev => ({
+                      ...prev,
+                      slidingText: prev.slidingText.map((textItem, i) =>
+                        i === index ? { text: e.target.value } : textItem
+                      )
+                    }));
+                  }}
+                  placeholder="Enter sliding text message"
+                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h4 className="font-medium text-purple-900 mb-2">Sliding Text Tips:</h4>
+            <ul className="text-sm text-purple-700 space-y-1">
+              <li>• Add promotional messages, offers, or announcements</li>
+              <li>• Use emojis to make messages more engaging</li>
+              <li>• Keep messages concise for better readability</li>
+            </ul>
+          </div>
+        </div>
+      </AccordionSection>
+
+      {/* Top Header Text Section */}
+      <AccordionSection
+        title="Top Header Text"
+        icon={Info}
+        isExpanded={expandedPanels.header}
+        onToggle={() => handlePanelToggle('header')}
+        badge={{
+          text: homePageData.topHeaderText ? 'Set' : 'Not Set',
+          type: homePageData.topHeaderText ? 'success' : 'warning'
+        }}
+      >
+        <div className="space-y-6">
+          <div className="flex items-center space-x-2 mb-3">
+            <Info size={20} className="text-green-600" />
+            <h3 className="text-lg font-semibold">Header Text</h3>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Header Text</label>
+            <input
+              type="text"
+              value={homePageData.topHeaderText}
+              onChange={(e) => {
+                setHomePageData(prev => ({
+                  ...prev,
+                  topHeaderText: e.target.value
+                }));
+              }}
+              placeholder="24/7 Support Available"
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            />
+          </div>
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <h4 className="font-medium text-green-900 mb-2">Header Text Tips:</h4>
+            <ul className="text-sm text-green-700 space-y-1">
+              <li>• This text appears at the top of your website</li>
+              <li>• Use it for important announcements or contact info</li>
+              <li>• Keep it short and informative</li>
+            </ul>
+          </div>
+        </div>
+      </AccordionSection>
+
       {/* Offer Panel Section */}
       <AccordionSection
         title="Offer Panel"
@@ -816,6 +952,136 @@ const HomepageManagement = () => {
                 onRemove={removePaymentMethod}
               />
             ))}
+          </div>
+        </div>
+      </AccordionSection>
+
+      {/* Terms and Conditions Section */}
+      <AccordionSection
+        title="Terms and Conditions"
+        icon={Info}
+        isExpanded={expandedPanels.terms}
+        onToggle={() => handlePanelToggle('terms')}
+        badge={{
+          text: homePageData.termsAndConditions ? 'Set' : 'Not Set',
+          type: homePageData.termsAndConditions ? 'success' : 'warning'
+        }}
+      >
+        <div className="space-y-6">
+          <div className="flex items-center space-x-2 mb-3">
+            <Info size={20} className="text-orange-600" />
+            <h3 className="text-lg font-semibold">Terms and Conditions Content</h3>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <input
+              type="text"
+              value={homePageData.termsAndConditions?.title || ''}
+              onChange={(e) => {
+                setHomePageData(prev => ({
+                  ...prev,
+                  termsAndConditions: {
+                    ...prev.termsAndConditions,
+                    title: e.target.value
+                  }
+                }));
+              }}
+              placeholder="Terms and Conditions"
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+            <textarea
+              value={homePageData.termsAndConditions?.content || ''}
+              onChange={(e) => {
+                setHomePageData(prev => ({
+                  ...prev,
+                  termsAndConditions: {
+                    ...prev.termsAndConditions,
+                    content: e.target.value
+                  }
+                }));
+              }}
+              placeholder="Enter terms and conditions content..."
+              rows={10}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            />
+          </div>
+
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <h4 className="font-medium text-orange-900 mb-2">Terms and Conditions Tips:</h4>
+            <ul className="text-sm text-orange-700 space-y-1">
+              <li>• Include clear terms about user accounts and responsibilities</li>
+              <li>• Detail payment, shipping, and return policies</li>
+              <li>• Explain liability limitations and governing law</li>
+              <li>• Keep content comprehensive but easy to understand</li>
+            </ul>
+          </div>
+        </div>
+      </AccordionSection>
+
+      {/* Privacy Policy Section */}
+      <AccordionSection
+        title="Privacy Policy"
+        icon={Info}
+        isExpanded={expandedPanels.privacy}
+        onToggle={() => handlePanelToggle('privacy')}
+        badge={{
+          text: homePageData.privacyPolicy ? 'Set' : 'Not Set',
+          type: homePageData.privacyPolicy ? 'success' : 'warning'
+        }}
+      >
+        <div className="space-y-6">
+          <div className="flex items-center space-x-2 mb-3">
+            <Info size={20} className="text-purple-600" />
+            <h3 className="text-lg font-semibold">Privacy Policy Content</h3>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+            <input
+              type="text"
+              value={homePageData.privacyPolicy?.title || ''}
+              onChange={(e) => {
+                setHomePageData(prev => ({
+                  ...prev,
+                  privacyPolicy: {
+                    ...prev.privacyPolicy,
+                    title: e.target.value
+                  }
+                }));
+              }}
+              placeholder="Privacy Policy"
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+            <textarea
+              value={homePageData.privacyPolicy?.content || ''}
+              onChange={(e) => {
+                setHomePageData(prev => ({
+                  ...prev,
+                  privacyPolicy: {
+                    ...prev.privacyPolicy,
+                    content: e.target.value
+                  }
+                }));
+              }}
+              placeholder="Enter privacy policy content..."
+              rows={10}
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+            />
+          </div>
+
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h4 className="font-medium text-purple-900 mb-2">Privacy Policy Tips:</h4>
+            <ul className="text-sm text-purple-700 space-y-1">
+              <li>• Explain how user data is collected and used</li>
+              <li>• Detail data protection and security measures</li>
+              <li>• Include information about cookies and tracking</li>
+              <li>• Provide contact information for privacy inquiries</li>
+            </ul>
           </div>
         </div>
       </AccordionSection>

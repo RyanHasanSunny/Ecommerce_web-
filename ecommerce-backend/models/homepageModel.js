@@ -6,6 +6,10 @@ const HomePageSchema = new mongoose.Schema({
     imageUrl: { type: String, required: true },
     altText: { type: String, required: true }
   }],
+  slidingText: [{
+    text: { type: String, required: true }
+  }],
+  topHeaderText: { type: String, default: '24/7 Support Available' },
   offerPanel: {
     title: { type: String, required: true },
     description: { type: String, required: true },
@@ -30,6 +34,16 @@ const HomePageSchema = new mongoose.Schema({
       getway: { type: String, required: true },
       getwaynumber: { type: String, required: true }
     }]
+  },
+  termsAndConditions: {
+    title: { type: String, default: 'Terms and Conditions' },
+    content: { type: String, default: 'Default terms and conditions content...' },
+    lastUpdated: { type: Date, default: Date.now }
+  },
+  privacyPolicy: {
+    title: { type: String, default: 'Privacy Policy' },
+    content: { type: String, default: 'Default privacy policy content...' },
+    lastUpdated: { type: Date, default: Date.now }
   }
 });
 

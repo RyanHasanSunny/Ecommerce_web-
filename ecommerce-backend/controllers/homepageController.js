@@ -15,19 +15,23 @@ exports.getHomePage = async (req, res) => {
 
 // Update homepage data
 exports.updateHomePage = async (req, res) => {
-  const { heroPanel, offerPanel, contactInfo, paymentInfo } = req.body;
+  const { heroPanel, slidingText, topHeaderText, offerPanel, contactInfo, paymentInfo, termsAndConditions, privacyPolicy } = req.body;
 
   try {
     let homePageData = await HomePage.findOne();
 
     if (homePageData) {
       homePageData.heroPanel = heroPanel || homePageData.heroPanel;
+      homePageData.slidingText = slidingText || homePageData.slidingText;
+      homePageData.topHeaderText = topHeaderText || homePageData.topHeaderText;
       homePageData.offerPanel = offerPanel || homePageData.offerPanel;
       homePageData.contactInfo = contactInfo || homePageData.contactInfo;
       homePageData.paymentInfo = paymentInfo || homePageData.paymentInfo;
-      
+      homePageData.termsAndConditions = termsAndConditions || homePageData.termsAndConditions;
+      homePageData.privacyPolicy = privacyPolicy || homePageData.privacyPolicy;
+
     } else {
-      homePageData = new HomePage({ heroPanel, offerPanel, contactInfo, paymentInfo });
+      homePageData = new HomePage({ heroPanel, slidingText, topHeaderText, offerPanel, contactInfo, paymentInfo, termsAndConditions, privacyPolicy });
     }
 
     await homePageData.save();
