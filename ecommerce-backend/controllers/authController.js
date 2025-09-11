@@ -25,6 +25,12 @@ exports.registerUser = async (req, res) => {
 // @access  Public
 exports.loginUser = async (req, res) => {
   const { email, password, rememberMe } = req.body;
+
+  // Validate required fields
+  if (!email || !password) {
+    return res.status(400).json({ msg: 'Email and password are required' });
+  }
+
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ msg: 'User does not exist' });

@@ -11,7 +11,26 @@ const connectDB = require('./config/db');
 const { createServer } = require('http');
 
 dotenv.config();
+
+// Check for required environment variables
+const requiredEnvVars = ['MONGO_URI', 'JWT_SECRET'];
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error(`Missing required environment variables: ${missingVars.join(', ')}`);
+  process.exit(1);
+}
+
 connectDB();
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err, promise) => {
+  console.error('Unhandled Rejection:', err.message);
+  httpServer.close(() => {
+    console.error('Server closed due to unhandled rejection');
+    process.exit(1);
+  });
+});
 
 const app = express();
 const httpServer = createServer(app);
@@ -26,6 +45,11 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
+
+    // In development, allow any localhost origin
+    if (process.env.NODE_ENV !== 'production' && origin && origin.startsWith('http://localhost')) {
+      return callback(null, true);
+    }
 
     const allowedOrigins = [
       'http://localhost:3000', // Frontend development
