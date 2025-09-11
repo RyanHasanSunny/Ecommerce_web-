@@ -11,6 +11,7 @@ const LoginPage = () => {
     email: '',
     password: ''
   });
+  const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [windowLoader, setWindowLoader] = useState({
@@ -89,7 +90,7 @@ const LoginPage = () => {
       successMessage: 'Login successful!'
     });
 
-    const result = await login(formData.email, formData.password);
+    const result = await login(formData.email, formData.password, rememberMe);
     
     if (result.success) {
       // Show success state
@@ -223,6 +224,8 @@ const LoginPage = () => {
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">

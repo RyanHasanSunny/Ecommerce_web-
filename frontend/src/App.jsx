@@ -1,11 +1,15 @@
 // src/App.jsx - UPDATED VERSION
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './user-panel/context/AuthContext';
 import { Loader } from 'lucide-react';
 import RouteLoader from './RouteLoader';
 import ScrollToTop from './ScrollToTop';
+import InitialLoader from './InitialLoader';
+import { AppDataProvider } from './AppDataContext';
+import { getCategories } from './user-panel/api/api';
+import apiService from './user-panel/api/api';
 import './App.css';
 
 
@@ -48,14 +52,47 @@ const HomepageManagement= lazy(() => import('./admin_panel/pages/HomepageManagem
 const OrderManagement   = lazy(() => import('./admin_panel/pages/OrderList'));
 
 function App() {
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [initialData, setInitialData] = useState({ categories: [], homePageData: null });
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        // Fetch categories
+        const categoriesResponse = await getCategories();
+        const categories = Array.isArray(categoriesResponse) ? categoriesResponse : categoriesResponse.categories || [];
+        const parentCategories = categories.filter(cat => cat.isParent);
+
+        // Fetch homepage data
+        const homePageResponse = await apiService.getHomePage();
+        const homePageData = homePageResponse.data || homePageResponse;
+
+        setInitialData({ categories: parentCategories, homePageData });
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
+        // Continue with empty data if fetch fails
+        setInitialData({ categories: [], homePageData: null });
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []);
+
+  if (initialLoading) {
+    return <InitialLoader />;
+  }
+
   return (
     <div className="App">
-      <AuthProvider>
-        <Router>
-          <ScrollToTop />
-          <RouteLoader />                           {/* ← show loader on every route-change */}
-          <Suspense fallback={<RouteLoader />}>     {/* also fallback on initial chunk-load */}
-            <Routes>
+      <AppDataProvider initialData={initialData}>
+        <AuthProvider>
+          <Router>
+            <ScrollToTop />
+            <RouteLoader />                           {/* ← show loader on every route-change */}
+            <Suspense fallback={<RouteLoader />}>     {/* also fallback on initial chunk-load */}
+              <Routes>
               {/* Public Authentication Routes */}
               <Route path="/login"           element={<LoginPage />} />
               <Route path="/signup"          element={<SignupPage />} />
@@ -177,6 +214,7 @@ function App() {
           </Suspense>
         </Router>
       </AuthProvider>
+      </AppDataProvider>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Tab, Tabs, TabList, TabPanel } from "react-tabs";
-import { CreditCard, CheckCircle, Shield, Truck, Globe, ArrowLeft, Package, MapPin, DollarSign } from "lucide-react";
+import { CheckCircle, Shield, Truck, Globe, ArrowLeft, Package, MapPin, DollarSign } from "lucide-react";
 import { placeOrder, getHomePage } from "../../api/api";
 import CustomAlert from "../Confirmationpopup/Alert";
 
@@ -10,7 +9,7 @@ const PaymentPage = () => {
   const navigate = useNavigate();
   const { cartItems, totalAmount, selectedItems } = location.state || {};
 
-  const [selectedTab, setSelectedTab] = useState(0);
+
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [transactionId, setTransactionId] = useState("");
@@ -61,7 +60,6 @@ const PaymentPage = () => {
       free: "Free",
       total: "Total",
       manualPayment: "Manual Payment",
-      cardPayment: "Card Payment",
       manualInstructions: "Manual Payment Instructions",
       manualDesc: "Send money to our mobile banking accounts and provide the transaction ID.",
       transactionId: "Transaction ID",
@@ -73,9 +71,6 @@ const PaymentPage = () => {
       defaultAdvance: "Default advance: ৳500",
       customAdvance: "Custom advance amount (৳)",
       dueOnDelivery: "Due on delivery",
-      cardInstructions: "Card Payment Instructions",
-      cardDesc: "Use your debit/credit card for secure online payment.",
-      payNowCard: "Pay Now with Card",
       shippingAddress: "Shipping Address",
       fullName: "Full Name",
       phone: "Phone",
@@ -107,7 +102,6 @@ const PaymentPage = () => {
       free: "বিনামূল্যে",
       total: "মোট",
       manualPayment: "ম্যানুয়াল পেমেন্ট",
-      cardPayment: "কার্ড পেমেন্ট",
       manualInstructions: "ম্যানুয়াল পেমেন্ট নির্দেশাবলী",
       manualDesc: "আমাদের মোবাইল ব্যাংকিং অ্যাকাউন্টে টাকা পাঠান এবং লেনদেনের আইডি প্রদান করুন।",
       transactionId: "লেনদেনের আইডি",
@@ -119,9 +113,6 @@ const PaymentPage = () => {
       defaultAdvance: "ডিফল্ট অগ্রিম: ৳৫০০",
       customAdvance: "কাস্টম অগ্রিম পরিমাণ (৳)",
       dueOnDelivery: "ডেলিভারিতে বকেয়া",
-      cardInstructions: "কার্ড পেমেন্ট নির্দেশাবলী",
-      cardDesc: "নিরাপদ অনলাইন পেমেন্টের জন্য আপনার ডেবিট/ক্রেডিট কার্ড ব্যবহার করুন।",
-      payNowCard: "কার্ড দিয়ে পেমেন্ট করুন",
       shippingAddress: "ডেলিভারি ঠিকানা",
       fullName: "সম্পূর্ণ নাম",
       phone: "ফোন",
@@ -188,7 +179,7 @@ const handleConfirmOrder = async () => {
   const orderData = {
     items: cartItems.filter((item) => selectedItems.includes(item._id)),
     shippingAddress,
-    extraCharge: calculateShipping(),
+    extraCharge: 0,
     fromCart: true,
   };
 
@@ -231,18 +222,12 @@ const handleConfirmOrder = async () => {
     
   } else {
     // Regular Payment (Full payment)
-    if (selectedTab === 0) {
-      // Manual payment
-      if (!transactionId.trim()) {
-        alert("Please provide a transaction ID for manual payment.");
-        return;
-      }
-      orderData.paymentMethod = paymentMethod; // bkash, nagad, rocket, etc.
-      orderData.transactionId = transactionId;
-    } else {
-      // Card payment
-      orderData.paymentMethod = 'card';
+    if (!transactionId.trim()) {
+      alert("Please provide a transaction ID for manual payment.");
+      return;
     }
+    orderData.paymentMethod = paymentMethod; // bkash, nagad, rocket, etc.
+    orderData.transactionId = transactionId;
   }
 
   try {
@@ -441,184 +426,142 @@ const handleConfirmOrder = async () => {
 
           <div className="lg:col-span-2 order-1 lg:order-2">
             <div className="bg-white rounded-2xl shadow-lg p-8">
-              <Tabs selectedIndex={selectedTab} onSelect={(index) => setSelectedTab(index)}>
-                <TabList className="flex bg-gray-100 rounded-xl p-1 mb-8">
-                  <Tab className={`flex-1 py-4 px-6 text-center rounded-lg font-medium transition-all cursor-pointer ${
-                    selectedTab === 0 
-                      ? 'bg-white text-blue-600 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}>
-                    <Shield className="w-5 h-5 inline mr-2" />
-                    {t.manualPayment}
-                  </Tab>
-                  <Tab className={`flex-1 py-4 px-6 text-center rounded-lg font-medium transition-all cursor-pointer ${
-                    selectedTab === 1 
-                      ? 'bg-white text-blue-600 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}>
-                    <CreditCard className="w-5 h-5 inline mr-2" />
-                    {t.cardPayment}
-                  </Tab>
-                </TabList>
+              <div className="space-y-8">
+                <div className="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
+                  <h3 className="font-semibold text-lg text-blue-800 mb-3">{t.manualInstructions}</h3>
+                  <p className="text-blue-700 mb-4">{t.manualDesc}</p>
+                </div>
 
-                <TabPanel>
-                  <div className="space-y-8">
-                    <div className="bg-blue-50 p-6 rounded-xl border-l-4 border-blue-500">
-                      <h3 className="font-semibold text-lg text-blue-800 mb-3">{t.manualInstructions}</h3>
-                      <p className="text-blue-700 mb-4">{t.manualDesc}</p>
-                    </div>
-
-                    {paymentMethods.length > 0 ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                        {paymentMethods.map((method) => {
-                          const color = getMethodColor(method.getway);
-                          const methodKey = method.getway.toLowerCase();
-                          return (
-                            <div 
-                              key={method._id || method.getway}
-                              className={`p-6 border-2 rounded-xl cursor-pointer transition-all ${
-                                paymentMethod === method.getway 
-                                  ? `${color.border} ${color.bgLight}`
-                                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                              }`}
-                            >
-                              <input
-                                type="radio"
-                                id={method.getway}
-                                name="payment-method"
-                                value={method.getway}
-                                checked={paymentMethod === method.getway}
-                                onChange={handlePaymentMethodChange}
-                                className="sr-only"
-                              />
-                              <label htmlFor={method.getway} className="cursor-pointer block text-center">
-                                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 font-bold text-white text-xl ${color.bg}`}>
-                                  {method.getway.charAt(0).toUpperCase()}
-                                </div>
-                                <h4 className="font-semibold text-gray-800 mb-2">
-                                  {t.paymentMethods[methodKey] || method.getway}
-                                </h4>
-                                <p className="text-xs text-gray-600">
-                                  {method.getwaynumber}
-                                </p>
-                              </label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-center">
-                        <p className="text-yellow-700">No payment methods available. Please contact support.</p>
-                      </div>
-                    )}
-
-                    <div className="space-y-4">
-                      {/* COD Section */}
-                      <div className="bg-yellow-50 p-6 rounded-xl border border-yellow-200">
-                        <label className="flex items-center cursor-pointer mb-4">
+                {paymentMethods.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    {paymentMethods.map((method) => {
+                      const color = getMethodColor(method.getway);
+                      const methodKey = method.getway.toLowerCase();
+                      return (
+                        <div
+                          key={method._id || method.getway}
+                          className={`p-6 border-2 rounded-xl cursor-pointer transition-all ${
+                            paymentMethod === method.getway
+                              ? `${color.border} ${color.bgLight}`
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
                           <input
-                            type="checkbox"
-                            checked={isCOD}
-                            onChange={handleCODChange}
-                            className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-3"
+                            type="radio"
+                            id={method.getway}
+                            name="payment-method"
+                            value={method.getway}
+                            checked={paymentMethod === method.getway}
+                            onChange={handlePaymentMethodChange}
+                            className="sr-only"
                           />
-                          <span className="font-medium text-gray-700">{t.codLabel}</span>
-                        </label>
-                        
-                        {isCOD && (
-                          <div className="ml-8 space-y-4">
-                            <p className="text-sm text-yellow-700 mb-4">
-                              <strong>{t.codNote.split(':')[0]}:</strong> {t.codNote.split(':')[1]}
+                          <label htmlFor={method.getway} className="cursor-pointer block text-center">
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 font-bold text-white text-xl ${color.bg}`}>
+                              {method.getway.charAt(0).toUpperCase()}
+                            </div>
+                            <h4 className="font-semibold text-gray-800 mb-2">
+                              {t.paymentMethods[methodKey] || method.getway}
+                            </h4>
+                            <p className="text-xs text-gray-600">
+                              {method.getwaynumber}
                             </p>
-                            
-                            <div className="bg-white p-4 rounded-lg border">
-                              <h4 className="font-medium text-gray-800 mb-3 flex items-center">
-                                <DollarSign className="w-4 h-4 mr-2" />
-                                {t.advancePayment}
-                              </h4>
-                              <p className="text-sm text-gray-600 mb-4">{t.advancePaymentDesc}</p>
-                              
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600">{t.defaultAdvance}</span>
-                                  <button
-                                    onClick={() => setCustomAdvanceAmount(500)}
-                                    className={`px-3 py-1 rounded-md text-xs ${
-                                      customAdvanceAmount === 500 
-                                        ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                                        : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
-                                    }`}
-                                  >
-                                    Use Default
-                                  </button>
-                                </div>
-                                
-                                <div>
-                                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    {t.customAdvance}
-                                  </label>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    max={calculateTotal()}
-                                    value={customAdvanceAmount}
-                                    onChange={handleAdvanceAmountChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="Enter advance amount"
-                                  />
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    {t.dueOnDelivery}: ৳{calculateDueAmount().toFixed(2)}
-                                  </p>
-                                </div>
-                              </div>
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 text-center">
+                    <p className="text-yellow-700">No payment methods available. Please contact support.</p>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  {/* COD Section */}
+                  <div className="bg-yellow-50 p-6 rounded-xl border border-yellow-200">
+                    <label className="flex items-center cursor-pointer mb-4">
+                      <input
+                        type="checkbox"
+                        checked={isCOD}
+                        onChange={handleCODChange}
+                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-3"
+                      />
+                      <span className="font-medium text-gray-700">{t.codLabel}</span>
+                    </label>
+
+                    {isCOD && (
+                      <div className="ml-8 space-y-4">
+                        <p className="text-sm text-yellow-700 mb-4">
+                          <strong>{t.codNote.split(':')[0]}:</strong> {t.codNote.split(':')[1]}
+                        </p>
+
+                        <div className="bg-white p-4 rounded-lg border">
+                          <h4 className="font-medium text-gray-800 mb-3 flex items-center">
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            {t.advancePayment}
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-4">{t.advancePaymentDesc}</p>
+
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">{t.defaultAdvance}</span>
+                              <button
+                                onClick={() => setCustomAdvanceAmount(500)}
+                                className={`px-3 py-1 rounded-md text-xs ${
+                                  customAdvanceAmount === 500
+                                    ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                                    : 'bg-gray-100 text-gray-600 border border-gray-300 hover:bg-gray-200'
+                                }`}
+                              >
+                                Use Default
+                              </button>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                {t.customAdvance}
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                max={calculateTotal()}
+                                value={customAdvanceAmount}
+                                onChange={handleAdvanceAmountChange}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter advance amount"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">
+                                {t.dueOnDelivery}: ৳{calculateDueAmount().toFixed(2)}
+                              </p>
                             </div>
                           </div>
-                        )}
-                      </div>
-
-                      {/* Transaction ID for advance payment or regular payment */}
-                      {((isCOD && customAdvanceAmount > 0 && paymentMethod) || (!isCOD && paymentMethod)) && (
-                        <div>
-                          <label htmlFor="transaction-id" className="block text-sm font-medium text-gray-700 mb-3">
-                            {t.transactionId} *
-                            {isCOD && customAdvanceAmount > 0 && (
-                              <span className="text-xs text-gray-500 ml-2">(for advance payment)</span>
-                            )}
-                          </label>
-                          <input
-                            type="text"
-                            id="transaction-id"
-                            value={transactionId}
-                            onChange={handleTransactionIdChange}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                            placeholder={t.transactionIdPlaceholder}
-                            required
-                          />
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
-                </TabPanel>
 
-                <TabPanel>
-                  <div className="space-y-8">
-                    <div className="bg-green-50 p-6 rounded-xl border-l-4 border-green-500">
-                      <h3 className="font-semibold text-lg text-green-800 mb-3">{t.cardInstructions}</h3>
-                      <p className="text-green-700">{t.cardDesc}</p>
+                  {/* Transaction ID for advance payment or regular payment */}
+                  {((isCOD && customAdvanceAmount > 0 && paymentMethod) || (!isCOD && paymentMethod)) && (
+                    <div>
+                      <label htmlFor="transaction-id" className="block text-sm font-medium text-gray-700 mb-3">
+                        {t.transactionId} *
+                        {isCOD && customAdvanceAmount > 0 && (
+                          <span className="text-xs text-gray-500 ml-2">(for advance payment)</span>
+                        )}
+                      </label>
+                      <input
+                        type="text"
+                        id="transaction-id"
+                        value={transactionId}
+                        onChange={handleTransactionIdChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                        placeholder={t.transactionIdPlaceholder}
+                        required
+                      />
                     </div>
-
-                    <div className="text-center">
-                      <button
-                        onClick={() => console.log("Redirecting to card payment gateway")}
-                        className="w-full px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all transform hover:scale-105 font-semibold shadow-lg text-lg"
-                      >
-                        <CreditCard className="w-6 h-6 inline mr-3" />
-                        {t.payNowCard}
-                      </button>
-                    </div>
-                  </div>
-                </TabPanel>
-              </Tabs>
+                  )}
+                </div>
+              </div>
 
               <div className="mt-10 bg-gray-50 p-6 rounded-xl">
                 <h3 className="font-semibold text-xl mb-6 flex items-center text-gray-800">

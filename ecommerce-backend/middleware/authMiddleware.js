@@ -3,11 +3,10 @@ const jwt = require('jsonwebtoken');
 
 module.exports = (req, res, next) => {
   console.log('Auth middleware hit:', req.method, req.path);
-  console.log('Headers:', req.headers);
-  
-  const token = req.header('x-auth-token');
-  console.log('Token received:', token ? 'Yes' : 'No');
-  
+
+  const token = req.cookies.token;
+  console.log('Token received from cookie:', token ? 'Yes' : 'No');
+
   if (!token) {
     console.log('No token provided');
     return res.status(401).json({ msg: 'No token, authorization denied' });

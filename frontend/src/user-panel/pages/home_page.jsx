@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import HeroPanel from "../Sections/Heropanel/Heropanel";
+import { useAppData } from "../../AppDataContext";
 import { getCategories } from '../../user-panel/api/api';
 
 import apiService from "../api/api";
@@ -22,65 +23,24 @@ import {
 
 // Main HomePage Component
 const HomePage = () => {
-  const [homePageData, setHomePageData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { categories: initialCategories, homePageData: initialHomePageData } = useAppData();
+  const [homePageData, setHomePageData] = useState(initialHomePageData);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [categories, setCategories] = useState(initialCategories || []);
 
-
-
-  const [categories, setCategories] = useState([]);
-
+  // Update state when context data changes
   useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const data = await getCategories();
-        // Ensure categories is always an array
-        const list = Array.isArray(data) ? data : data.categories;
-        // Filter only parent categories
-        const parentCategories = list.filter(cat => cat.isParent);
-        setCategories(parentCategories || []);
-      } catch (err) {
-        console.error('Error fetching categories:', err);
-      }
-    };
-    fetchAll();
-  }, []);
+    if (initialCategories) {
+      setCategories(initialCategories);
+    }
+    if (initialHomePageData) {
+      setHomePageData(initialHomePageData);
+    }
+  }, [initialCategories, initialHomePageData]);
 
-  useEffect(() => {
-    const fetchHomePageData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await apiService.getHomePage();
-        setHomePageData(response.data || response);
-      } catch (err) {
-        console.error('Error fetching homepage data:', err);
-        setError('Failed to load homepage data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHomePageData();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Loading...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <AlertCircle className="w-8 h-8 text-red-600" />
-        <span className="ml-2 text-red-600">{error}</span>
-      </div>
-    );
-  }
+  // Optional: Fetch fresh data if needed (but since we have initial data, maybe not necessary)
+  // For now, we'll use the pre-fetched data
 
   return (
     <div className=" min-h-screen bg-white">

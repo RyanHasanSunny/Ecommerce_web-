@@ -124,7 +124,7 @@ const HeroPanel = ({ heroData }) => {
   return (
     <div className="flex flex-col w-full justify-center items-center">
       {/* Main container with grid layout */}
-      <div className="  px-2 lg:px-5 mb-4 mt-4">
+      <div className="  px-2 lg:px-5 ">
         {/* Main Hero Carousel - Takes 3 columns on large screens */}
         <div className="lg:col-span-3 relative overflow-hidden rounded-lg"
           style={{ aspectRatio: "16 / 6" }}>
@@ -191,7 +191,7 @@ const HeroPanel = ({ heroData }) => {
       </div>
 
       {/* Sliding Text Banner */}
-      <div className="w-full bg-gray-200 py-2 overflow-hidden">
+      <div className="w-full  py-2 overflow-hidden">
         <div className="relative">
           <div className="animate-slide-right-to-left whitespace-nowrap">
             {textSlides.map((text, index) => (
@@ -214,7 +214,7 @@ const HeroPanel = ({ heroData }) => {
         }
         
         .animate-slide-right-to-left {
-          animation: slide-right-to-left 20s linear infinite;
+          animation: slide-right-to-left 50s linear infinite;
         }
       `}</style>
     </div>

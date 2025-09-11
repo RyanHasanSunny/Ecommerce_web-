@@ -381,7 +381,7 @@ const HomepageManagement = () => {
     slidingText: [{
       text: '🎉 Summer Sale - Up to 50% OFF on all products!'
     }, {
-      text: '🚚 Free Shipping on orders above $50'
+      text: '🚚 Free Shipping on orders above ৳50'
     }],
     topHeaderText: '24/7 Support Available',
     offerPanel: {

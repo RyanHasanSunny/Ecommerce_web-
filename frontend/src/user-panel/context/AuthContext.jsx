@@ -55,76 +55,67 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Helper function to clear tokens
+  // Helper function to clear tokens - no longer needed with cookies
   const clearTokens = useCallback(() => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('adminToken');
+    // Cookies are cleared server-side
   }, []);
 
-  // Initialize auth state from localStorage
+  // Initialize auth state by checking if user is authenticated
   useEffect(() => {
     const initializeAuth = async () => {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        dispatch({ type: 'SET_LOADING', payload: false });
-        return;
-      }
-
       try {
         dispatch({ type: 'SET_LOADING', payload: true });
-        
-        // Check if token is valid by trying to get user profile
+
+        // Check if user is authenticated by trying to get user profile
+        // Cookies will be sent automatically with credentials: 'include'
         const userData = await apiService.getUserProfile();
-        
-        dispatch({ 
-          type: 'LOGIN_SUCCESS', 
-          payload: { user: userData } 
+
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: { user: userData }
         });
       } catch (error) {
         console.error('Auth initialization failed:', error);
-        
-        // Clear invalid tokens
-        clearTokens();
-        dispatch({ type: 'LOGOUT' });
-        
-        // Only show error if it's not a token expiry issue
-        if (error.status !== 401) {
+
+        // For 401 errors (unauthorized), just set as not authenticated
+        // Don't show error message or redirect - user can access public pages
+        if (error.status === 401) {
+          dispatch({ type: 'LOGOUT' });
+        } else {
+          // For other errors, show error message
           dispatch({ type: 'SET_ERROR', payload: 'Authentication failed. Please login again.' });
+          dispatch({ type: 'LOGOUT' });
         }
       }
     };
 
     initializeAuth();
-  }, [clearTokens]);
+  }, []);
 
   // Actions - wrapped with useCallback to prevent infinite loops
-  const login = useCallback(async (email, password) => {
+  const login = useCallback(async (email, password, rememberMe = false) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'CLEAR_ERROR' });
-      
-      const response = await apiService.login(email, password);
-      
-      // Store token
-      localStorage.setItem('token', response.token);
-      
-      // Get user profile
+
+      const response = await apiService.login(email, password, rememberMe);
+
+      // Cookie is set server-side, no need to store locally
+      // Get user profile to confirm authentication
       const userData = await apiService.getUserProfile();
-      
-      dispatch({ 
-        type: 'LOGIN_SUCCESS', 
-        payload: { user: userData } 
+
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: { user: userData }
       });
-      
+
       return { success: true, data: response };
     } catch (error) {
       console.error('Login error:', error);
-      clearTokens();
       dispatch({ type: 'SET_ERROR', payload: error.message || 'Login failed' });
       return { success: false, error: error.message || 'Login failed' };
     }
-  }, [clearTokens]);
+  }, []);
 
   const register = useCallback(async (userData) => {
     try {
@@ -143,10 +134,14 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const logout = useCallback(() => {
-    clearTokens();
+  const logout = useCallback(async () => {
+    try {
+      await apiService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
     dispatch({ type: 'LOGOUT' });
-  }, [clearTokens]);
+  }, []);
 
   const updateUser = useCallback((userData) => {
     dispatch({ type: 'UPDATE_USER', payload: userData });

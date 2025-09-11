@@ -20,24 +20,14 @@ async request(endpoint, options = {}) {
 
   const config = { ...options, headers };
 
-  // Add auth token if available
-  const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
-  if (token) {
-    config.headers['x-auth-token'] = token;
-  }
+  // Include credentials to send cookies
+  config.credentials = 'include';
 
   try {
     const response = await fetch(url, config);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-
-      // 🔥 handle invalid/expired token
-      if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('adminToken');
-        window.location.href = '/login'; // redirect
-      }
 
       throw new APIError(
         errorData.msg || errorData.message || `HTTP ${response.status}`,
@@ -55,10 +45,10 @@ async request(endpoint, options = {}) {
 
 
   // Authentication APIs
-  async login(email, password) {
+  async login(email, password, rememberMe = false) {
     return this.request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, rememberMe })
     });
   },
 
@@ -71,6 +61,12 @@ async request(endpoint, options = {}) {
 
   async getUserProfile() {
     return this.request('/auth/profile');
+  },
+
+  async logout() {
+    return this.request('/auth/logout', {
+      method: 'POST'
+    });
   },
 
   async updatePassword(currentPassword, newPassword) {

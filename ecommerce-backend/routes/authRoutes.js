@@ -3,6 +3,7 @@ const router  = express.Router();
 const {
   registerUser,
   loginUser,
+  logoutUser,
   getUserProfile,
   updatePassword,
   forgotPassword,
@@ -17,6 +18,7 @@ router.post('/forgot-password', forgotPassword);
 router.post('/reset-password',  resetPassword);
 
 // Protected routes
+router.post('/logout',          authMiddleware, logoutUser);
 router.get('/profile',          authMiddleware, getUserProfile);
 router.put('/password', authMiddleware, updatePassword);
 

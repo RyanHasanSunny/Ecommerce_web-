@@ -1,9 +1,9 @@
 // src/user-panel/components/header/Header.jsx - MOBILE UX FIXED - Search Always Visible on Mobile
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import apiService from "../../api/api";
+import apiService, { getCart } from "../../api/api";
 import {
   ShoppingCart,
   Search,
@@ -71,13 +71,33 @@ const Header = () => {
     }
   }, [searchQuery]);
 
-  // TODO: Fetch cart count from API
-  useEffect(() => {
+  // Fetch cart count from API
+  const fetchCartCount = useCallback(async () => {
     if (isAuthenticated()) {
-      // Fetch cart count from API
-      // setCartItemCount(response.itemCount);
+      try {
+        const cart = await getCart();
+        setCartItemCount(cart.items ? cart.items.length : 0);
+      } catch (error) {
+        console.error('Error fetching cart:', error);
+        setCartItemCount(0);
+      }
+    } else {
+      setCartItemCount(0);
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchCartCount();
+  }, [isAuthenticated]);
+
+  // Listen for cart updates
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      fetchCartCount();
+    };
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, [fetchCartCount]);
 
   // Fetch top header text from API
   useEffect(() => {

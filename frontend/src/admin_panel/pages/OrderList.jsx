@@ -624,8 +624,14 @@ const OrderDetailDialog = ({ open, onClose, orderId }) => {
                       <Grid item xs={6}><Typography align="right">৳{order.deliveryCharge?.toLocaleString()}</Typography></Grid>
                       <Grid item xs={6}><Typography>Extra Charge:</Typography></Grid>
                       <Grid item xs={6}><Typography align="right">৳{order.extraCharge?.toLocaleString()}</Typography></Grid>
-                      <Grid item xs={6}><Typography variant="h6">Customer Pays:</Typography></Grid>
-                      <Grid item xs={6}><Typography variant="h6" align="right">৳{order.totalAmount?.toLocaleString()}</Typography></Grid>
+                      <Grid item xs={6}><Typography variant="h6">Customer Paid:</Typography></Grid>
+                      <Grid item xs={6}><Typography variant="h6" align="right">৳{order.paidAmount?.toLocaleString() || '0'}</Typography></Grid>
+                      {order.dueAmount > 0 && (
+                        <>
+                          <Grid item xs={6}><Typography color="warning.main">Due Amount:</Typography></Grid>
+                          <Grid item xs={6}><Typography align="right" color="warning.main">৳{order.dueAmount?.toLocaleString()}</Typography></Grid>
+                        </>
+                      )}
                     </Grid>
                   </CardContent>
                 </Card>
@@ -1216,19 +1222,18 @@ const OrderList = () => {
               <TableCell>Status</TableCell>
               <TableCell>Payment</TableCell>
               <TableCell>Transaction ID</TableCell>
-             
+
               <TableCell>Price</TableCell>
-              {/* <TableCell>Profit</TableCell>
-              <TableCell>Discount</TableCell> */}
-               <TableCell>Delivery Charge</TableCell>
-               <TableCell>Total</TableCell>
+              <TableCell>Delivery Charge</TableCell>
+              <TableCell>Customer Paid</TableCell>
+              <TableCell>Due Amount</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>
-            {filteredOrders
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((order) => (
+              <TableBody>
+                {filteredOrders
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((order) => (
                 <TableRow key={order._id} hover>
                   <TableCell>
                     <Typography variant="body2" fontFamily="monospace">
@@ -1269,7 +1274,7 @@ const OrderList = () => {
                   </TableCell>
                   <TableCell>
                     {order.paymentDetails?.transactionId ? (
-                      <Typography variant="body2" fontFamily="monospace" sx={{ 
+                      <Typography variant="body2" fontFamily="monospace" sx={{
                         backgroundColor: 'rgba(25, 118, 210, 0.08)',
                         padding: '2px 8px',
                         borderRadius: '4px',
@@ -1279,15 +1284,15 @@ const OrderList = () => {
                         {order.paymentDetails.transactionId}
                       </Typography>
                     ) : (
-                      <Chip 
-                        label="No Transaction ID" 
-                        size="small" 
-                        variant="outlined" 
+                      <Chip
+                        label="No Transaction ID"
+                        size="small"
+                        variant="outlined"
                         color="default"
                       />
                     )}
                   </TableCell>
-                 
+
                   <TableCell>
                     <Typography variant="body2" fontWeight="medium" color="primary.main">
                       ৳{order.subtotal?.toLocaleString() || 'N/A'}
@@ -1318,12 +1323,28 @@ const OrderList = () => {
                     </Typography>
                   </TableCell>
                    <TableCell>
-                    <Typography variant="body2" fontWeight="medium">
-                      ৳{order.totalAmount?.toLocaleString()}
+                    <Typography variant="body2" fontWeight="medium" color="success.main">
+                      ৳{order.paidAmount?.toLocaleString() || '0'}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       Customer Paid
                     </Typography>
+                  </TableCell>
+                  <TableCell>
+                    {order.dueAmount > 0 ? (
+                      <Typography variant="body2" fontWeight="medium" color="warning.main">
+                        ৳{order.dueAmount?.toLocaleString()}
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        -
+                      </Typography>
+                    )}
+                    {order.dueAmount > 0 && (
+                      <Typography variant="caption" color="text.secondary">
+                        Due
+                      </Typography>
+                    )}
                   </TableCell>
                   <TableCell align="center">
                     <Stack direction="row" spacing={1} justifyContent="center">

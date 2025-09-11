@@ -3,11 +3,11 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import apiService from "../../api/api";
 import ProductCard from "./productcard/ProductCard";
-import { 
-  TrendingUp, 
-  Star, 
-  ShoppingBag, 
-  Users, 
+import {
+  TrendingUp,
+  Star,
+  ShoppingBag,
+  Users,
   ArrowRight,
   Sparkles,
   Gift,

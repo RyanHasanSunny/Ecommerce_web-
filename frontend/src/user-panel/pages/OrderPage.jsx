@@ -422,8 +422,11 @@ const OrdersPage = () => {
                             <p className="font-medium text-gray-900">{formatDate(order.createdAt)}</p>
                           </div>
                           <div>
-                            <span className="text-gray-500">Total Amount:</span>
-                            <p className="font-medium text-gray-900">৳{(order.totalAmount || 0).toFixed(2)}</p>
+                            <span className="text-gray-500">Customer Paid:</span>
+                            <p className="font-medium text-gray-900">৳{(order.paidAmount || 0).toFixed(2)}</p>
+                            {order.dueAmount > 0 && (
+                              <p className="text-sm text-orange-600">Due: ৳{order.dueAmount.toFixed(2)}</p>
+                            )}
                           </div>
                           <div>
                             <span className="text-gray-500">Items:</span>

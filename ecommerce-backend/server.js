@@ -6,6 +6,7 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const color = require('colors');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const { createServer } = require('http');
 
@@ -17,8 +18,32 @@ const httpServer = createServer(app);
 
 // Middleware
 app.use(express.json());
+app.use(cookieParser());
 app.use(morgan('dev'));
-app.use(cors());
+
+// CORS configuration
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      'http://localhost:3000', // Frontend development
+      'http://localhost:5173', // Vite default
+      process.env.FRONTEND_URL // Production frontend URL
+    ].filter(Boolean);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true, // Allow cookies to be sent
+  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+};
+
+app.use(cors(corsOptions));
 
 // Health-check
 app.get('/', (req, res) => {

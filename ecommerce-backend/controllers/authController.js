@@ -24,7 +24,7 @@ exports.registerUser = async (req, res) => {
 // @desc    Authenticate user & get token
 // @access  Public
 exports.loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, rememberMe } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ msg: 'User does not exist' });
@@ -32,12 +32,38 @@ exports.loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
 
+    // Set token expiry based on remember me preference
+    const expiresIn = rememberMe ? '365d' : '1h'; // 1 year if remember me, 1 hour otherwise
+
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn }
     );
-    res.json({ token, role: user.role });
+
+    // Set httpOnly cookie
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', // 'lax' for development cross-origin
+      maxAge: rememberMe ? 365 * 24 * 60 * 60 * 1000 : 1 * 60 * 60 * 1000 // 1 year or 1 hour
+    };
+
+    res.cookie('token', token, cookieOptions);
+    res.json({ role: user.role });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// @route   POST /api/auth/logout
+// @desc    Logout user by clearing cookie
+// @access  Private
+exports.logoutUser = async (req, res) => {
+  try {
+    res.clearCookie('token');
+    res.json({ msg: 'Logged out successfully' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });

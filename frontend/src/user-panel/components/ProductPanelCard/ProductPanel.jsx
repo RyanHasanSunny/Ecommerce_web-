@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getProducts } from "../../api/api";
+import { getProducts, addToCart } from "../../api/api";
+import { useAuth } from "../../context/AuthContext";
 import { ArrowRight, ShoppingCart, Heart, Eye } from "lucide-react";
 
 const ProductCard = ({ thumbnail, title, sellingPrice, offerPrice, productId, onClick }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const calculateDiscount = () => {
     if (offerPrice && offerPrice < sellingPrice) {
@@ -15,9 +17,21 @@ const ProductCard = ({ thumbnail, title, sellingPrice, offerPrice, productId, on
     return 0;
   };
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.stopPropagation();
-    console.log(`Added ${title} to cart`);
+    if (!isAuthenticated()) {
+      alert('Please login to add items to cart');
+      return;
+    }
+    try {
+      await addToCart(productId, 1);
+      alert(`${title} added to cart!`);
+      // Dispatch event to update header
+      window.dispatchEvent(new CustomEvent('cartUpdated'));
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert('Failed to add item to cart. Please try again.');
+    }
   };
 
   const handleWishlist = (e) => {
@@ -98,11 +112,11 @@ const ProductCard = ({ thumbnail, title, sellingPrice, offerPrice, productId, on
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="text-2xl font-bold text-gray-900">
-              ${offerPrice || sellingPrice}
+              ৳{offerPrice || sellingPrice}
             </span>
             {offerPrice && offerPrice < sellingPrice && (
               <span className="text-lg text-gray-500 line-through">
-                ${sellingPrice}
+                ৳{sellingPrice}
               </span>
             )}
           </div>

@@ -15,7 +15,7 @@ export default function ServiceSection() {
     {
       icon: Truck,
       title: "Free Shipping",
-      description: "Order over 150 $"
+      description: "Order over 150 ৳"
     },
     {
       icon: Headphones,
