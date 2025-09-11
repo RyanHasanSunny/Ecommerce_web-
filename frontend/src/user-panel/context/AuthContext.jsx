@@ -1,3 +1,4 @@
+
 // src/user-panel/context/AuthContext.jsx - FIXED VERSION
 
 import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
@@ -162,7 +163,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user: state.user,
-    isAuthenticated: state.isAuthenticated,
+    isAuthenticated,
     loading: state.loading,
     error: state.error,
     login,
@@ -170,7 +171,6 @@ export const AuthProvider = ({ children }) => {
     logout,
     updateUser,
     clearError,
-    isAuthenticated,
     hasToken
   };
 

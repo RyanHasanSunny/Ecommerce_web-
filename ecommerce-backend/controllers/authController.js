@@ -24,19 +24,38 @@ exports.registerUser = async (req, res) => {
 // @desc    Authenticate user & get token
 // @access  Public
 exports.loginUser = async (req, res) => {
+  console.log('Login attempt:', { email: req.body.email, rememberMe: req.body.rememberMe });
+
   const { email, password, rememberMe } = req.body;
 
   // Validate required fields
   if (!email || !password) {
+    console.log('Login validation failed: Missing email or password');
     return res.status(400).json({ msg: 'Email and password are required' });
   }
 
   try {
+    console.log('Looking up user by email:', email);
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: 'User does not exist' });
+    if (!user) {
+      console.log('User not found:', email);
+      return res.status(400).json({ msg: 'User does not exist' });
+    }
 
+    console.log('User found, comparing passwords');
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
+    if (!isMatch) {
+      console.log('Password mismatch for user:', email);
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+
+    console.log('Password match, generating JWT token');
+
+    // Check if JWT_SECRET is available
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET not found in environment variables');
+      return res.status(500).json({ msg: 'Server configuration error' });
+    }
 
     // Set token expiry based on remember me preference
     const expiresIn = rememberMe ? '365d' : '1h'; // 1 year if remember me, 1 hour otherwise
@@ -47,6 +66,8 @@ exports.loginUser = async (req, res) => {
       { expiresIn }
     );
 
+    console.log('JWT token generated successfully');
+
     // Set httpOnly cookie
     const cookieOptions = {
       httpOnly: true,
@@ -55,10 +76,19 @@ exports.loginUser = async (req, res) => {
       maxAge: rememberMe ? 365 * 24 * 60 * 60 * 1000 : 1 * 60 * 60 * 1000 // 1 year or 1 hour
     };
 
+    console.log('Setting cookie with options:', {
+      httpOnly: cookieOptions.httpOnly,
+      secure: cookieOptions.secure,
+      sameSite: cookieOptions.sameSite,
+      maxAge: cookieOptions.maxAge
+    });
+
     res.cookie('token', token, cookieOptions);
+    console.log('Login successful for user:', email);
     res.json({ role: user.role });
   } catch (err) {
-    console.error(err);
+    console.error('Login error:', err);
+    console.error('Error stack:', err.stack);
     res.status(500).json({ msg: 'Server error' });
   }
 };

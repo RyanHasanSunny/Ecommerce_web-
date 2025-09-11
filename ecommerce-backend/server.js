@@ -40,7 +40,6 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(morgan('dev'));
 
-// CORS configuration
 const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -48,23 +47,29 @@ const corsOptions = {
 
     // In development, allow any localhost origin
     if (process.env.NODE_ENV !== 'production' && origin && origin.startsWith('http://localhost')) {
+      console.log('CORS: Allowing localhost origin in development:', origin);
       return callback(null, true);
     }
 
     const allowedOrigins = [
       'http://localhost:3000', // Frontend development
       'http://localhost:5173', // Vite default
+      'http://localhost:4000', // Additional common dev port
+      'http://localhost:8080', // Additional common dev port
       process.env.FRONTEND_URL // Production frontend URL
     ].filter(Boolean);
 
     if (allowedOrigins.includes(origin)) {
+      console.log('CORS: Allowing configured origin:', origin);
       return callback(null, true);
     }
 
+    console.log('CORS: Blocking origin:', origin);
     return callback(new Error('Not allowed by CORS'));
   },
   credentials: true, // Allow cookies to be sent
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  optionsSuccessStatus: 200, // Some legacy browsers choke on 204
+  exposedHeaders: ['Set-Cookie'] // Expose Set-Cookie header to frontend
 };
 
 app.use(cors(corsOptions));
