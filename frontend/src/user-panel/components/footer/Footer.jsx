@@ -60,11 +60,7 @@ const Footer = () => {
   };
 
   const features = [
-    // { 
-    //   icon: Truck, 
-    //   title: 'Free Shipping', 
-    //   description: 'On orders over ৳50'
-    // },
+    
     { 
       icon: Shield, 
       title: 'Secure Payment', 
@@ -126,8 +122,8 @@ const Footer = () => {
     <footer className="bg-white border-t border-gray-200">
       {/* Features Section */}
       <div className="bg-gray-50 border-b border-gray-200">
-        <div className="flex w-full justify-evenly mx-auto px-4 py-12">
-          <div className="flex flex-wrap gap-20 md:gap-40 lg:gap-20">
+        <div className="flex w-full items-center justify-center mx-auto px-4 py-12">
+          <div className="flex flex-wrap items-center justify-center gap-20 md:gap-40 lg:gap-20">
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (

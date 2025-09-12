@@ -677,7 +677,7 @@ const ProductPage = () => {
                   )}
                 </div>
 
-                <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                {/* <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                   <div className="flex items-center space-x-2">
                     <Truck className="w-4 h-4 text-green-600" />
                     <span>
@@ -692,7 +692,7 @@ const ProductPage = () => {
                     <MapPin className="w-4 h-4 text-purple-600" />
                     <span>Delivering to <strong>{selectedCity === 'dhaka' ? 'Dhaka' : 'your location'}</strong></span>
                   </div>
-                </div>
+                </div> */}
               </div>
             )}
 
