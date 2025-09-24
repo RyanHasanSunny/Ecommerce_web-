@@ -215,15 +215,15 @@ const Header = () => {
             </button>
 
             {/* Mobile: Cart Icon */}
-            <div className="lg:hidden">
+            <div className="lg:hidden w-6  relative">
               <Link
                 to="/cart"
-                className="p-2 text-gray-600 hover:text-gray-900 rounded-lg transition-colors relative"
+                className=" text-gray-600 hover:text-gray-900 rounded-lg transition-colors"
                 aria-label="Shopping cart"
               >
                 <ShoppingCart className="w-5 h-5" />
                 {cartItemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                  <span className="absolute -top-4  left-4 bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-medium">
                     {cartItemCount > 99 ? '99+' : cartItemCount}
                   </span>
                 )}
@@ -238,7 +238,7 @@ const Header = () => {
             >
               <ShoppingCart className="w-5 h-5" />
               {cartItemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-medium">
                   {cartItemCount > 99 ? '99+' : cartItemCount}
                 </span>
               )}

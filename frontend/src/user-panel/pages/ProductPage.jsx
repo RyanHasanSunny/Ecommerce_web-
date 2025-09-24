@@ -363,9 +363,9 @@ const ProductPage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1  lg:grid-cols-2 gap-12">
           {/* Images */}
-          <div className="flex flex-col space-y-4">
+          <div className="flex flex-col  space-y-14">
             <div className="relative group w-full lg:w-[500px] h-full lg:h-[500px] bg-gray-50 rounded-2xl overflow-hidden">
               <img
                 src={imageError ? "/placeholder-product.jpg" : images[currentImageIndex]}
@@ -416,7 +416,7 @@ const ProductPage = () => {
               )}
             </div>
             {images.length > 1 && (
-              <div className="flex space-x-2 overflow-x-auto">
+              <div className="flex flex-wrap justify-center gap-2">
                 {images.map((img, i) => (
                   <button
                     key={i}
@@ -430,7 +430,7 @@ const ProductPage = () => {
                     <img
                       src={img}
                       alt={`${product.title} ${i + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-20 h-20 object-cover"
                       onError={e => (e.target.src = "/placeholder-product.jpg")}
                     />
                   </button>

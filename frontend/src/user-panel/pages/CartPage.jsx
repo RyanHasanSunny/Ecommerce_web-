@@ -78,6 +78,8 @@ const CartPage = () => {
       if (response.success && response.cart) {
         const updatedItems = response.cart.items || [];
         setCartItems(updatedItems);
+        // Dispatch event to update cart count in header
+        window.dispatchEvent(new Event('cartUpdated'));
       } else {
         await fetchCart();
       }
@@ -97,9 +99,11 @@ const CartPage = () => {
     setUpdating(true);
     try {
       const response = await apiService.removeFromCart(itemId);
-      
+
       if (response.items) {
         setCartItems(response.items);
+        // Dispatch event to update cart count in header
+        window.dispatchEvent(new Event('cartUpdated'));
       } else {
         await fetchCart();
       }
