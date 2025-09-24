@@ -423,9 +423,9 @@ const OrdersPage = () => {
                           </div>
                           <div>
                             <span className="text-gray-500">Customer Paid:</span>
-                            <p className="font-medium text-gray-900">৳{(order.paidAmount || 0).toFixed(2)}</p>
+                            <p className="font-medium text-gray-900">৳ {(order.paidAmount || 0).toFixed(2)}</p>
                             {order.dueAmount > 0 && (
-                              <p className="text-sm text-orange-600">Due: ৳{order.dueAmount.toFixed(2)}</p>
+                              <p className="text-sm text-orange-600">Due: ৳ {order.dueAmount.toFixed(2)}</p>
                             )}
                           </div>
                           <div>
@@ -473,11 +473,11 @@ const OrdersPage = () => {
                                     {product?.title || 'Unknown Product'}
                                   </p>
                                   <p className="text-sm text-gray-500">
-                                    Qty: {item?.quantity || 1} × ৳{(item?.finalPrice || 0).toFixed(2)}
+                                    Qty: {item?.quantity || 1} × ৳ {(item?.finalPrice || 0).toFixed(2)}
                                   </p>
                                 </div>
                                 <div className="text-sm font-medium text-gray-900">
-                                  ৳{((item?.quantity || 1) * (item?.finalPrice || 0)).toFixed(2)}
+                                  ৳ {((item?.quantity || 1) * (item?.finalPrice || 0)).toFixed(2)}
                                 </div>
                               </div>
                             );

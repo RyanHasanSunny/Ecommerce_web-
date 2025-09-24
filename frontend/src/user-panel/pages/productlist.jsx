@@ -459,7 +459,7 @@ const ProductList = () => {
 
                 {(filters.minPrice || filters.maxPrice) && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                    Price: ৳{filters.minPrice || '0'} - ৳{filters.maxPrice || '∞'}
+                    Price: ৳ {filters.minPrice || '0'} - ৳ {filters.maxPrice || '∞'}
                     <button
                       onClick={() => {
                         handleFilterChange('minPrice', '');

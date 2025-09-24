@@ -410,7 +410,7 @@ const OrderDetailPage = () => {
                             
                             <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
                               <span>Quantity: {itemQuantity}</span>
-                              <span>Price: ৳{Number(itemPrice).toFixed(2)}</span>
+                              <span>Price: ৳ {Number(itemPrice).toFixed(2)}</span>
                             </div>
 
                             {order?.status === 'delivered' && (
@@ -425,7 +425,7 @@ const OrderDetailPage = () => {
                           
                           <div className="text-right">
                             <p className="text-lg font-semibold text-gray-900">
-                              ৳{(itemQuantity * itemPrice).toFixed(2)}
+                              ৳ {(itemQuantity * itemPrice).toFixed(2)}
                             </p>
                             {order?.status === 'delivered' && productId && (
                               <button
@@ -479,37 +479,37 @@ const OrderDetailPage = () => {
               <div className="space-y-3">
                 <div className="flex justify-between text-gray-600">
                   <span>Subtotal ({order?.items?.length || 0} items)</span>
-                  <span>৳{((order?.totalAmount || 0) - (order?.deliveryCharge || 0) - (order?.tax || 0)).toFixed(2)}</span>
+                  <span>৳ {((order?.totalAmount || 0) - (order?.deliveryCharge || 0) - (order?.tax || 0)).toFixed(2)}</span>
                 </div>
 
                 {(order?.discount || 0) > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Discount</span>
-                    <span>-৳{(order?.discount || 0).toFixed(2)}</span>
+                    <span>-৳ {(order?.discount || 0).toFixed(2)}</span>
                   </div>
                 )}
 
                 <div className="flex justify-between text-gray-600">
                   <span>Shipping</span>
-                  <span>{(order?.deliveryCharge || 0) > 0 ? `৳${(order?.deliveryCharge || 0).toFixed(2)}` : 'Free'}</span>
+                  <span>{(order?.deliveryCharge || 0) > 0 ? `৳ ${(order?.deliveryCharge || 0).toFixed(2)}` : 'Free'}</span>
                 </div>
 
                 {(order?.tax || 0) > 0 && (
                   <div className="flex justify-between text-gray-600">
                     <span>Tax</span>
-                    <span>৳{(order?.tax || 0).toFixed(2)}</span>
+                    <span>৳ {(order?.tax || 0).toFixed(2)}</span>
                   </div>
                 )}
 
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-lg font-semibold text-gray-900">
                     <span>Customer Paid</span>
-                    <span>৳{(order?.paidAmount || 0).toFixed(2)}</span>
+                    <span>৳ {(order?.paidAmount || 0).toFixed(2)}</span>
                   </div>
                   {order?.dueAmount > 0 && (
                     <div className="flex justify-between text-orange-600 mt-1">
                       <span>Due Amount</span>
-                      <span>৳{order?.dueAmount.toFixed(2)}</span>
+                      <span>৳ {order?.dueAmount.toFixed(2)}</span>
                     </div>
                   )}
                 </div>

@@ -408,7 +408,7 @@ const ProfilePage = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-lg font-semibold text-gray-900">
-                            ৳{order.totalAmount}
+                            ৳ {order.totalAmount}
                           </p>
                           <p className="text-sm text-gray-600">
                             {order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}

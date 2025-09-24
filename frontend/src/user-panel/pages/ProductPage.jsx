@@ -365,7 +365,7 @@ const ProductPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Images */}
-          <div className="space-y-4">
+          <div className="flex flex-col space-y-4">
             <div className="relative group w-full lg:w-[500px] h-full lg:h-[500px] bg-gray-50 rounded-2xl overflow-hidden">
               <img
                 src={imageError ? "/placeholder-product.jpg" : images[currentImageIndex]}
@@ -452,15 +452,15 @@ const ProductPage = () => {
             <div>
               <div className="flex items-center space-x-4">
                 <span className="text-xl font-bold text-gray-900">
-                  ৳{pricing.finalPrice.toFixed(2)}
+                  ৳ {pricing.finalPrice.toFixed(2)}
                 </span>
                 {pricing.hasDiscount && (
                   <>
                     <span className="text-xl text-gray-500 line-through">
-                      ৳{pricing.sellingPrice.toFixed(2)}
+                      ৳ {pricing.sellingPrice.toFixed(2)}
                     </span>
                     <span className="bg-green-100 text-green-800 px-3 py-1 rounded-md text-sm font-semibold">
-                      Save ৳{pricing.offerValue.toFixed(2)} ({pricing.discountPercentage}% OFF)
+                      Save ৳ {pricing.offerValue.toFixed(2)} ({pricing.discountPercentage}% OFF)
                     </span>
                   </>
                 )}
@@ -477,15 +477,15 @@ const ProductPage = () => {
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">MRP:</span>
-                    <span className="text-gray-900">৳{pricing.sellingPrice.toFixed(2)}</span>
+                    <span className="text-gray-900">৳ {pricing.sellingPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Discount:</span>
-                    <span className="text-green-600">-৳{pricing.offerValue.toFixed(2)}</span>
+                    <span className="text-green-600">-৳ {pricing.offerValue.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between font-semibold pt-1 border-t border-blue-200">
                     <span className="text-gray-900">You Pay:</span>
-                    <span className="text-gray-900">৳{pricing.finalPrice.toFixed(2)}</span>
+                    <span className="text-gray-900">৳ {pricing.finalPrice.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -559,14 +559,14 @@ const ProductPage = () => {
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Item Total ({quantity} items):</span>
                       <span className="font-semibold text-gray-900">
-                        ৳{(pricing.finalPrice * quantity).toFixed(2)}
+                        ৳ {(pricing.finalPrice * quantity).toFixed(2)}
                       </span>
                     </div>
                     {pricing.hasDiscount && (
                       <div className="flex justify-between text-sm mt-1">
                         <span className="text-gray-600">Total Savings:</span>
                         <span className="font-semibold text-green-600">
-                          ৳{(pricing.offerValue * quantity).toFixed(2)}
+                           {(pricing.offerValue * quantity).toFixed(2)}
                         </span>
                       </div>
                     )}
@@ -785,7 +785,7 @@ const ProductPage = () => {
                       <div>
                         <h5 className="font-medium mb-2">Inside Dhaka</h5>
                         <ul className="space-y-1 text-sm">
-                          <li>• Delivery Charge: ৳60</li>
+                          <li>• Delivery Charge: ৳ 60</li>
                           <li>• Standard Delivery: 2-3 business days</li>
                           <li>• Express Delivery: Next day (additional charge)</li>
                         </ul>
@@ -793,7 +793,7 @@ const ProductPage = () => {
                       <div>
                         <h5 className="font-medium mb-2">Outside Dhaka</h5>
                         <ul className="space-y-1 text-sm">
-                          <li>• Delivery Charge: ৳120</li>
+                          <li>• Delivery Charge: ৳ 120</li>
                           <li>• Standard Delivery: 3-5 business days</li>
                           <li>• Express Delivery: 2-3 days (additional charge)</li>
                         </ul>
@@ -802,7 +802,7 @@ const ProductPage = () => {
                     <div className="border-t pt-3 mt-3">
                       <p className="text-sm text-gray-600">
                         <strong>Note:</strong> Delivery charges are calculated at checkout based on your shipping address.
-                        Free delivery available on orders above ৳500.
+                        Free delivery available on orders above ৳ 500.
                       </p>
                     </div>
                   </div>

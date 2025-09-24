@@ -350,15 +350,15 @@ const CartPage = () => {
 
                               <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2 mb-3">
                                 <span className="text-sm md:text-base lg:text-lg font-semibold text-gray-900">
-                                   ৳{pricing.finalPrice.toFixed(2)} <span className="text-xs md:text-sm font-normal text-gray-500">per unit</span>
+                                   ৳ {pricing.finalPrice.toFixed(2)} <span className="text-xs md:text-sm font-normal text-gray-500">per unit</span>
                                 </span>
                                 {pricing.hasDiscount && (
                                   <div className="flex items-center space-x-2">
                                     <span className="text-xs md:text-sm text-gray-500 line-through">
-                                      ৳{pricing.sellingPrice.toFixed(2)}
+                                      ৳ {pricing.sellingPrice.toFixed(2)}
                                     </span>
                                     <span className="text-xs md:text-sm text-green-600 font-medium">
-                                      Save ৳{pricing.offerValue.toFixed(2)}
+                                      Save ৳ {pricing.offerValue.toFixed(2)}
                                     </span>
                                   </div>
                                 )}
@@ -424,14 +424,14 @@ const CartPage = () => {
 
                             <div className="text-left sm:text-right">
                               <p className="text-sm md:text-base lg:text-lg font-semibold text-gray-900">
-                                ৳{(pricing.finalPrice * quantity).toFixed(2)}
+                                ৳ {(pricing.finalPrice * quantity).toFixed(2)}
                               </p>
                               <p className="text-xs md:text-sm text-gray-500">
-                                ৳{pricing.finalPrice.toFixed(2)} × {quantity}
+                                ৳ {pricing.finalPrice.toFixed(2)} × {quantity}
                               </p>
                               {pricing.hasDiscount && (
                                 <p className="text-xs md:text-sm text-green-600">
-                                  Total saved: ৳{(pricing.offerValue * quantity).toFixed(2)}
+                                  Total saved: ৳ {(pricing.offerValue * quantity).toFixed(2)}
                                 </p>
                               )}
                             </div>
@@ -488,13 +488,13 @@ const CartPage = () => {
               <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
                 <div className="flex justify-between text-gray-600 text-xs md:text-sm">
                   <span>Subtotal ({selectedItems.length} selected items)</span>
-                  <span> ৳{calculateSubtotal().toFixed(2)}</span>
+                  <span> ৳ {calculateSubtotal().toFixed(2)}</span>
                 </div>
                 
                 {discount > 0 && (
                   <div className="flex justify-between text-green-600 text-xs md:text-sm">
                     <span>Discount ({discount}%)</span>
-                    <span>- ৳{((calculateSubtotal() * discount) / 100).toFixed(2)}</span>
+                    <span>- ৳ {((calculateSubtotal() * discount) / 100).toFixed(2)}</span>
                   </div>
                 )}
                 
@@ -511,7 +511,7 @@ const CartPage = () => {
                 <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between text-sm md:text-base lg:text-lg font-semibold text-gray-900">
                     <span>Total</span>
-                    <span> ৳{calculateTotal().toFixed(2)}</span>
+                    <span> ৳ {calculateTotal().toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -531,7 +531,7 @@ const CartPage = () => {
                 </div>
                 <div className="flex items-center">
                   <Truck className="w-3 h-3 md:w-4 md:h-4 mr-2 flex-shrink-0" />
-                  <span>Free shipping on orders over  ৳50</span>
+                  <span>Free shipping on orders over  ৳ 50</span>
                 </div>
               </div>
 
