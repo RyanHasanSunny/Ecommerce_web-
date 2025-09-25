@@ -66,7 +66,7 @@ const HomePage = () => {
       </section>
 
       {/* Categories Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-10 bg-gray-50">
         <div className="container flex flex-col mx-auto  px-4">
           <div className="text-center mb-5">
             <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-6">
@@ -85,7 +85,7 @@ const HomePage = () => {
                 className="group relative bg-white rounded-xl py-2 px-5 justify-center text-center overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 no-underline"
               >
                 <div className="overflow-hidden">
-                  <h2 className="font-semibold">{category.name}</h2>
+                  <p className="font-semibold">{category.name}</p>
                 </div>
               </Link>
             ))}
