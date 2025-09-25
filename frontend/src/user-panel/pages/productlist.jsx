@@ -295,136 +295,271 @@ const ProductList = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex gap-8">
           {/* Filters Sidebar */}
-          <div className={`${showFilters ? 'block' : 'hidden'} lg:block w-full lg:w-80 flex-shrink-0`}>
-            <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Filters</h2>
-                <div className="flex items-center gap-2">
-                  {Object.values(filters).some(v => v) && (
-                    <button
-                      onClick={resetFilters}
-                      className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setShowFilters(false)}
-                    className="lg:hidden p-1 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+        {/* Filters Sidebar (desktop) */}
+<div className="hidden lg:block w-80 flex-shrink-0">
+  <div className="bg-white rounded-xl shadow-sm p-6 sticky top-4">
+    <div className="flex items-center justify-between mb-6">
+      <h2 className="text-xl font-semibold text-gray-900">Filters</h2>
+      <div className="flex items-center gap-2">
+        {Object.values(filters).some(v => v) && (
+          <button
+            onClick={resetFilters}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            Clear All
+          </button>
+        )}
+      </div>
+    </div>
 
-              {/* Search Filter - Add search input in sidebar */}
-              <div className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Search Products</h3>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={filters.search}
-                    onChange={(e) => handleFilterChange('search', e.target.value)}
-                    placeholder="Search products..."
-                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                </div>
-              </div>
+    {/* Search Filter */}
+    <div className="mb-8">
+      <h3 className="text-sm font-semibold text-gray-900 mb-4">Search Products</h3>
+      <div className="relative">
+        <input
+          type="text"
+          value={filters.search}
+          onChange={(e) => handleFilterChange('search', e.target.value)}
+          placeholder="Search products..."
+          className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+      </div>
+    </div>
 
-              {/* Category Filter */}
-              <div className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Category</h3>
-                <div className="space-y-3 max-h-48 overflow-y-auto">
-                  <label className="flex items-center cursor-pointer group">
-                    <input
-                      type="radio"
-                      name="category"
-                      value=""
-                      checked={!filters.category}
-                      onChange={(e) => handleFilterChange('category', e.target.value)}
-                      className="sr-only"
-                    />
-                    <div className={`w-4 h-4 rounded-full border-2 mr-3 transition-colors ${!filters.category
-                        ? 'bg-blue-500 border-blue-500'
-                        : 'border-gray-300 group-hover:border-blue-300'
-                      }`}>
-                      {!filters.category && (
-                        <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
-                      )}
-                    </div>
-                    <span className={`text-sm ${!filters.category ? 'text-blue-600 font-medium' : 'text-gray-700'
-                      }`}>
-                      All Categories
-                    </span>
-                  </label>
-
-                  {categories.map(category => (
-                    <label key={category._id} className="flex items-center cursor-pointer group">
-                      <input
-                        type="radio"
-                        name="category"
-                        value={category._id}
-                        checked={filters.category === category._id}
-                        onChange={(e) => handleFilterChange('category', e.target.value)}
-                        className="sr-only"
-                      />
-                      <div className={`w-4 h-4 rounded-full border-2 mr-3 transition-colors ${filters.category === category._id
-                          ? 'bg-blue-500 border-blue-500'
-                          : 'border-gray-300 group-hover:border-blue-300'
-                        }`}>
-                        {filters.category === category._id && (
-                          <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
-                        )}
-                      </div>
-                      <span className={`text-sm ${filters.category === category._id ? 'text-blue-600 font-medium' : 'text-gray-700'
-                        }`}>
-                        {category.name}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {/* Price Range Filter */}
-              <div className="mb-8">
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Price Range</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="number"
-                      placeholder="Min"
-                      value={filters.minPrice}
-                      onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <span className="text-gray-500">-</span>
-                    <input
-                      type="number"
-                      placeholder="Max"
-                      value={filters.maxPrice}
-                      onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Availability Filter */}
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Availability</h3>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={filters.inStock}
-                    onChange={(e) => handleFilterChange('inStock', e.target.checked)}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">In Stock Only</span>
-                </label>
-              </div>
-            </div>
+    {/* Category Filter */}
+    <div className="mb-8">
+      <h3 className="text-sm font-semibold text-gray-900 mb-4">Category</h3>
+      <div className="space-y-3 max-h-48 overflow-y-auto">
+        <label className="flex items-center cursor-pointer group">
+          <input
+            type="radio"
+            name="category"
+            value=""
+            checked={!filters.category}
+            onChange={(e) => handleFilterChange('category', e.target.value)}
+            className="sr-only"
+          />
+          <div className={`w-4 h-4 rounded-full border-2 mr-3 transition-colors ${!filters.category
+              ? 'bg-blue-500 border-blue-500'
+              : 'border-gray-300 group-hover:border-blue-300'
+            }`}>
+            {!filters.category && (
+              <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
+            )}
           </div>
+          <span className={`text-sm ${!filters.category ? 'text-blue-600 font-medium' : 'text-gray-700'}`}>
+            All Categories
+          </span>
+        </label>
+
+        {categories.map(category => (
+          <label key={category._id} className="flex items-center cursor-pointer group">
+            <input
+              type="radio"
+              name="category"
+              value={category._id}
+              checked={filters.category === category._id}
+              onChange={(e) => handleFilterChange('category', e.target.value)}
+              className="sr-only"
+            />
+            <div className={`w-4 h-4 rounded-full border-2 mr-3 transition-colors ${filters.category === category._id
+                ? 'bg-blue-500 border-blue-500'
+                : 'border-gray-300 group-hover:border-blue-300'
+              }`}>
+              {filters.category === category._id && (
+                <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
+              )}
+            </div>
+            <span className={`text-sm ${filters.category === category._id ? 'text-blue-600 font-medium' : 'text-gray-700'}`}>
+              {category.name}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+
+    {/* Price Range Filter */}
+    <div className="mb-8">
+      <h3 className="text-sm font-semibold text-gray-900 mb-4">Price Range</h3>
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <input
+            type="number"
+            placeholder="Min"
+            value={filters.minPrice}
+            onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <span className="text-gray-500">-</span>
+          <input
+            type="number"
+            placeholder="Max"
+            value={filters.maxPrice}
+            onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Availability Filter */}
+    <div>
+      <h3 className="text-sm font-semibold text-gray-900 mb-4">Availability</h3>
+      <label className="flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          checked={filters.inStock}
+          onChange={(e) => handleFilterChange('inStock', e.target.checked)}
+          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+        />
+        <span className="ml-2 text-sm text-gray-700">In Stock Only</span>
+      </label>
+    </div>
+  </div>
+</div>
+
+{/* Filters Popup (mobile bottom sheet) */}
+{showFilters && (
+  <div className="lg:hidden fixed inset-0 z-50">
+    {/* Backdrop */}
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => setShowFilters(false)}
+    />
+    {/* Sheet panel */}
+    <div
+      className="absolute inset-x-0 bottom-0 max-h-[80vh] bg-white rounded-t-2xl shadow-lg p-6 overflow-y-auto"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-gray-900">Filters</h2>
+        <div className="flex items-center gap-2">
+          {Object.values(filters).some(v => v) && (
+            <button
+              onClick={resetFilters}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              Clear All
+            </button>
+          )}
+          <button
+            onClick={() => setShowFilters(false)}
+            className="p-1 text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Search Filter */}
+      <div className="mb-8">
+        <h3 className="text-sm font-semibold text-gray-900 mb-4">Search Products</h3>
+        <div className="relative">
+          <input
+            type="text"
+            value={filters.search}
+            onChange={(e) => handleFilterChange('search', e.target.value)}
+            placeholder="Search products..."
+            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        </div>
+      </div>
+
+      {/* Category Filter */}
+      <div className="mb-8">
+        <h3 className="text-sm font-semibold text-gray-900 mb-4">Category</h3>
+        <div className="space-y-3 max-h-48 overflow-y-auto">
+          <label className="flex items-center cursor-pointer group">
+            <input
+              type="radio"
+              name="category"
+              value=""
+              checked={!filters.category}
+              onChange={(e) => handleFilterChange('category', e.target.value)}
+              className="sr-only"
+            />
+            <div className={`w-4 h-4 rounded-full border-2 mr-3 transition-colors ${!filters.category
+                ? 'bg-blue-500 border-blue-500'
+                : 'border-gray-300 group-hover:border-blue-300'
+              }`}>
+              {!filters.category && (
+                <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
+              )}
+            </div>
+            <span className={`text-sm ${!filters.category ? 'text-blue-600 font-medium' : 'text-gray-700'}`}>
+              All Categories
+            </span>
+          </label>
+
+          {categories.map(category => (
+            <label key={category._id} className="flex items-center cursor-pointer group">
+              <input
+                type="radio"
+                name="category"
+                value={category._id}
+                checked={filters.category === category.__id}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
+                className="sr-only"
+              />
+              <div className={`w-4 h-4 rounded-full border-2 mr-3 transition-colors ${filters.category === category._id
+                  ? 'bg-blue-500 border-blue-500'
+                  : 'border-gray-300 group-hover:border-blue-300'
+                }`}>
+                {filters.category === category._id && (
+                  <div className="w-2 h-2 bg-white rounded-full mx-auto mt-0.5"></div>
+                )}
+              </div>
+              <span className={`text-sm ${filters.category === category._id ? 'text-blue-600 font-medium' : 'text-gray-700'}`}>
+                {category.name}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Price Range Filter */}
+      <div className="mb-8">
+        <h3 className="text-sm font-semibold text-gray-900 mb-4">Price Range</h3>
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <input
+              type="number"
+              placeholder="Min"
+              value={filters.minPrice}
+              onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <span className="text-gray-500">-</span>
+            <input
+              type="number"
+              placeholder="Max"
+              value={filters.maxPrice}
+              onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Availability Filter */}
+      <div className="pb-2">
+        <h3 className="text-sm font-semibold text-gray-900 mb-4">Availability</h3>
+        <label className="flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={filters.inStock}
+            onChange={(e) => handleFilterChange('inStock', e.target.checked)}
+            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+          />
+          <span className="ml-2 text-sm text-gray-700">In Stock Only</span>
+        </label>
+      </div>
+    </div>
+  </div>
+)}
+
 
           {/* Products Grid */}
           <div className="flex-1">
@@ -516,7 +651,7 @@ const ProductList = () => {
                 )}
               </div>
             ) : (
-              <div className="flex flex-wrap justify-center gap-8">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                 {processedProducts.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}
