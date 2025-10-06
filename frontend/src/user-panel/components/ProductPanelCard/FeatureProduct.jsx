@@ -80,7 +80,7 @@ const FeaturedProducts = ({ title, subtitle }) => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 justify-center">
         {products.length === 0 ? (
           <div className="col-span-full text-center py-16">
             <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -93,8 +93,6 @@ const FeaturedProducts = ({ title, subtitle }) => {
           ))
         )}
       </div>
-
-      {/* View All Button */}
       {products.length > 0 && (
         <div className="text-center mt-12">
           <Link
