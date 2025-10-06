@@ -313,14 +313,14 @@ const ProductManagement = () => {
           <Grid container spacing={3}>
             {/* Main Content */}
             <Grid item xs={12} lg={8}>
-              <Paper sx={{ p: 3 }}>
+              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
                 {/* Basic Information */}
                 <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
                   Basic Information
                 </Typography>
 
                 <Grid container spacing={3}>
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={20}>
                     <TextField
                       label="Product Title"
                       variant="outlined"
@@ -328,9 +328,10 @@ const ProductManagement = () => {
                       value={formData.title}
                       onChange={(e) => handleInputChange('title', e.target.value)}
                       placeholder="Enter product title"
+                      sx={{ '& .MuiInputBase-input': { overflow: 'visible' } }}
                     />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
+                  <Grid item xs={12}>
                     <TextField
                       label="Company Name"
                       variant="outlined"
@@ -350,6 +351,7 @@ const ProductManagement = () => {
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       placeholder="Enter detailed product description"
+                      sx={{ '& .MuiInputBase-input': { overflow: 'visible' } }}
                     />
                   </Grid>
                 </Grid>
@@ -441,7 +443,7 @@ const ProductManagement = () => {
                           placeholder="e.g., Processor"
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6}>
+                      <Grid item xs={12} sm={7}>
                         <TextField
                           label="Details"
                           variant="outlined"
@@ -452,7 +454,7 @@ const ProductManagement = () => {
                           placeholder="e.g., Intel Core i7-12700K"
                         />
                       </Grid>
-                      <Grid item xs={12} sm={2}>
+                      <Grid item xs={12} sm={1}>
                         <Box display="flex" gap={1}>
                           <IconButton
                             onClick={handleSpecificationSubmit}
@@ -479,7 +481,7 @@ const ProductManagement = () => {
 
             {/* Sidebar */}
             <Grid item xs={12} lg={4}>
-              <Paper sx={{ p: 3, position: isTablet ? 'static' : 'sticky', top: 20 }}>
+              <Paper sx={{ p: { xs: 2, sm: 3 }, position: isTablet ? 'static' : 'sticky', top: 20 }}>
 
                 <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
                   Category & Pricing
@@ -508,7 +510,7 @@ const ProductManagement = () => {
                 {/* Pricing */}
                 {/* Pricing Section - Replace the existing pricing grid */}
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
+                  <Grid item xs={12} sm={6}>
                     <TextField
                       label="Unit Price"
                       type="number"
@@ -521,7 +523,7 @@ const ProductManagement = () => {
                       helperText="Base cost of the product"
                     />
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid item xs={12} sm={6}>
                     <TextField
                       label="Profit"
                       type="number"
@@ -534,7 +536,7 @@ const ProductManagement = () => {
                       helperText="Profit margin"
                     />
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid item xs={12} sm={6}>
                     <TextField
                       label="Delivery Charge"
                       type="number"
@@ -548,7 +550,7 @@ const ProductManagement = () => {
                       helperText="Product-specific delivery charge"
                     />
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid item xs={12} sm={6}>
                     <TextField
                       label="Stock"
                       type="number"
@@ -677,7 +679,7 @@ const ProductManagement = () => {
                     <img
                       src={formData.thumbnail}
                       alt="Product preview"
-                      style={{ width: '300px', maxWidth: '300px', borderRadius: 8 }}
+                      style={{ width: '100%', maxWidth: '300px', borderRadius: 8 }}
                     />
                   )}
                 </Grid>

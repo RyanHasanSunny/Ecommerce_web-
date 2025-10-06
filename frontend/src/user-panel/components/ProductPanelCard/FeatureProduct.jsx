@@ -80,7 +80,7 @@ const FeaturedProducts = ({ title, subtitle }) => {
       </div>
 
       {/* Products Grid */}
-      <div className="flex flex-wrap justify-center gap-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
         {products.length === 0 ? (
           <div className="col-span-full text-center py-16">
             <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />

@@ -427,7 +427,7 @@ const ProductList = () => {
           </div>
 
           {/* Products Grid */}
-          <div className="flex-1">
+          <div className="flex-2 flex-grow">
             {/* Active Filters */}
             {Object.values(filters).some(v => v) && (
               <div className="mb-6 flex flex-wrap items-center gap-2">
@@ -516,7 +516,7 @@ const ProductList = () => {
                 )}
               </div>
             ) : (
-              <div className="flex flex-wrap justify-center gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1">
                 {processedProducts.map((product) => (
                   <ProductCard key={product._id} product={product} />
                 ))}
