@@ -29,6 +29,14 @@ async request(endpoint, options = {}) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
 
+      if (response.status === 401) {
+        // Handle admin logout on session expiration
+        if (localStorage.getItem('adminToken')) {
+          localStorage.removeItem('adminToken');
+          window.location.href = '/adminlogin';
+        }
+      }
+
       throw new APIError(
         errorData.msg || errorData.message || `HTTP ${response.status}`,
         response.status,
