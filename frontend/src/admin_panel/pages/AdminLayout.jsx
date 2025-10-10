@@ -1,17 +1,17 @@
 import React from 'react';
 import Header from '../admincomponents/header/Header';
 import LeftMenu from '../admincomponents/menu/left_menu/LeftMenu';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
 const AdminLayout = () => {
-  const [selectedMenu, setSelectedMenu] = useState('Dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const activePath = location.pathname;
 
   const handleMenuItemClick = (menuItem, path) => {
-    setSelectedMenu(menuItem);
     navigate(path); // Dynamically navigate to the new path
     setSidebarOpen(false); // Close sidebar on mobile after navigation
   };
@@ -38,15 +38,15 @@ const AdminLayout = () => {
 
       <div className="flex flex-row" style={{ flex: 1, overflowY: 'auto' }}>
         {/* Sidebar - Hidden on mobile by default, shown when toggled */}
-        <div className={`fixed inset-y-0 left-0 z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:block`}>
+        <div className={`fixed inset-y-0 left-0 z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out md:translate-x-0`}>
           <div className="md:hidden fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)}></div>
           <div className="relative">
-            <LeftMenu onMenuItemClick={handleMenuItemClick} />
+            <LeftMenu onMenuItemClick={handleMenuItemClick} activePath={activePath} />
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-4 md:ml-0">
+        <div className="flex-1 p-4 md:ml-64">
           <Outlet /> {/* The dynamic page content will be rendered here */}
         </div>
       </div>

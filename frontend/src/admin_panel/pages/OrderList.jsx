@@ -279,31 +279,75 @@ const OrderStatusDialog = ({ open, onClose, order, onUpdate }) => {
   );
 };
 
-// Payment Status Update Dialog (no changes needed)
+// Payment Status Update Dialog (enhanced with total amount option and validation)
 const PaymentStatusDialog = ({ open, onClose, order, onUpdate }) => {
   const [paymentStatus, setPaymentStatus] = useState(order?.paymentStatus || '');
   const [transactionId, setTransactionId] = useState(order?.paymentDetails?.transactionId || '');
-  const [amount, setAmount] = useState(order?.totalAmount || '');
+  const [amount, setAmount] = useState(order?.dueAmount || '');
+  const [updateType, setUpdateType] = useState('dueAmount'); // 'dueAmount' or 'totalAmount'
   const [loading, setLoading] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
     if (order) {
       setPaymentStatus(order.paymentStatus);
       setTransactionId(order.paymentDetails?.transactionId || '');
-      setAmount(order.totalAmount);
+      setAmount(updateType === 'dueAmount' ? (order.dueAmount || '') : (order.totalAmount || ''));
+      setValidationError('');
     }
-  }, [order]);
+  }, [order, updateType]);
+
+  const validateAmount = (value) => {
+    const numValue = parseFloat(value) || 0;
+    if (updateType === 'dueAmount') {
+      const totalAmount = order?.totalAmount || 0;
+      if (numValue > totalAmount) {
+        return `Due amount cannot exceed total amount (৳${totalAmount.toLocaleString()})`;
+      }
+    }
+    return '';
+  };
+
+  const handleAmountChange = (e) => {
+    const value = e.target.value;
+    setAmount(value);
+    const error = validateAmount(value);
+    setValidationError(error);
+  };
+
+  const handleUpdateTypeChange = (newType) => {
+    setUpdateType(newType);
+    setAmount(newType === 'dueAmount' ? (order?.dueAmount || '') : (order?.totalAmount || ''));
+    setValidationError('');
+  };
 
   const handleSubmit = async () => {
+    if (validationError) {
+      alert(validationError);
+      return;
+    }
+
+    if (updateType === 'totalAmount') {
+      setConfirmDialogOpen(true);
+      return;
+    }
+
+    await performUpdate();
+  };
+
+  const performUpdate = async () => {
     setLoading(true);
     try {
       await apiService.updatePaymentStatus(order._id, {
         paymentStatus,
         transactionId: transactionId || undefined,
-        amount: parseFloat(amount) || order.totalAmount
+        amount: parseFloat(amount) || (updateType === 'dueAmount' ? order.dueAmount : order.totalAmount),
+        updateType // Send the update type to backend
       });
       onUpdate();
       onClose();
+      setConfirmDialogOpen(false);
     } catch (error) {
       alert(`Error updating payment status: ${error.message}`);
     } finally {
@@ -312,82 +356,166 @@ const PaymentStatusDialog = ({ open, onClose, order, onUpdate }) => {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <MoneyIcon />
-          Update Payment Status
-        </Box>
-      </DialogTitle>
-      <DialogContent>
-        <Box sx={{ mt: 2 }}>
-          <Grid container spacing={2}>
-            <Grid item xs={12}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Order ID: {order?._id}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Current Amount: ৳{order?.totalAmount?.toLocaleString()}
-              </Typography>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <FormControl fullWidth>
-                <InputLabel>Payment Status</InputLabel>
-                <Select
-                  value={paymentStatus}
-                  label="Payment Status"
-                  onChange={(e) => setPaymentStatus(e.target.value)}
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <MoneyIcon />
+            Update Payment Status
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Order ID: {order?._id}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Current Due Amount: ৳{order?.dueAmount?.toLocaleString()}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Total Amount: ৳{order?.totalAmount?.toLocaleString()}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Payment Status</InputLabel>
+                  <Select
+                    value={paymentStatus}
+                    label="Payment Status"
+                    onChange={(e) => setPaymentStatus(e.target.value)}
+                  >
+                    <MenuItem value="unpaid">
+                      <Chip label="Unpaid" color="error" size="small" />
+                    </MenuItem>
+                    <MenuItem value="paid">
+                      <Chip label="Paid" color="success" size="small" />
+                    </MenuItem>
+                    <MenuItem value="refunded">
+                      <Chip label="Refunded" color="warning" size="small" />
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Transaction ID"
+                  value={transactionId}
+                  onChange={(e) => setTransactionId(e.target.value)}
+                  placeholder="Enter transaction ID"
+                />
+              </Grid>
+
+              {/* Update Type Toggle */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  What would you like to update?
+                </Typography>
+                <ToggleButtonGroup
+                  value={updateType}
+                  exclusive
+                  onChange={(e, newType) => newType && handleUpdateTypeChange(newType)}
+                  aria-label="update type"
+                  fullWidth
                 >
-                  <MenuItem value="unpaid">
-                    <Chip label="Unpaid" color="error" size="small" />
-                  </MenuItem>
-                  <MenuItem value="paid">
-                    <Chip label="Paid" color="success" size="small" />
-                  </MenuItem>
-                  <MenuItem value="refunded">
-                    <Chip label="Refunded" color="warning" size="small" />
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+                  <ToggleButton value="dueAmount" aria-label="due amount">
+                    Due Amount
+                  </ToggleButton>
+                  <ToggleButton value="totalAmount" aria-label="total amount">
+                    Total Amount
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Grid>
 
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Transaction ID"
-                value={transactionId}
-                onChange={(e) => setTransactionId(e.target.value)}
-                placeholder="Enter transaction ID"
-              />
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label={updateType === 'dueAmount' ? 'Due Amount' : 'Total Amount'}
+                  type="number"
+                  value={amount}
+                  onChange={handleAmountChange}
+                  error={!!validationError}
+                  helperText={validationError}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start">৳</InputAdornment>,
+                  }}
+                />
+                {updateType === 'dueAmount' && (
+                  <Typography variant="caption" color="text.secondary">
+                    Due amount cannot exceed total amount (৳{order?.totalAmount?.toLocaleString()})
+                  </Typography>
+                )}
+                {updateType === 'totalAmount' && (
+                  <Alert severity="warning" sx={{ mt: 1 }}>
+                    <Typography variant="body2">
+                      Updating total amount will change the order's total value. This action requires confirmation.
+                    </Typography>
+                  </Alert>
+                )}
+              </Grid>
             </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+            disabled={loading || !paymentStatus || !!validationError}
+          >
+            {loading ? 'Updating...' : 'Update Payment'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Amount"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">৳</InputAdornment>,
-                }}
-              />
-            </Grid>
-          </Grid>
-        </Box>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={loading || !paymentStatus}
-        >
-          {loading ? 'Updating...' : 'Update Payment'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      {/* Confirmation Dialog for Total Amount Updates */}
+      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Alert severity="warning" sx={{ p: 0 }} />
+            Confirm Total Amount Update
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="body1" gutterBottom>
+              You are about to update the total amount of this order from{' '}
+              <strong>৳{order?.totalAmount?.toLocaleString()}</strong> to{' '}
+              <strong>৳{parseFloat(amount)?.toLocaleString()}</strong>.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              This will affect:
+            </Typography>
+            <Box component="ul" sx={{ pl: 3, mt: 1 }}>
+              <li>The order's total value</li>
+              <li>Revenue calculations</li>
+              <li>Profit calculations</li>
+              <li>Customer due amount</li>
+            </Box>
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                This action cannot be undone. Please confirm you want to proceed.
+              </Typography>
+            </Alert>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="warning"
+            onClick={performUpdate}
+            disabled={loading}
+          >
+            {loading ? 'Updating...' : 'Confirm Update'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 

@@ -562,7 +562,7 @@ exports.updateOrderStatus = async (req, res) => {
 // @access  Private (Admin)
 exports.updatePaymentStatus = async (req, res) => {
   const { orderId } = req.params;
-  const { paymentStatus, transactionId, amount } = req.body;
+  const { paymentStatus, transactionId, amount, updateType } = req.body;
 
   try {
     // Check if user is admin
@@ -575,31 +575,106 @@ exports.updatePaymentStatus = async (req, res) => {
       return res.status(404).json({ msg: 'Order not found' });
     }
 
-    // Handle different payment status updates
-    if (paymentStatus === 'paid') {
-      const paymentAmount = amount || order.dueAmount;
-      order.paidAmount += paymentAmount;
-      order.dueAmount = Math.max(0, order.dueAmount - paymentAmount);
-      
+    const previousTotalAmount = order.totalAmount;
+    const previousDueAmount = order.dueAmount;
+    const previousPaidAmount = order.paidAmount;
+
+    // Handle different update types
+    if (updateType === 'totalAmount') {
+      // Update total amount - this affects due amount calculation
+      const newTotalAmount = parseFloat(amount);
+      if (newTotalAmount < 0) {
+        return res.status(400).json({ msg: 'Total amount cannot be negative' });
+      }
+
+      order.totalAmount = newTotalAmount;
+      // Recalculate due amount: due = total - paid
+      order.dueAmount = Math.max(0, newTotalAmount - order.paidAmount);
+
+      // Update payment status based on new amounts
       if (order.dueAmount <= 0) {
         order.paymentStatus = 'paid';
         order.dueAmount = 0;
+      } else if (order.paidAmount > 0) {
+        order.paymentStatus = 'cod'; // Partial payment
+      } else {
+        order.paymentStatus = 'unpaid';
       }
 
-      order.paymentDetails = {
-        ...order.paymentDetails,
-        transactionId: transactionId || 'MANUAL',
-        paidAt: new Date(),
-        amount: order.paidAmount
-      };
+    } else if (updateType === 'dueAmount') {
+      // Update due amount directly - this affects paid amount calculation
+      const newDueAmount = parseFloat(amount);
+      if (newDueAmount < 0) {
+        return res.status(400).json({ msg: 'Due amount cannot be negative' });
+      }
+      if (newDueAmount > order.totalAmount) {
+        return res.status(400).json({
+          msg: 'Due amount cannot exceed total amount',
+          totalAmount: order.totalAmount,
+          requestedDueAmount: newDueAmount
+        });
+      }
+
+      order.dueAmount = newDueAmount;
+      // Recalculate paid amount: paid = total - due
+      order.paidAmount = order.totalAmount - newDueAmount;
+
+      // Update payment status based on new amounts
+      if (order.dueAmount <= 0) {
+        order.paymentStatus = 'paid';
+        order.dueAmount = 0;
+        order.paidAmount = order.totalAmount;
+      } else if (order.paidAmount > 0) {
+        order.paymentStatus = 'cod'; // Partial payment
+      } else {
+        order.paymentStatus = 'unpaid';
+      }
+
     } else {
-      order.paymentStatus = paymentStatus;
+      // Legacy payment update (receiving payment)
+      if (paymentStatus === 'paid') {
+        const paymentAmount = amount || order.dueAmount;
+        order.paidAmount += paymentAmount;
+        order.dueAmount = Math.max(0, order.dueAmount - paymentAmount);
+
+        if (order.dueAmount <= 0) {
+          order.paymentStatus = 'paid';
+          order.dueAmount = 0;
+        }
+
+        order.paymentDetails = {
+          ...order.paymentDetails,
+          transactionId: transactionId || 'MANUAL',
+          paidAt: new Date(),
+          amount: order.paidAmount
+        };
+      } else {
+        order.paymentStatus = paymentStatus;
+      }
     }
 
-    // Add to status history
+    // Update payment details
+    if (transactionId) {
+      order.paymentDetails = {
+        ...order.paymentDetails,
+        transactionId,
+        lastUpdated: new Date()
+      };
+    }
+
+    // Add to status history with detailed note
+    let historyNote = '';
+    if (updateType === 'totalAmount') {
+      historyNote = `Total amount updated from ৳${previousTotalAmount} to ৳${order.totalAmount}. Due amount: ৳${order.dueAmount}`;
+    } else if (updateType === 'dueAmount') {
+      historyNote = `Due amount updated from ৳${previousDueAmount} to ৳${order.dueAmount}. Paid amount: ৳${order.paidAmount}`;
+    } else {
+      historyNote = `Payment status updated to ${paymentStatus}${amount ? ` with amount ৳${amount}` : ''}`;
+    }
+
     order.statusHistory.push({
       status: order.status,
-      note: `Payment status updated to ${paymentStatus}${amount ? ` with amount ৳${amount}` : ''}`,
+      note: historyNote,
       updatedBy: req.user.userId
     });
 
@@ -613,7 +688,8 @@ exports.updatePaymentStatus = async (req, res) => {
         totalAmount: order.totalAmount,
         paidAmount: order.paidAmount,
         dueAmount: order.dueAmount,
-        paymentStatus: order.paymentStatus
+        paymentStatus: order.paymentStatus,
+        updateType: updateType || 'payment'
       }
     });
   } catch (err) {

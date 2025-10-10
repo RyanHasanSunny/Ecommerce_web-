@@ -12,22 +12,25 @@ const menuItems = [
   {name: "Settings", icon: <FaCog />, path: "/admin/settings" }
 ];
 
-const LeftMenu = ({ onMenuItemClick }) => {
+const LeftMenu = ({ onMenuItemClick, activePath }) => {
   return (
     <aside className="w-64 text-white flex flex-col shadow-lg md:shadow-none" style={{ backgroundColor: "#061a3fff", height: "100vh", minHeight: "100%" }}>
       <nav className="flex-1 py-4">
         <ul className="space-y-2">
-          {menuItems.map((item) => (
-            <li key={item.name}>
-              <a
-                onClick={() => onMenuItemClick(item.name, item.path)} // Pass both name and path
-                className="flex items-center gap-3 px-6 py-3 hover:bg-gray-800 transition-colors rounded-md cursor-pointer mx-2"
-              >
-                <span className="text-lg">{item.icon}</span>
-                <span className="font-medium">{item.name}</span>
-              </a>
-            </li>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = activePath.startsWith(item.path);
+            return (
+              <li key={item.name}>
+                <a
+                  onClick={() => onMenuItemClick(item.name, item.path)} // Pass both name and path
+                  className={`flex items-center gap-3 px-6 py-3 transition-colors rounded-md cursor-pointer mx-2 ${isActive ? 'bg-gray-700' : 'hover:bg-gray-800'}`}
+                >
+                  <span className="text-lg">{item.icon}</span>
+                  <span className="font-medium">{item.name}</span>
+                </a>
+              </li>
+            );
+          })}
         </ul>
       </nav>
     </aside>
