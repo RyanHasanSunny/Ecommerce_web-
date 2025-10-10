@@ -211,7 +211,7 @@ const ProductManagement = () => {
 
 
   const validateForm = () => {
-    const required = ['title', 'companyName', 'description', 'price', 'profit', 'stock', 'categoryId'];
+    const required = ['title', 'description', 'price', 'profit', 'stock', 'categoryId'];
     const missing = required.filter(field => !formData[field]?.toString().trim());
 
     if (missing.length > 0) {
@@ -319,8 +319,8 @@ const ProductManagement = () => {
                   Basic Information
                 </Typography>
 
-                <Grid container spacing={3}>
-                  <Grid item xs={20}>
+                <Grid container spacing={3} direction="column">
+                  <Grid item xs={12}>
                     <TextField
                       label="Product Title"
                       variant="outlined"
@@ -347,7 +347,6 @@ const ProductManagement = () => {
                       variant="outlined"
                       fullWidth
                       multiline
-                      rows={4}
                       value={formData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       placeholder="Enter detailed product description"
@@ -399,7 +398,7 @@ const ProductManagement = () => {
                             <Typography variant="subtitle2" color="primary" gutterBottom>
                               {spec.title}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.5 }}>
                               {spec.details}
                             </Typography>
                           </Box>
@@ -431,8 +430,8 @@ const ProductManagement = () => {
                     <Typography variant="subtitle1" gutterBottom>
                       {specForm.editIndex !== null ? 'Edit Specification' : 'Add New Specification'}
                     </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} sm={4}>
+                    <Grid container spacing={2} direction="column">
+                      <Grid item xs={12}>
                         <TextField
                           label="Specification Title"
                           variant="outlined"
@@ -443,18 +442,21 @@ const ProductManagement = () => {
                           placeholder="e.g., Processor"
                         />
                       </Grid>
-                      <Grid item xs={12} sm={7}>
+                      <Grid item xs={12}>
                         <TextField
                           label="Details"
                           variant="outlined"
                           fullWidth
                           size="small"
+                          multiline
+                          minRows={3}
                           value={specForm.details}
                           onChange={(e) => setSpecForm(prev => ({ ...prev, details: e.target.value }))}
                           placeholder="e.g., Intel Core i7-12700K"
+                          sx={{ '& .MuiInputBase-input': { overflow: 'visible' } }}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={1}>
+                      <Grid item xs={12}>
                         <Box display="flex" gap={1}>
                           <IconButton
                             onClick={handleSpecificationSubmit}

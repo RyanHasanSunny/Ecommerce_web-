@@ -24,6 +24,12 @@ exports.placeOrder = async (req, res) => {
     const { items, shippingAddress, paymentMethod, transactionId, notes, extraCharge = 0, paidAmount, isCOD } = req.body;
     const userId = req.user.userId;
 
+    // Get cart to apply promo discount
+    const cart = await Cart.findOne({ userId, status: 'active' });
+    const appliedPromo = cart?.appliedPromo || null;
+    const discountAmount = cart?.discountAmount || 0;
+    const discountType = cart?.discountType || null;
+
     // Validation (existing code remains same)
     if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || !shippingAddress.address || !shippingAddress.city) {
       return res.status(400).json({ msg: 'Please provide complete shipping address' });
@@ -81,7 +87,7 @@ exports.placeOrder = async (req, res) => {
     }
 
     const deliveryCharge = calculateDeliveryCharge(shippingAddress.city, subtotal);
-    const totalAmount = subtotal + deliveryCharge + extraCharge;
+    const totalAmount = subtotal + deliveryCharge + extraCharge - discountAmount;
 
     // FIXED: Calculate paidAmount and payment status based on order type
     let calculatedPaidAmount;
@@ -130,6 +136,9 @@ exports.placeOrder = async (req, res) => {
       totalProductDeliveryCharge: totalDeliveryCharge,
       totalSellingPrice,
       totalOfferValue,
+      appliedPromo,
+      discountAmount,
+      discountType,
       shippingAddress,
       paymentMethod, // This will be the actual gateway: bkash, nagad, rocket, card, or 'cod' for pure COD
       paymentStatus, // This will be 'cod' for COD orders, 'paid' for full payments
@@ -150,7 +159,10 @@ exports.placeOrder = async (req, res) => {
       const orderedProductIds = items.map(item => item.productId);
       await Cart.findOneAndUpdate(
         { userId, status: 'active' },
-        { $pull: { items: { productId: { $in: orderedProductIds } } } },
+        {
+          $pull: { items: { productId: { $in: orderedProductIds } } },
+          $unset: { appliedPromo: 1, discountAmount: 1, discountType: 1 }
+        },
         { new: true }
       );
     }

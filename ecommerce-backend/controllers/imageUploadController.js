@@ -4,6 +4,13 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
 const { s3, generatePresignedUrl } = require('../config/awsConfig');
+const { Upload } = require('@aws-sdk/lib-storage');
+const {
+  HeadObjectCommand,
+  DeleteObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand
+} = require('@aws-sdk/client-s3');
 
 // Configure multer for memory storage (we'll process images before uploading)
 const storage = multer.memoryStorage();
@@ -92,7 +99,11 @@ const optimizeAndUploadImage = async (buffer, originalname, folder = 'products')
       }
     };
 
-    const mainImageResult = await s3.upload(uploadParams).promise();
+    const mainUpload = new Upload({
+      client: s3,
+      params: uploadParams
+    });
+    const mainImageResult = await mainUpload.done();
 
     // Upload thumbnail to S3
     const thumbnailParams = {
@@ -107,7 +118,11 @@ const optimizeAndUploadImage = async (buffer, originalname, folder = 'products')
       }
     };
 
-    const thumbnailResult = await s3.upload(thumbnailParams).promise();
+    const thumbnailUpload = new Upload({
+      client: s3,
+      params: thumbnailParams
+    });
+    const thumbnailResult = await thumbnailUpload.done();
 
     return {
       success: true,
@@ -232,15 +247,15 @@ const deleteImage = async (req, res) => {
     }
 
     // Check if file exists
-    const headParams = {
+    const headCommand = new HeadObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET_NAME,
       Key: fileName
-    };
+    });
 
     try {
-      await s3.headObject(headParams).promise();
+      await s3.send(headCommand);
     } catch (error) {
-      if (error.statusCode === 404) {
+      if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
         return res.status(404).json({
           success: false,
           message: 'Image not found'
@@ -250,21 +265,21 @@ const deleteImage = async (req, res) => {
     }
 
     // Delete the image
-    const deleteParams = {
+    const deleteCommand = new DeleteObjectCommand({
       Bucket: process.env.AWS_S3_BUCKET_NAME,
       Key: fileName
-    };
+    });
 
-    await s3.deleteObject(deleteParams).promise();
+    await s3.send(deleteCommand);
 
     // Also try to delete thumbnail if it exists
     const thumbnailKey = fileName.replace(/^products\//, 'products/thumbnails/').replace(/\.[^/.]+$/, '.jpg');
     try {
-      const thumbnailDeleteParams = {
+      const thumbnailDeleteCommand = new DeleteObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: thumbnailKey
-      };
-      await s3.deleteObject(thumbnailDeleteParams).promise();
+      });
+      await s3.send(thumbnailDeleteCommand);
     } catch (thumbnailError) {
       // Thumbnail deletion failed, but that's okay
       console.log('Thumbnail deletion failed (might not exist):', thumbnailError.message);
@@ -317,19 +332,19 @@ const updateImage = async (req, res) => {
 
     // Delete old image
     try {
-      const deleteParams = {
+      const deleteCommand = new DeleteObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: oldFileName
-      };
-      await s3.deleteObject(deleteParams).promise();
+      });
+      await s3.send(deleteCommand);
 
       // Try to delete old thumbnail
       const oldThumbnailKey = oldFileName.replace(/^products\//, 'products/thumbnails/').replace(/\.[^/.]+$/, '.jpg');
-      const thumbnailDeleteParams = {
+      const thumbnailDeleteCommand = new DeleteObjectCommand({
         Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: oldThumbnailKey
-      };
-      await s3.deleteObject(thumbnailDeleteParams).promise();
+      });
+      await s3.send(thumbnailDeleteCommand);
     } catch (deleteError) {
       console.log('Old image deletion warning:', deleteError.message);
     }
@@ -373,7 +388,8 @@ const listImages = async (req, res) => {
       params.ContinuationToken = continuationToken;
     }
 
-    const result = await s3.listObjectsV2(params).promise();
+    const command = new ListObjectsV2Command(params);
+    const result = await s3.send(command);
 
     const images = result.Contents.map(item => ({
       fileName: item.Key,

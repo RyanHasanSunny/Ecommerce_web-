@@ -173,6 +173,58 @@ async request(endpoint, options = {}) {
     });
   },
 
+  // Promo APIs
+  async applyPromo(promoCode) {
+    return this.request('/cart/apply-promo', {
+      method: 'POST',
+      body: JSON.stringify({ promoCode })
+    });
+  },
+
+  async removePromo() {
+    return this.request('/cart/remove-promo', {
+      method: 'DELETE'
+    });
+  },
+
+  async getPromoSetting() {
+    const homePageData = await this.request('/homepagedata');
+    return { promoEnabled: homePageData.promoEnabled || false };
+  },
+
+  // Admin Promo APIs
+  async getAllPromos(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/admin/promos${queryString ? `?${queryString}` : ''}`);
+  },
+
+  async createPromo(promoData) {
+    return this.request('/admin/promos', {
+      method: 'POST',
+      body: JSON.stringify(promoData)
+    });
+  },
+
+  async updatePromo(id, promoData) {
+    return this.request(`/admin/promos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(promoData)
+    });
+  },
+
+  async deletePromo(id) {
+    return this.request(`/admin/promos/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async togglePromoEnable(id, isEnabled) {
+    return this.request(`/admin/promos/${id}/enable`, {
+      method: 'PUT',
+      body: JSON.stringify({ isEnabled })
+    });
+  },
+
   // Order APIs - User
   async placeOrder(orderData) {
     return this.request('/orders/place', {
@@ -371,6 +423,13 @@ export const getImageDetails = (fileName) => apiService.getImageDetails(fileName
 export const testS3Connection = () => apiService.testS3Connection();
 export const getHomePage = () => apiService.getHomePage();
 export const updateHomePage = (homePageData) => apiService.updateHomePage(homePageData);
+
+// Promo exports - Admin
+export const getAllPromos = (params) => apiService.getAllPromos(params);
+export const createPromo = (promoData) => apiService.createPromo(promoData);
+export const updatePromo = (id, promoData) => apiService.updatePromo(id, promoData);
+export const deletePromo = (id) => apiService.deletePromo(id);
+export const togglePromoEnable = (id, isEnabled) => apiService.togglePromoEnable(id, isEnabled);
 
 export { APIError };
 export default apiService;

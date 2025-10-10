@@ -44,7 +44,17 @@ const HomePageSchema = new mongoose.Schema({
     title: { type: String, default: 'Privacy Policy' },
     content: { type: String, default: 'Default privacy policy content...' },
     lastUpdated: { type: Date, default: Date.now }
-  }
+  },
+  promoEnabled: {
+    type: Boolean,
+    default: false
+  },
+  promoCodes: [{
+    code: { type: String, required: true },
+    discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
+    discountValue: { type: Number, required: true },
+    expiryDate: { type: Date, required: true }
+  }]
 });
 
 module.exports = mongoose.model('HomePage', HomePageSchema);

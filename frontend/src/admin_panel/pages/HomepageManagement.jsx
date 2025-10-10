@@ -339,6 +339,73 @@ const PaymentMethodField = ({ method, index, onUpdate, onRemove }) => {
   );
 };
 
+const PromoCodeField = ({ promo, index, onUpdate, onRemove }) => {
+  return (
+    <div className="bg-yellow-50 p-4 rounded-lg space-y-4 border border-yellow-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Promo Code</label>
+          <input
+            type="text"
+            value={promo.code}
+            onChange={(e) => onUpdate(index, 'code', e.target.value)}
+            placeholder="SUMMER2024"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
+          <select
+            value={promo.discountType}
+            onChange={(e) => onUpdate(index, 'discountType', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+          >
+            <option value="percentage">Percentage</option>
+            <option value="fixed">Fixed Amount</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Discount Value</label>
+          <input
+            type="number"
+            value={promo.discountValue}
+            onChange={(e) => onUpdate(index, 'discountValue', e.target.value)}
+            placeholder="10"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+          <input
+            type="date"
+            value={promo.expiryDate}
+            onChange={(e) => onUpdate(index, 'expiryDate', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium">{promo.code}</span>
+          <span className="text-xs text-gray-500">
+            {promo.discountType === 'percentage' ? `${promo.discountValue}% off` : `৳${promo.discountValue} off`}
+          </span>
+        </div>
+        <button
+          onClick={() => onRemove(index)}
+          className="p-2 text-red-600 hover:bg-red-100 rounded-md transition-colors"
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 
 
 
@@ -389,6 +456,8 @@ const HomepageManagement = () => {
       description: '',
       isEnabled: true
     },
+    promoEnabled: false,
+    promoCodes: [],
     contactInfo: {
       email: '',
       contactNumber: '',
@@ -409,6 +478,7 @@ const HomepageManagement = () => {
     sliding: false,
     header: false,
     offer: false,
+    promo: false,
     contact: false,
     payment: false,
     terms: false,
@@ -423,11 +493,36 @@ const HomepageManagement = () => {
     setLoading(true);
     try {
       const response = await apiService.getHomePage();
-      if (response && response.data) {
-        setHomePageData(response.data);
-      } else if (response) {
-        setHomePageData(response);
-      }
+      const defaultData = {
+        heroPanel: [{
+          imageUrl: '',
+          altText: ''
+        }],
+        slidingText: [{
+          text: '🎉 Summer Sale - Up to 50% OFF on all products!'
+        }, {
+          text: '🚚 Free Shipping on orders above ৳50'
+        }],
+        topHeaderText: '24/7 Support Available',
+        offerPanel: {
+          title: '',
+          description: '',
+          isEnabled: true
+        },
+        promoEnabled: false,
+        promoCodes: [],
+        contactInfo: {
+          email: '',
+          contactNumber: '',
+          socialLinks: [],
+          location: ''
+        },
+        paymentInfo: {
+          method: []
+        }
+      };
+      const data = response && response.data ? response.data : response || {};
+      setHomePageData({ ...defaultData, ...data });
     } catch (error) {
       console.error('Error fetching homepage data:', error);
       showAlert('Failed to load homepage data: ' + error.message, 'error');
@@ -540,6 +635,32 @@ const HomepageManagement = () => {
           i === index ? { ...method, [field]: value } : method
         )
       }
+    }));
+  };
+
+  const addPromoCode = () => {
+    setHomePageData(prev => ({
+      ...prev,
+      promoCodes: [
+        ...prev.promoCodes,
+        { code: '', discountType: 'percentage', discountValue: '', expiryDate: '' }
+      ]
+    }));
+  };
+
+  const removePromoCode = (index) => {
+    setHomePageData(prev => ({
+      ...prev,
+      promoCodes: prev.promoCodes.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updatePromoCode = (index, field, value) => {
+    setHomePageData(prev => ({
+      ...prev,
+      promoCodes: prev.promoCodes.map((promo, i) =>
+        i === index ? { ...promo, [field]: value } : promo
+      )
     }));
   };
 
@@ -813,6 +934,71 @@ const HomepageManagement = () => {
               className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
+        </div>
+      </AccordionSection>
+
+      {/* Promo Codes Section */}
+      <AccordionSection
+        title="Promo Codes"
+        icon={Share2}
+        isExpanded={expandedPanels.promo}
+        onToggle={() => handlePanelToggle('promo')}
+        badge={{
+          text: homePageData.promoEnabled ? `${homePageData.promoCodes.length} Code${homePageData.promoCodes.length !== 1 ? 's' : ''}` : 'Disabled',
+          type: homePageData.promoEnabled ? 'success' : 'warning'
+        }}
+      >
+        <div className="space-y-6">
+          <div className="flex items-center space-x-4 mb-4">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={homePageData.promoEnabled}
+                onChange={(e) => setHomePageData(prev => ({ ...prev, promoEnabled: e.target.checked }))}
+                className="sr-only"
+              />
+              <div className={`relative w-10 h-6 rounded-full transition-colors ${homePageData.promoEnabled ? 'bg-yellow-600' : 'bg-gray-300'}`}>
+                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${homePageData.promoEnabled ? 'translate-x-4' : 'translate-x-0'}`} />
+              </div>
+              <span className="ml-3 text-sm font-medium text-gray-700">Enable Promo Codes</span>
+            </label>
+          </div>
+
+          {homePageData.promoEnabled && (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <Share2 size={20} className="text-yellow-600" />
+                  <h3 className="text-lg font-semibold">Promo Codes</h3>
+                </div>
+                <button
+                  onClick={addPromoCode}
+                  className="flex items-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
+                >
+                  <Plus size={16} />
+                  <span>Add Promo Code</span>
+                </button>
+              </div>
+
+              {homePageData.promoCodes.length === 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+                  <p className="text-yellow-600">No promo codes added yet. Click "Add Promo Code" to get started.</p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {homePageData.promoCodes.map((promo, index) => (
+                  <PromoCodeField
+                    key={index}
+                    promo={promo}
+                    index={index}
+                    onUpdate={updatePromoCode}
+                    onRemove={removePromoCode}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </AccordionSection>
 

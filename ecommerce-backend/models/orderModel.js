@@ -105,6 +105,17 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     default: 0 // Sum of all discount amounts
   },
+
+  // Promo code discount
+  appliedPromo: String,
+  discountAmount: {
+    type: Number,
+    default: 0
+  },
+  discountType: {
+    type: String,
+    enum: ['percentage', 'fixed']
+  },
   
   // Shipping information
   shippingAddress: {

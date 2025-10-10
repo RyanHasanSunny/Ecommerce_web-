@@ -89,6 +89,7 @@ app.use('/api',           require('./routes/orderRoutes'));
 app.use('/api',           require('./routes/cartRoutes'));
 app.use('/api/upload',    require('./routes/uploadRoutes'));
 app.use('/api',           require('./routes/HomeRoutes'));
+app.use('/api/promos',    require('./routes/promoRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

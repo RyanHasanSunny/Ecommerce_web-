@@ -18,6 +18,8 @@ const CartPage = () => {
   const [appliedCoupon, setAppliedCoupon] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [discountType, setDiscountType] = useState('');
+  const [promoEnabled, setPromoEnabled] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -26,6 +28,18 @@ const CartPage = () => {
     }
     fetchCart();
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const fetchPromoSetting = async () => {
+      try {
+        const setting = await apiService.getPromoSetting();
+        setPromoEnabled(setting.promoEnabled);
+      } catch (err) {
+        console.error('Error fetching promo setting:', err);
+      }
+    };
+    fetchPromoSetting();
+  }, []);
 
   const fetchCart = async () => {
     try {
@@ -47,6 +61,9 @@ const CartPage = () => {
       }
       
       setCartItems(items);
+      setAppliedCoupon(response.appliedPromo || '');
+      setDiscount(response.discountAmount || 0);
+      setDiscountType(response.discountType || '');
     } catch (err) {
       console.error('Error fetching cart:', err);
       setError('Failed to load cart items');
@@ -136,25 +153,41 @@ const CartPage = () => {
     if (!couponCode.trim()) return;
 
     try {
-      const mockDiscount = couponCode.toUpperCase() === 'SAVE10' ? 10 : 0;
-      
-      if (mockDiscount > 0) {
-        setAppliedCoupon(couponCode);
-        setDiscount(mockDiscount);
+      setUpdating(true);
+      const response = await apiService.applyPromo(couponCode);
+
+      if (response.success) {
+        setAppliedCoupon(response.cart.appliedPromo);
+        setDiscount(response.discount);
+        setDiscountType(response.discountType);
         setCouponCode('');
+        await fetchCart();
       } else {
-        setError('Invalid coupon code');
+        setError(response.msg || 'Invalid promo code');
         setTimeout(() => setError(''), 3000);
       }
     } catch (err) {
-      setError('Failed to apply coupon');
+      setError(err.message || 'Failed to apply promo');
       setTimeout(() => setError(''), 3000);
+    } finally {
+      setUpdating(false);
     }
   };
 
-  const removeCoupon = () => {
-    setAppliedCoupon('');
-    setDiscount(0);
+  const removeCoupon = async () => {
+    try {
+      setUpdating(true);
+      await apiService.removePromo();
+      setAppliedCoupon('');
+      setDiscount(0);
+      setDiscountType('');
+      await fetchCart();
+    } catch (err) {
+      setError('Failed to remove promo');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   // FIXED PRICING CALCULATION - Match ProductPage logic
@@ -202,7 +235,12 @@ const CartPage = () => {
 
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
-    const discountAmount = (subtotal * discount) / 100;
+    let discountAmount = 0;
+    if (discountType === 'percentage') {
+      discountAmount = (subtotal * discount) / 100;
+    } else if (discountType === 'fixed') {
+      discountAmount = discount;
+    }
     return Math.max(0, subtotal - discountAmount);
   };
 
@@ -453,41 +491,43 @@ const CartPage = () => {
             <div className="bg-white rounded-lg shadow-sm p-4 md:p-6 sticky top-4">
               <h2 className="text-base md:text-lg font-semibold text-gray-900 mb-4 md:mb-6">Order Summary</h2>
 
-              <div className="mb-4 md:mb-6">
-                <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
-                  Promo Code
-                </label>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Enter code"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs md:text-sm"
-                  />
-                  <button
-                    onClick={applyCoupon}
-                    className="px-3 md:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs md:text-sm font-medium"
-                  >
-                    Apply
-                  </button>
-                </div>
-                
-                {appliedCoupon && (
-                  <div className="mt-2 flex items-center justify-between text-xs md:text-sm">
-                    <div className="flex items-center text-green-600">
-                      <Tag className="w-3 h-3 md:w-4 md:h-4 mr-1" />
-                      <span>Code "{appliedCoupon}" applied</span>
-                    </div>
+              {promoEnabled && (
+                <div className="mb-4 md:mb-6">
+                  <label className="block text-xs md:text-sm font-medium text-gray-700 mb-2">
+                    Promo Code
+                  </label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      placeholder="Enter code"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs md:text-sm"
+                    />
                     <button
-                      onClick={removeCoupon}
-                      className="text-red-600 hover:text-red-700"
+                      onClick={applyCoupon}
+                      className="px-3 md:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs md:text-sm font-medium"
                     >
-                      Remove
+                      Apply
                     </button>
                   </div>
-                )}
-              </div>
+
+                  {appliedCoupon && (
+                    <div className="mt-2 flex items-center justify-between text-xs md:text-sm">
+                      <div className="flex items-center text-green-600">
+                        <Tag className="w-3 h-3 md:w-4 md:h-4 mr-1" />
+                        <span>Code "{appliedCoupon}" applied</span>
+                      </div>
+                      <button
+                        onClick={removeCoupon}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
                 <div className="flex justify-between text-gray-600 text-xs md:text-sm">
@@ -497,8 +537,18 @@ const CartPage = () => {
                 
                 {discount > 0 && (
                   <div className="flex justify-between text-green-600 text-xs md:text-sm">
-                    <span>Discount ({discount}%)</span>
-                    <span>- ৳ {((calculateSubtotal() * discount) / 100).toFixed(2)}</span>
+                    <span>
+                      {discountType === 'percentage' 
+                        ? `Discount (${discount}%)` 
+                        : `Discount ৳${discount.toFixed(2)}`
+                      }
+                    </span>
+                    <span>
+                      - ৳ {calculateTotal() < calculateSubtotal() 
+                        ? (calculateSubtotal() - calculateTotal()).toFixed(2) 
+                        : '0.00'
+                      }
+                    </span>
                   </div>
                 )}
                 

@@ -1,5 +1,7 @@
 const Cart = require('../models/cartModel');
 const Product = require('../models/productModel');
+const PromoCode = require('../models/promoCodeModel');
+const HomePage = require('../models/homepageModel');
 
 // Helper function to calculate final price (same logic as ProductPage)
 const calculateFinalPrice = (product) => {
@@ -191,6 +193,106 @@ exports.clearCart = async (req, res) => {
     await cart.save();
     res.json({ msg: 'Cart cleared', cart });
   } catch (err) {
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// Apply promo code to cart
+exports.applyPromo = async (req, res) => {
+  const userId = req.user.userId;
+  const { promoCode } = req.body;
+
+  try {
+    // Check if promo feature is enabled globally
+    const homePage = await HomePage.findOne({});
+    if (!homePage || !homePage.promoEnabled) {
+      return res.status(400).json({ msg: 'Promo codes are currently disabled' });
+    }
+
+    // Find the cart
+    const cart = await Cart.findOne({ userId, status: 'active' });
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ msg: 'Cart is empty' });
+    }
+
+    // Find the promo code in homepage promoCodes
+    const promo = homePage.promoCodes.find(p => p.code.toUpperCase() === promoCode.toUpperCase() && new Date(p.expiryDate) > new Date());
+
+    if (!promo) {
+      return res.status(400).json({ msg: 'Invalid or expired promo code' });
+    }
+
+    // Calculate subtotal
+    const subtotal = cart.items.reduce((total, item) => total + item.totalPrice, 0);
+
+    // Calculate discount
+    let discountAmount = 0;
+    if (promo.discountType === 'percentage') {
+      discountAmount = (subtotal * promo.discountValue) / 100;
+    } else {
+      discountAmount = Math.min(promo.discountValue, subtotal); // Fixed amount, not more than subtotal
+    }
+
+    // Update cart with promo
+    cart.appliedPromo = promo.code;
+    cart.discountAmount = discountAmount;
+    cart.discountType = promo.discountType;
+    await cart.save();
+
+    // Populate and return updated cart
+    const populatedCart = await Cart.findOne({ userId, status: 'active' })
+      .populate(
+        'items.productId',
+        'title companyName description price profit sellingPrice offerValue finalPrice image specifications stock thumbnail'
+      );
+
+    res.json({
+      success: true,
+      msg: 'Promo code applied successfully',
+      cart: populatedCart,
+      discount: discountAmount,
+      discountType: promo.discountType
+    });
+
+  } catch (err) {
+    console.error('applyPromo error:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// Remove promo code from cart
+exports.removePromo = async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const cart = await Cart.findOne({ userId, status: 'active' });
+    if (!cart) {
+      return res.status(404).json({ msg: 'Cart not found' });
+    }
+
+    // No usage count to decrement since promo codes are in homepage
+
+    // Remove promo from cart
+    cart.appliedPromo = null;
+    cart.discountAmount = 0;
+    cart.discountType = null;
+    await cart.save();
+
+    // Populate and return updated cart
+    const populatedCart = await Cart.findOne({ userId, status: 'active' })
+      .populate(
+        'items.productId',
+        'title companyName description price profit sellingPrice offerValue finalPrice image specifications stock thumbnail'
+      );
+
+    res.json({
+      success: true,
+      msg: 'Promo code removed successfully',
+      cart: populatedCart
+    });
+
+  } catch (err) {
+    console.error('removePromo error:', err);
     res.status(500).json({ msg: 'Server error' });
   }
 };

@@ -1,4 +1,6 @@
-const AWS = require('aws-sdk');
+const { S3Client } = require('@aws-sdk/client-s3');
+const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+const { GetObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
 require('dotenv').config();
 
 // Validate required environment variables
@@ -14,54 +16,50 @@ if (missingVars.length > 0) {
   throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
 }
 
-// Configure AWS
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+// Create S3 client with configuration
+const s3 = new S3Client({
   region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
   // Add retry configuration
-  maxRetries: 3,
-  retryDelayOptions: {
-    customBackoff: function(retryCount) {
-      return Math.pow(2, retryCount) * 100; // Exponential backoff
-    }
-  }
-});
-
-// Create S3 instance with additional configuration
-const s3 = new AWS.S3({
-  apiVersion: '2006-03-01',
-  signatureVersion: 'v4',
+  maxAttempts: 3,
   // Add timeout configuration
-  httpOptions: {
-    timeout: 30000, // 30 seconds
-    connectTimeout: 5000 // 5 seconds
-  }
+  requestTimeout: 30000, // 30 seconds
+  connectionTimeout: 5000 // 5 seconds
 });
 
 // Test S3 connection function
 const testS3Connection = async () => {
   try {
-    const params = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME
-    };
-    
-    await s3.headBucket(params).promise();
+    const command = new HeadObjectCommand({
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: 'test-connection-key' // This will fail but test connection
+    });
+
+    await s3.send(command);
     console.log('✅ S3 connection successful');
     return true;
   } catch (error) {
+    // If it's a NoSuchKey error, connection is fine
+    if (error.name === 'NotFound' || error.name === 'NoSuchKey') {
+      console.log('✅ S3 connection successful');
+      return true;
+    }
     console.error('❌ S3 connection failed:', error.message);
     return false;
   }
 };
 
 // Helper function to generate presigned URL for private files
-const generatePresignedUrl = (key, expires = 3600) => {
-  return s3.getSignedUrl('getObject', {
+const generatePresignedUrl = async (key, expires = 3600) => {
+  const command = new GetObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET_NAME,
     Key: key,
-    Expires: expires // URL expires in 1 hour by default
   });
+
+  return await getSignedUrl(s3, command, { expiresIn: expires });
 };
 
 module.exports = {
