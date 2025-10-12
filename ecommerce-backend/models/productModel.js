@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const productSchema = new mongoose.Schema({
   productId: { type: String, required: true, unique: true },
   title: { type: String, required: true, trim: true },
-  companyName: { type: String, required: true, trim: true },
+  companyName: { type: String, trim: true },
   description: { type: String, required: true, trim: true },
   specifications: [
     {
@@ -12,9 +12,9 @@ const productSchema = new mongoose.Schema({
     }
   ],
   price: { type: Number, required: true },           // Unit price (base cost)
-  profit: { type: Number, required: true },          // Profit margin
+  expectedProfit: { type: Number, required: true },  // Expected profit margin
   deliveryCharge: { type: Number, default: 0 },      // Delivery charge (optional)
-  sellingPrice: { type: Number },                    // Auto-calculated: price + profit + deliveryCharge (REMOVED required: true)
+  sellingPrice: { type: Number },                    // Auto-calculated: price + expectedProfit + deliveryCharge (REMOVED required: true)
   offerValue: { type: Number, default: 0 },          // Discount amount (not price)
   finalPrice: { type: Number },                      // Auto-calculated: sellingPrice - offerValue (REMOVED required: true)
   stock: { type: Number, required: true, default: 0 },
@@ -27,17 +27,17 @@ const productSchema = new mongoose.Schema({
 
 // Pre-save middleware to auto-calculate selling price and final price
 productSchema.pre('save', function(next) {
-  // Calculate selling price: unit price + profit + delivery charge
-  this.sellingPrice = this.price + this.profit + (this.deliveryCharge || 0);
-  
-  // Calculate final price: selling price - offer value
-  this.finalPrice = this.sellingPrice - (this.offerValue || 0);
-  
+  // Calculate selling price: unit price + expectedProfit + delivery charge - offer value
+  this.sellingPrice = this.price + this.expectedProfit + (this.deliveryCharge || 0) - (this.offerValue || 0);
+
+  // Calculate final price: same as selling price since offer value is already subtracted
+  this.finalPrice = this.sellingPrice;
+
   // Ensure final price is not negative
   if (this.finalPrice < 0) {
     this.finalPrice = 0;
   }
-  
+
   next();
 });
 
@@ -45,7 +45,7 @@ productSchema.pre('save', function(next) {
 productSchema.virtual('priceBreakdown').get(function() {
   return {
     unitPrice: this.price,
-    profit: this.profit,
+    expectedProfit: this.expectedProfit,
     deliveryCharge: this.deliveryCharge || 0,
     sellingPrice: this.sellingPrice,
     offerValue: this.offerValue || 0,
@@ -58,7 +58,7 @@ productSchema.virtual('priceBreakdown').get(function() {
 // Method to update pricing
 productSchema.methods.updatePricing = function(updates) {
   if (updates.price !== undefined) this.price = updates.price;
-  if (updates.profit !== undefined) this.profit = updates.profit;
+  if (updates.expectedProfit !== undefined) this.expectedProfit = updates.expectedProfit;
   if (updates.deliveryCharge !== undefined) this.deliveryCharge = updates.deliveryCharge;
   if (updates.offerValue !== undefined) this.offerValue = updates.offerValue;
   

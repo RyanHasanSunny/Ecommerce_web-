@@ -198,14 +198,12 @@ const ProductManagement = () => {
     const unitPrice = parseFloat(formData.price) || 0;
     const profit = parseFloat(formData.profit) || 0;
     const deliveryCharge = parseFloat(formData.deliveryCharge) || 0;
-    return unitPrice + profit + deliveryCharge;
+    const offerValue = parseFloat(formData.offerValue) || 0;
+    return unitPrice + profit + deliveryCharge - offerValue;
   };
 
   const calculateFinalPrice = () => {
-    const sellingPrice = calculateSellingPrice();
-    const offerValue = parseFloat(formData.offerValue) || 0;
-    const finalPrice = sellingPrice - offerValue;
-    return finalPrice < 0 ? 0 : finalPrice;
+    return calculateSellingPrice();
   };
 
 
@@ -601,15 +599,6 @@ const ProductManagement = () => {
                         <Typography variant="body2">৳{formData.deliveryCharge}</Typography>
                       </Box>
                     )}
-                    <Divider sx={{ my: 1 }} />
-                    <Box display="flex" justifyContent="space-between" mb={1}>
-                      <Typography variant="subtitle2" color="primary">
-                        Selling Price:
-                      </Typography>
-                      <Typography variant="subtitle2" color="primary">
-                        ৳{calculateSellingPrice()}
-                      </Typography>
-                    </Box>
                     {formData.offerValue && (
                       <Box display="flex" justifyContent="space-between" mb={1}>
                         <Typography variant="body2" color="error">
@@ -620,6 +609,14 @@ const ProductManagement = () => {
                         </Typography>
                       </Box>
                     )}
+                    <Box display="flex" justifyContent="space-between" mb={1}>
+                      <Typography variant="subtitle2" color="info.main">
+                        Net Profit:
+                      </Typography>
+                      <Typography variant="subtitle2" color="info.main">
+                        ৳{parseFloat(formData.profit || 0) - parseFloat(formData.offerValue || 0)}
+                      </Typography>
+                    </Box>
                     <Divider sx={{ my: 1 }} />
                     <Box display="flex" justifyContent="space-between">
                       <Typography variant="h6" color="success.main">
@@ -695,24 +692,6 @@ const ProductManagement = () => {
                   </Typography>
                   <Typography variant="h6" color="primary">
                     ৳{calculateFinalPrice()}
-                    {formData.offerValue && (
-                      <Typography
-                        component="span"
-                        variant="body2"
-                        sx={{
-                          ml: 1,
-                          textDecoration: 'line-through',
-                          color: 'text.secondary'
-                        }}
-                      >
-                        ৳{calculateSellingPrice()}
-                      </Typography>
-                    )}
-                    {formData.offerValue && (
-                      <Typography component="span" variant="body2" color="success.main" sx={{ ml: 1 }}>
-                        (Save ৳{formData.offerValue})
-                      </Typography>
-                    )}
                   </Typography>
                 </Grid>
               </Grid>

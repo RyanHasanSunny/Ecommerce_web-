@@ -27,9 +27,9 @@ const orderSchema = new mongoose.Schema({
       type: Number,
       required: true // Base cost of the product
     },
-    profit: {
+    expectedProfit: {
       type: Number,
-      required: true, // Profit margin per unit
+      required: true, // Expected profit margin per unit
       default: 0
     },
     deliveryCharge: {
@@ -38,7 +38,7 @@ const orderSchema = new mongoose.Schema({
     },
     sellingPrice: {
       type: Number,
-      required: true // unitPrice + profit + deliveryCharge
+      required: true // unitPrice + expectedProfit + deliveryCharge
     },
     offerValue: {
       type: Number,
@@ -104,6 +104,10 @@ const orderSchema = new mongoose.Schema({
   totalOfferValue: {
     type: Number,
     default: 0 // Sum of all discount amounts
+  },
+  netProfit: {
+    type: Number,
+    default: 0 // Total profit after all discounts (totalProfit - discountAmount)
   },
 
   // Promo code discount
@@ -251,7 +255,7 @@ orderSchema.methods.calculateRevenue = function() {
     
     // Use new pricing structure fields
     totalUnitPrice += (item.unitPrice || 0) * quantity;
-    totalProfit += (item.profit || 0) * quantity;
+    totalProfit += (item.expectedProfit || 0) * quantity;
     totalProductDeliveryCharge += (item.deliveryCharge || 0) * quantity;
     totalSellingPrice += (item.sellingPrice || 0) * quantity;
     totalOfferValue += (item.offerValue || 0) * quantity;
@@ -269,27 +273,27 @@ orderSchema.methods.calculateRevenue = function() {
 // Method to validate pricing consistency
 orderSchema.methods.validatePricing = function() {
   const errors = [];
-  
+
   this.items.forEach((item, index) => {
-    // Check if sellingPrice = unitPrice + profit + deliveryCharge
-    const expectedSellingPrice = item.unitPrice + item.profit + (item.deliveryCharge || 0);
+    // Check if sellingPrice = unitPrice + expectedProfit + deliveryCharge
+    const expectedSellingPrice = item.unitPrice + item.expectedProfit + (item.deliveryCharge || 0);
     if (Math.abs(item.sellingPrice - expectedSellingPrice) > 0.01) {
       errors.push(`Item ${index}: Selling price mismatch. Expected: ${expectedSellingPrice}, Got: ${item.sellingPrice}`);
     }
-    
+
     // Check if finalPrice = sellingPrice - offerValue
     const expectedFinalPrice = item.sellingPrice - (item.offerValue || 0);
     if (Math.abs(item.finalPrice - expectedFinalPrice) > 0.01) {
       errors.push(`Item ${index}: Final price mismatch. Expected: ${expectedFinalPrice}, Got: ${item.finalPrice}`);
     }
-    
+
     // Check if totalPrice = finalPrice × quantity
     const expectedTotalPrice = item.finalPrice * item.quantity;
     if (Math.abs(item.totalPrice - expectedTotalPrice) > 0.01) {
       errors.push(`Item ${index}: Total price mismatch. Expected: ${expectedTotalPrice}, Got: ${item.totalPrice}`);
     }
   });
-  
+
   return errors;
 };
 

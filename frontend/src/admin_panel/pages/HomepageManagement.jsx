@@ -324,6 +324,19 @@ const PaymentMethodField = ({ method, index, onUpdate, onRemove }) => {
         </div>
       </div>
 
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Logo Image</label>
+        <EnhancedImageUpload
+          images={method.imageUrl ? [{ url: method.imageUrl, altText: method.getway }] : []}
+          onImagesChange={(newImages) => {
+            const imageUrl = newImages.length > 0 ? newImages[0].url : '';
+            onUpdate(index, 'imageUrl', imageUrl);
+          }}
+          maxImages={1}
+          title="Payment Method Logo"
+        />
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium">{selectedMethod.label}</span>
@@ -612,7 +625,7 @@ const HomepageManagement = () => {
       paymentInfo: {
         method: [
           ...prev.paymentInfo.method,
-          { getway: 'bkash', getwaynumber: '' }
+          { getway: 'bkash', getwaynumber: '', imageUrl: '' }
         ]
       }
     }));

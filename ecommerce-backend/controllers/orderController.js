@@ -62,7 +62,7 @@ exports.placeOrder = async (req, res) => {
       subtotal += itemTotal;
 
       totalUnitPrice += product.price * item.quantity;
-      totalProfit += product.profit * item.quantity;
+      totalProfit += product.expectedProfit * item.quantity;
       totalDeliveryCharge += (product.deliveryCharge || 0) * item.quantity;
       totalOfferValue += (product.offerValue || 0) * item.quantity;
       totalSellingPrice += product.sellingPrice * item.quantity;
@@ -73,7 +73,7 @@ exports.placeOrder = async (req, res) => {
         thumbnail: product.thumbnail,
         quantity: item.quantity,
         unitPrice: product.price,
-        profit: product.profit,
+        expectedProfit: product.expectedProfit,
         deliveryCharge: product.deliveryCharge || 0,
         sellingPrice: product.sellingPrice,
         offerValue: product.offerValue || 0,
@@ -88,6 +88,7 @@ exports.placeOrder = async (req, res) => {
 
     const deliveryCharge = calculateDeliveryCharge(shippingAddress.city, subtotal);
     const totalAmount = subtotal + deliveryCharge + extraCharge - discountAmount;
+    const netProfit = totalProfit - discountAmount;
 
     // FIXED: Calculate paidAmount and payment status based on order type
     let calculatedPaidAmount;
@@ -136,6 +137,7 @@ exports.placeOrder = async (req, res) => {
       totalProductDeliveryCharge: totalDeliveryCharge,
       totalSellingPrice,
       totalOfferValue,
+      netProfit,
       appliedPromo,
       discountAmount,
       discountType,
@@ -275,13 +277,13 @@ const calculateOrderRevenue = (order) => {
     if (item.productId) {
       // Use product data if available
       totalUnitPrice += (item.productId.price || item.unitPrice) * quantity;
-      totalProfit += (item.productId.profit || item.profit) * quantity;
+      totalProfit += (item.productId.expectedProfit || item.expectedProfit || 0) * quantity;
       totalSellingPrice += (item.productId.sellingPrice || item.sellingPrice) * quantity;
       totalOfferValue += (item.productId.offerValue || item.offerValue || 0) * quantity;
     } else {
       // Fallback to stored item data
       totalUnitPrice += (item.unitPrice || item.price) * quantity;
-      totalProfit += (item.profit || 0) * quantity;
+      totalProfit += (item.expectedProfit || 0) * quantity;
       totalSellingPrice += (item.sellingPrice || item.price) * quantity;
       totalOfferValue += (item.offerValue || 0) * quantity;
     }
@@ -642,17 +644,20 @@ exports.updatePaymentStatus = async (req, res) => {
         order.paymentStatus = 'unpaid';
       }
 
-    } else {
-      // Legacy payment update (receiving payment)
+      // If payment status is set to paid, override to full payment
       if (paymentStatus === 'paid') {
-        const paymentAmount = amount || order.dueAmount;
-        order.paidAmount += paymentAmount;
-        order.dueAmount = Math.max(0, order.dueAmount - paymentAmount);
+        order.dueAmount = 0;
+        order.paidAmount = order.totalAmount;
+        order.paymentStatus = 'paid';
+      }
 
-        if (order.dueAmount <= 0) {
-          order.paymentStatus = 'paid';
-          order.dueAmount = 0;
-        }
+    } else {
+      // Payment status update
+      if (paymentStatus === 'paid') {
+        // When status is set to paid, ensure dueAmount is 0 and paidAmount equals totalAmount
+        order.dueAmount = 0;
+        order.paidAmount = order.totalAmount;
+        order.paymentStatus = 'paid';
 
         order.paymentDetails = {
           ...order.paymentDetails,
@@ -733,6 +738,7 @@ const revenueStats = await Order.aggregate([
           totalSellingPriceRevenue: { $sum: '$totalSellingPrice' },
           totalOfferPriceRevenue: { $sum: '$totalOfferValue' },
           totalProfit: { $sum: '$totalProfit' },
+          totalNetProfit: { $sum: '$netProfit' },
           averageOrderValue: { $avg: '$totalAmount' },
           deliveredOrders: { $sum: 1 },
           paidOrders: {
@@ -799,7 +805,8 @@ const todayRevenue = await Order.aggregate([
           total: { $sum: '$totalAmount' },
           paid: { $sum: '$paidAmount' },
           due: { $sum: '$dueAmount' },
-          profit: { $sum: '$totalProfit' }
+          profit: { $sum: '$totalProfit' },
+          netProfit: { $sum: '$netProfit' }
         }
       }
     ]);
@@ -827,7 +834,9 @@ const todayRevenue = await Order.aggregate([
         todayRevenue: todayData.total || 0,
         todayPaidAmount: todayData.paid || 0,
         todayDueAmount: todayData.due || 0,
-        todayProfit: todayData.profit || 0
+        todayProfit: todayData.profit || 0,
+        totalNetProfit: baseStats.totalNetProfit || 0,
+        todayNetProfit: todayData.netProfit || 0
       }
     });
   } catch (err) {

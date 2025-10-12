@@ -234,6 +234,16 @@ const handleConfirmOrder = async () => {
     const response = await placeOrder(orderData);
     setOrderResponse(response);
     setShowCustomAlert(true);
+
+    // Meta Pixel Purchase event
+    if (window.fbq) {
+      window.fbq('track', 'Purchase', {
+        value: totalOrderAmount,
+        currency: 'BDT',
+        content_ids: selectedItems,
+        content_type: 'product'
+      });
+    }
   } catch (error) {
     console.error("Error placing order:", error);
     alert("Error placing order. Please try again.");
@@ -456,8 +466,23 @@ const handleConfirmOrder = async () => {
                             className="sr-only"
                           />
                           <label htmlFor={method.getway} className="cursor-pointer block text-center">
-                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 font-bold text-white text-xl ${color.bg}`}>
-                              {method.getway.charAt(0).toUpperCase()}
+                            <div className="mx-auto mb-3">
+                              {method.imageUrl ? (
+                                <img
+                                  src={method.imageUrl}
+                                  alt={method.getway}
+                                  className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className={`w-16 h-16 rounded-full flex items-center justify-center font-bold text-white text-xl ${color.bg} ${method.imageUrl ? 'hidden' : ''}`}
+                              >
+                                {method.getway.charAt(0).toUpperCase()}
+                              </div>
                             </div>
                             <h4 className="font-semibold text-gray-800 mb-2">
                               {t.paymentMethods[methodKey] || method.getway}

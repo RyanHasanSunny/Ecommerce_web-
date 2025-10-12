@@ -32,7 +32,8 @@ const HomePageSchema = new mongoose.Schema({
   paymentInfo: {
     method: [{
       getway: { type: String, required: true },
-      getwaynumber: { type: String, required: true }
+      getwaynumber: { type: String, required: true },
+      imageUrl: { type: String }
     }]
   },
   termsAndConditions: {

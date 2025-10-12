@@ -57,6 +57,19 @@ const ProductPage = () => {
         setError("");
         const fetched = await apiService.getProductById(productId);
         setProduct(fetched);
+
+        // Meta Pixel ViewContent event
+        if (fetched && window.fbq) {
+          const pricing = getPricing(fetched);
+          if (pricing) {
+            window.fbq('track', 'ViewContent', {
+              content_ids: [fetched._id],
+              content_type: 'product',
+              value: pricing.finalPrice,
+              currency: 'BDT'
+            });
+          }
+        }
       } catch (err) {
         console.error("Error fetching product:", err);
         setError(err.message || "Product not found");
@@ -237,6 +250,16 @@ const ProductPage = () => {
       await apiService.addToCart(product._id, quantity);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 3000);
+
+      // Meta Pixel AddToCart event
+      if (window.fbq) {
+        window.fbq('track', 'AddToCart', {
+          content_ids: [product._id],
+          content_type: 'product',
+          value: pricing.finalPrice * quantity,
+          currency: 'BDT'
+        });
+      }
     } catch (err) {
       console.error("Failed to add to cart:", err);
       alert("Failed to add to cart. Please try again.");

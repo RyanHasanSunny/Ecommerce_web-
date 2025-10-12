@@ -55,6 +55,24 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'delivered': return 'success';
+    case 'cancelled': return 'error';
+    case 'shipped': return 'primary';
+    case 'processing': return 'info';
+    default: return 'warning';
+  }
+};
+
+const getPaymentColor = (paymentStatus) => {
+  switch (paymentStatus) {
+    case 'paid': return 'success';
+    case 'refunded': return 'warning';
+    default: return 'error';
+  }
+};
+
 // API Service (same as before - no changes needed)
 const apiService = {
   async getAllOrders(params = {}) {
@@ -357,7 +375,7 @@ const PaymentStatusDialog = ({ open, onClose, order, onUpdate }) => {
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <MoneyIcon />
@@ -368,94 +386,207 @@ const PaymentStatusDialog = ({ open, onClose, order, onUpdate }) => {
           <Box sx={{ mt: 2 }}>
             <Grid container spacing={2}>
               <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Order ID: {order?._id}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Current Due Amount: ৳{order?.dueAmount?.toLocaleString()}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Total Amount: ৳{order?.totalAmount?.toLocaleString()}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>Payment Status</InputLabel>
-                  <Select
-                    value={paymentStatus}
-                    label="Payment Status"
-                    onChange={(e) => setPaymentStatus(e.target.value)}
-                  >
-                    <MenuItem value="unpaid">
-                      <Chip label="Unpaid" color="error" size="small" />
-                    </MenuItem>
-                    <MenuItem value="paid">
-                      <Chip label="Paid" color="success" size="small" />
-                    </MenuItem>
-                    <MenuItem value="refunded">
-                      <Chip label="Refunded" color="warning" size="small" />
-                    </MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Transaction ID"
-                  value={transactionId}
-                  onChange={(e) => setTransactionId(e.target.value)}
-                  placeholder="Enter transaction ID"
-                />
-              </Grid>
-
-              {/* Update Type Toggle */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle2" gutterBottom>
-                  What would you like to update?
-                </Typography>
-                <ToggleButtonGroup
-                  value={updateType}
-                  exclusive
-                  onChange={(e, newType) => newType && handleUpdateTypeChange(newType)}
-                  aria-label="update type"
-                  fullWidth
-                >
-                  <ToggleButton value="dueAmount" aria-label="due amount">
-                    Due Amount
-                  </ToggleButton>
-                  <ToggleButton value="totalAmount" aria-label="total amount">
-                    Total Amount
-                  </ToggleButton>
-                </ToggleButtonGroup>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label={updateType === 'dueAmount' ? 'Due Amount' : 'Total Amount'}
-                  type="number"
-                  value={amount}
-                  onChange={handleAmountChange}
-                  error={!!validationError}
-                  helperText={validationError}
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start">৳</InputAdornment>,
-                  }}
-                />
-                {updateType === 'dueAmount' && (
-                  <Typography variant="caption" color="text.secondary">
-                    Due amount cannot exceed total amount (৳{order?.totalAmount?.toLocaleString()})
-                  </Typography>
-                )}
-                {updateType === 'totalAmount' && (
-                  <Alert severity="warning" sx={{ mt: 1 }}>
-                    <Typography variant="body2">
-                      Updating total amount will change the order's total value. This action requires confirmation.
+                <Card variant="outlined" sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                      Order Summary
                     </Typography>
-                  </Alert>
-                )}
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="subtitle2" color="text.primary" gutterBottom>
+                          <strong>Order ID:</strong> {order?._id}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Date:</strong> {new Date(order?.createdAt).toLocaleDateString()}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Customer:</strong> {order?.userId?.name || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Email:</strong> {order?.userId?.email || 'N/A'}
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Current Order Status:</strong>{' '}
+                          <Chip 
+                            label={order?.status} 
+                            color={getStatusColor(order?.status)}
+                            size="small" 
+                          />
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Current Payment Status:</strong>{' '}
+                          <Chip 
+                            label={order?.paymentStatus} 
+                            color={getPaymentColor(order?.paymentStatus)}
+                            size="small" 
+                          />
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          <strong>Current Due Amount:</strong> ৳{order?.dueAmount?.toLocaleString()}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Total Amount:</strong> ৳{order?.totalAmount?.toLocaleString()}
+                        </Typography>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Card variant="outlined" sx={{ mb: 3 }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                      Payment Update Details
+                    </Typography>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={4}>
+                        <FormControl fullWidth>
+                          <InputLabel>Payment Status</InputLabel>
+                          <Select
+                            value={paymentStatus}
+                            label="Payment Status"
+                            onChange={(e) => setPaymentStatus(e.target.value)}
+                          >
+                            <MenuItem value="unpaid">
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Chip label="Unpaid" color="error" size="small" />
+                                <Typography variant="body2" color="text.secondary">
+                                  Mark as unpaid
+                                </Typography>
+                              </Box>
+                            </MenuItem>
+                            <MenuItem value="paid">
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Chip label="Paid" color="success" size="small" />
+                                <Typography variant="body2" color="text.secondary">
+                                  Mark as fully paid
+                                </Typography>
+                              </Box>
+                            </MenuItem>
+                            <MenuItem value="refunded">
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Chip label="Refunded" color="warning" size="small" />
+                                <Typography variant="body2" color="text.secondary">
+                                  Issue refund
+                                </Typography>
+                              </Box>
+                            </MenuItem>
+                          </Select>
+                        </FormControl>
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                          Current: <Chip label={order?.paymentStatus} color={getPaymentColor(order?.paymentStatus)} size="small" />
+                        </Typography>
+                      </Grid>
+
+                      <Grid item xs={12} md={4}>
+                        <TextField
+                          fullWidth
+                          label="Transaction ID"
+                          value={transactionId}
+                          onChange={(e) => setTransactionId(e.target.value)}
+                          placeholder="Enter transaction ID (optional)"
+                          helperText={order?.paymentDetails?.transactionId ? `Current: ${order.paymentDetails.transactionId}` : 'No current transaction ID'}
+                        />
+                      </Grid>
+
+                      <Grid item xs={12} md={4}>
+                        <TextField
+                          fullWidth
+                          label="Payment Date"
+                          type="datetime-local"
+                          defaultValue=""
+                          InputLabelProps={{ shrink: true }}
+                          helperText="Date when payment was received (optional)"
+                        />
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Card variant="outlined" sx={{ mb: 3 }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom sx={{ color: 'primary.main' }}>
+                      Amount Update
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {/* Update Type Toggle */}
+                      <Grid item xs={12}>
+                        <Typography variant="subtitle2" gutterBottom>
+                          What would you like to update?
+                        </Typography>
+                        <ToggleButtonGroup
+                          value={updateType}
+                          exclusive
+                          onChange={(e, newType) => newType && handleUpdateTypeChange(newType)}
+                          aria-label="update type"
+                          fullWidth
+                          sx={{ mb: 2 }}
+                        >
+                          <ToggleButton value="dueAmount" aria-label="due amount">
+                            <Tooltip title="Update the remaining amount customer owes">
+                              <span>Due Amount</span>
+                            </Tooltip>
+                          </ToggleButton>
+                          <ToggleButton value="totalAmount" aria-label="total amount">
+                            <Tooltip title="Update the entire order total (affects all calculations)">
+                              <span>Total Amount</span>
+                            </Tooltip>
+                          </ToggleButton>
+                        </ToggleButtonGroup>
+                      </Grid>
+
+                      <Grid item xs={12}>
+                        <Box sx={{ mb: 2 }}>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            <strong>Current {updateType === 'dueAmount' ? 'Due Amount' : 'Total Amount'}:</strong>{' '}
+                            <Chip 
+                              label={`৳${updateType === 'dueAmount' ? order?.dueAmount?.toLocaleString() : order?.totalAmount?.toLocaleString()}`}
+                              color="info" 
+                              variant="outlined" 
+                              size="small" 
+                            />
+                          </Typography>
+                          {updateType === 'dueAmount' && (
+                            <Typography variant="caption" color="text.secondary">
+                              Updating due amount will adjust the remaining balance. Cannot exceed total amount (৳{order?.totalAmount?.toLocaleString()}).
+                            </Typography>
+                          )}
+                          {updateType === 'totalAmount' && (
+                            <Alert severity="warning" sx={{ mt: 1 }}>
+                              <Typography variant="body2">
+                                <strong>Warning:</strong> Updating total amount will recalculate profits, discounts, and due amounts across the entire order. This requires confirmation.
+                              </Typography>
+                            </Alert>
+                          )}
+                        </Box>
+
+                        <Tooltip 
+                          title={`Enter the new ${updateType === 'dueAmount' ? 'due amount' : 'total amount'}. Current value: ৳${updateType === 'dueAmount' ? order?.dueAmount?.toLocaleString() : order?.totalAmount?.toLocaleString()}`}
+                          arrow
+                        >
+                          <TextField
+                            fullWidth
+                            label={`New ${updateType === 'dueAmount' ? 'Due Amount' : 'Total Amount'}`}
+                            type="number"
+                            value={amount}
+                            onChange={handleAmountChange}
+                            error={!!validationError}
+                            helperText={validationError || `Updating from ৳${updateType === 'dueAmount' ? order?.dueAmount?.toLocaleString() : order?.totalAmount?.toLocaleString()}`}
+                            InputProps={{
+                              startAdornment: <InputAdornment position="start">৳</InputAdornment>,
+                            }}
+                            sx={{ '& .MuiInputBase-root': { borderRadius: 2 } }}
+                          />
+                        </Tooltip>
+                      </Grid>
+                    </Grid>
+                  </CardContent>
+                </Card>
               </Grid>
             </Grid>
           </Box>
@@ -473,7 +604,7 @@ const PaymentStatusDialog = ({ open, onClose, order, onUpdate }) => {
       </Dialog>
 
       {/* Confirmation Dialog for Total Amount Updates */}
-      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Alert severity="warning" sx={{ p: 0 }} />
@@ -482,36 +613,95 @@ const PaymentStatusDialog = ({ open, onClose, order, onUpdate }) => {
         </DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
-            <Typography variant="body1" gutterBottom>
-              You are about to update the total amount of this order from{' '}
-              <strong>৳{order?.totalAmount?.toLocaleString()}</strong> to{' '}
-              <strong>৳{parseFloat(amount)?.toLocaleString()}</strong>.
+            <Alert severity="warning" sx={{ mb: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Important: This change will affect multiple aspects of the order
+              </Typography>
+              <Typography variant="body1">
+                You are updating the total amount for Order <strong>{order?._id}</strong> from{' '}
+                <strong>৳{order?.totalAmount?.toLocaleString()}</strong> to{' '}
+                <strong>৳{parseFloat(amount)?.toLocaleString()}</strong>.
+              </Typography>
+            </Alert>
+
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle1" gutterBottom color="primary.main">
+                      Before Update
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="body2">Total Amount:</Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        ৳{order?.totalAmount?.toLocaleString()}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">Due Amount:</Typography>
+                      <Typography variant="body2" fontWeight="bold" color={order?.dueAmount > 0 ? 'warning.main' : 'success.main'}>
+                        ৳{order?.dueAmount?.toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                <Card variant="outlined">
+                  <CardContent>
+                    <Typography variant="subtitle1" gutterBottom color="primary.main">
+                      After Update
+                    </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                      <Typography variant="body2">Total Amount:</Typography>
+                      <Typography variant="body2" fontWeight="bold">
+                        ৳{parseFloat(amount)?.toLocaleString()}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">New Due Amount:</Typography>
+                      <Typography variant="body2" fontWeight="bold" color={Math.max(0, parseFloat(amount) - (order?.paidAmount || 0)) > 0 ? 'warning.main' : 'success.main'}>
+                        ৳{Math.max(0, parseFloat(amount) - (order?.paidAmount || 0)).toLocaleString()}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+
+            <Typography variant="subtitle1" gutterBottom sx={{ color: 'text.primary' }}>
+              Impact of This Change:
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-              This will affect:
-            </Typography>
-            <Box component="ul" sx={{ pl: 3, mt: 1 }}>
-              <li>The order's total value</li>
-              <li>Revenue calculations</li>
-              <li>Profit calculations</li>
-              <li>Customer due amount</li>
+            <Box component="ul" sx={{ pl: 3, mb: 3 }}>
+              <li><Typography variant="body2">The order's total value will be permanently updated</Typography></li>
+              <li><Typography variant="body2">Revenue and profit calculations will be recalculated</Typography></li>
+              <li><Typography variant="body2">Customer due amount will be adjusted based on payments received</Typography></li>
+              <li><Typography variant="body2">All related reports and analytics will reflect this change</Typography></li>
+              <li><Typography variant="body2" color="warning.main">This action cannot be undone</Typography></li>
             </Box>
-            <Alert severity="warning" sx={{ mt: 2 }}>
+
+            <Divider sx={{ my: 2 }} />
+            
+            <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
-                This action cannot be undone. Please confirm you want to proceed.
+                <strong>Customer Notification:</strong> Consider notifying the customer about this change via email or SMS.
               </Typography>
             </Alert>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setConfirmDialogOpen(false)} variant="outlined">
+            Cancel
+          </Button>
           <Button
             variant="contained"
             color="warning"
             onClick={performUpdate}
             disabled={loading}
+            sx={{ ml: 1 }}
           >
-            {loading ? 'Updating...' : 'Confirm Update'}
+            {loading ? 'Processing...' : 'Confirm & Update'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -578,11 +768,7 @@ const OrderDetailDialog = ({ open, onClose, orderId }) => {
                       <Typography variant="body2"><strong>Status:</strong> 
                         <Chip 
                           label={order.status} 
-                          color={
-                            order.status === 'delivered' ? 'success' :
-                            order.status === 'cancelled' ? 'error' :
-                            order.status === 'shipped' ? 'primary' : 'warning'
-                          }
+                          color={getStatusColor(order.status)}
                           size="small" 
                           sx={{ ml: 1 }}
                         />
@@ -590,7 +776,7 @@ const OrderDetailDialog = ({ open, onClose, orderId }) => {
                       <Typography variant="body2"><strong>Payment:</strong> 
                         <Chip 
                           label={order.paymentStatus} 
-                          color={order.paymentStatus === 'paid' ? 'success' : 'error'}
+                          color={getPaymentColor(order.paymentStatus)}
                           size="small" 
                           sx={{ ml: 1 }}
                         />
@@ -728,7 +914,10 @@ const OrderDetailDialog = ({ open, onClose, orderId }) => {
                       
                       <Grid item xs={6}><Typography color="success.main">Total Profit:</Typography></Grid>
                       <Grid item xs={6}><Typography align="right" color="success.main" fontWeight="medium">৳{order.totalProfit?.toLocaleString() || 'N/A'}</Typography></Grid>
-                      
+
+                      <Grid item xs={6}><Typography color="success.main">Net Profit:</Typography></Grid>
+                      <Grid item xs={6}><Typography align="right" color="success.main" fontWeight="medium">৳{order.netProfit?.toLocaleString() || 'N/A'}</Typography></Grid>
+
                       <Grid item xs={6}><Typography color="info.main">Product Delivery Charges:</Typography></Grid>
                       <Grid item xs={6}><Typography align="right" color="info.main" fontWeight="medium">৳{order.totalProductDeliveryCharge?.toLocaleString() || 'N/A'}</Typography></Grid>
                       
@@ -1117,29 +1306,6 @@ const OrderList = () => {
 
   const isFiltersActive = searchTerm || statusFilter || paymentFilter;
 
-
-
-
-
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'delivered': return 'success';
-      case 'cancelled': return 'error';
-      case 'shipped': return 'primary';
-      case 'processing': return 'info';
-      default: return 'warning';
-    }
-  };
-
-  const getPaymentColor = (paymentStatus) => {
-    switch (paymentStatus) {
-      case 'paid': return 'success';
-      case 'refunded': return 'warning';
-      default: return 'error';
-    }
-  };
-
   if (loading) {
     return (
       <Box sx={{ p: 4, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
@@ -1203,7 +1369,7 @@ const OrderList = () => {
         </div>
       </Card>
 
-      <Card 
+      <Card
         icon="📈"
         iconBg="#f0fdf4"
         iconColor="#059669"
@@ -1211,7 +1377,19 @@ const OrderList = () => {
         <div>
           <div style={labelStyle}>Total Profit</div>
           <div style={successValueStyle}>৳{stats.totalProfit?.toLocaleString() || 0}</div>
-          <div style={captionStyle}>Net Earnings</div>
+          <div style={captionStyle}>Gross Earnings</div>
+        </div>
+      </Card>
+
+      <Card
+        icon="💵"
+        iconBg="#ecfdf5"
+        iconColor="#10b981"
+      >
+        <div>
+          <div style={labelStyle}>Net Profit</div>
+          <div style={successValueStyle}>৳{stats.totalNetProfit?.toLocaleString() || 0}</div>
+          <div style={captionStyle}>After Discounts</div>
         </div>
       </Card>
 
