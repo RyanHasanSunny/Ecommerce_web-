@@ -66,7 +66,7 @@ const ProductManagement = () => {
     companyName: "",
     description: "",
     price: "",
-    profit: "",
+    expectedProfit: "",
     sellingPrice: "",
     deliveryCharge: "",
     stock: "",
@@ -113,7 +113,7 @@ const ProductManagement = () => {
             companyName: product.companyName || "",
             description: product.description || "",
             price: product.price || "",
-            profit: product.profit || "",
+            expectedProfit: product.expectedProfit || "",
             stock: product.stock || "",
             offerValue: product.offerValue || "",
             categoryId: product.category?._id || "",
@@ -196,7 +196,7 @@ const ProductManagement = () => {
 
   const calculateSellingPrice = () => {
     const unitPrice = parseFloat(formData.price) || 0;
-    const profit = parseFloat(formData.profit) || 0;
+    const profit = parseFloat(formData.expectedProfit) || 0;
     const deliveryCharge = parseFloat(formData.deliveryCharge) || 0;
     const offerValue = parseFloat(formData.offerValue) || 0;
     return unitPrice + profit + deliveryCharge - offerValue;
@@ -209,7 +209,7 @@ const ProductManagement = () => {
 
 
   const validateForm = () => {
-    const required = ['title', 'description', 'price', 'profit', 'stock', 'categoryId'];
+    const required = ['title', 'description', 'price', 'expectedProfit', 'stock', 'categoryId'];
     const missing = required.filter(field => !formData[field]?.toString().trim());
 
     if (missing.length > 0) {
@@ -222,7 +222,7 @@ const ProductManagement = () => {
       return false;
     }
 
-    if (parseFloat(formData.price) < 0 || parseFloat(formData.profit) < 0) {
+    if (parseFloat(formData.price) < 0 || parseFloat(formData.expectedProfit) < 0) {
       showAlert("Price and profit must be positive numbers", "error");
       return false;
     }
@@ -239,7 +239,7 @@ const ProductManagement = () => {
         ...formData,
         specifications,
         price: parseFloat(formData.price),                    // Unit price
-        profit: parseFloat(formData.profit),                  // Profit
+        expectedProfit: parseFloat(formData.expectedProfit),                  // Profit
         sellingPrice: calculateSellingPrice(),
         deliveryCharge: formData.deliveryCharge ? parseFloat(formData.deliveryCharge) : 0,
         stock: parseInt(formData.stock),
@@ -530,8 +530,8 @@ const ProductManagement = () => {
                       variant="outlined"
                       fullWidth
                       size="small"
-                      value={formData.profit}
-                      onChange={(e) => handleInputChange('profit', e.target.value)}
+                      value={formData.expectedProfit}
+                      onChange={(e) => handleInputChange('expectedProfit', e.target.value)}
                       InputProps={{ inputProps: { min: 0, step: 0.01 } }}
                       helperText="Profit margin"
                     />
@@ -591,7 +591,7 @@ const ProductManagement = () => {
                     </Box>
                     <Box display="flex" justifyContent="space-between" mb={1}>
                       <Typography variant="body2">+ Profit:</Typography>
-                      <Typography variant="body2">৳{formData.profit || 0}</Typography>
+                      <Typography variant="body2">৳{formData.expectedProfit || 0}</Typography>
                     </Box>
                     {formData.deliveryCharge && (
                       <Box display="flex" justifyContent="space-between" mb={1}>
@@ -614,7 +614,7 @@ const ProductManagement = () => {
                         Net Profit:
                       </Typography>
                       <Typography variant="subtitle2" color="info.main">
-                        ৳{parseFloat(formData.profit || 0) - parseFloat(formData.offerValue || 0)}
+                        ৳{parseFloat(formData.expectedProfit || 0) - parseFloat(formData.offerValue || 0)}
                       </Typography>
                     </Box>
                     <Divider sx={{ my: 1 }} />
