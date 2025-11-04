@@ -86,20 +86,7 @@ const TermsandConditions = () => {
             </div>
           </div>
 
-          {/* Footer Note */}
-          <div className="text-center mt-12">
-            <p className="text-gray-500 text-sm">
-              © {currentYear} Magic Mart. All rights reserved.
-            </p>
-            <div className="flex justify-center space-x-6 mt-4">
-              <Link to="/privacy" className="text-blue-600 hover:text-blue-800 text-sm">
-                Privacy Policy
-              </Link>
-              <Link to="/contact" className="text-blue-600 hover:text-blue-800 text-sm">
-                Contact Us
-              </Link>
-            </div>
-          </div>
+      
         </div>
       </div>
     </div>
