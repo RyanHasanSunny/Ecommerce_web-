@@ -198,12 +198,13 @@ const ProductManagement = () => {
     const unitPrice = parseFloat(formData.price) || 0;
     const profit = parseFloat(formData.expectedProfit) || 0;
     const deliveryCharge = parseFloat(formData.deliveryCharge) || 0;
-    const offerValue = parseFloat(formData.offerValue) || 0;
-    return unitPrice + profit + deliveryCharge - offerValue;
+    return unitPrice + profit + deliveryCharge;
   };
 
   const calculateFinalPrice = () => {
-    return calculateSellingPrice();
+    const sellingPrice = calculateSellingPrice();
+    const offerValue = parseFloat(formData.offerValue) || 0;
+    return sellingPrice - offerValue;
   };
 
 

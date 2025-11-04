@@ -29,11 +29,12 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
     navigate(`/product/${product._id}`);
   };
 
-  // FIXED PRICING CALCULATIONS - Match ProductPage logic
+  // UPDATED PRICING CALCULATIONS - Match backend logic
   const getPricing = () => {
     const unitPrice = product.price || 0;
-    const profit = product.profit || 0;
-    const sellingPrice = product.sellingPrice || (unitPrice + profit);
+    const profit = product.expectedProfit || product.profit || 0;
+    const deliveryCharge = product.deliveryCharge || 0;
+    const sellingPrice = product.sellingPrice || (unitPrice + profit + deliveryCharge);
     const offerValue = product.offerValue || 0;
     const finalPrice = product.finalPrice || (sellingPrice - offerValue);
 
@@ -45,6 +46,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
     return {
       unitPrice,
       profit,
+      deliveryCharge,
       sellingPrice,
       offerValue,
       finalPrice,

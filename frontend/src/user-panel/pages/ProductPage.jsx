@@ -117,16 +117,17 @@ const ProductPage = () => {
     }
   };
 
-  // CORRECTED PRICING CALCULATIONS
+  // UPDATED PRICING CALCULATIONS - Match backend logic
   const getPricing = () => {
     if (!product) return null;
 
     const unitPrice = product.price || 0;
-    const profit = product.profit || 0;
-    const sellingPrice = product.sellingPrice || (unitPrice + profit);
+    const profit = product.expectedProfit || product.profit || 0;
+    const deliveryCharge = product.deliveryCharge || 0;
+    const sellingPrice = product.sellingPrice || (unitPrice + profit + deliveryCharge);
     const offerValue = product.offerValue || 0;
     const finalPrice = product.finalPrice || (sellingPrice - offerValue);
-    
+
     const hasDiscount = offerValue > 0;
     const discountPercentage = hasDiscount && sellingPrice > 0
       ? Math.round((offerValue / sellingPrice) * 100)
@@ -135,6 +136,7 @@ const ProductPage = () => {
     return {
       unitPrice,
       profit,
+      deliveryCharge,
       sellingPrice,
       offerValue,
       finalPrice,
@@ -719,7 +721,7 @@ const ProductPage = () => {
               </div>
             )}
 
-            {product.specifications?.length > 0 && (
+            {/*  {product.specifications?.length > 0 && (
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold mb-3">Key Features</h3>
                 <ul className="space-y-2">
@@ -741,7 +743,7 @@ const ProductPage = () => {
                   )}
                 </ul>
               </div>
-            )}
+            )} */}
           </div>
         </div>
 

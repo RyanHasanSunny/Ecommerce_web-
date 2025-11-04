@@ -27,11 +27,11 @@ const productSchema = new mongoose.Schema({
 
 // Pre-save middleware to auto-calculate selling price and final price
 productSchema.pre('save', function(next) {
-  // Calculate selling price: unit price + expectedProfit + delivery charge - offer value
-  this.sellingPrice = this.price + this.expectedProfit + (this.deliveryCharge || 0) - (this.offerValue || 0);
+  // Calculate selling price: unit price + expectedProfit + delivery charge
+  this.sellingPrice = this.price + this.expectedProfit + (this.deliveryCharge || 0);
 
-  // Calculate final price: same as selling price since offer value is already subtracted
-  this.finalPrice = this.sellingPrice;
+  // Calculate final price: selling price - offer value
+  this.finalPrice = this.price + this.expectedProfit + (this.deliveryCharge || 0) - (this.offerValue || 0);
 
   // Ensure final price is not negative
   if (this.finalPrice < 0) {

@@ -136,8 +136,8 @@ const ProductList = () => {
         }
       }
 
-      // Price filters
-      const price = product.offerPrice || product.sellingPrice;
+      // Price filters - use finalPrice for filtering
+      const price = product.finalPrice || product.sellingPrice;
       if (filters.minPrice && price < parseFloat(filters.minPrice)) {
         return false;
       }
@@ -157,15 +157,15 @@ const ProductList = () => {
     switch (filters.sortBy) {
       case 'price-low':
         filtered.sort((a, b) => {
-          const priceA = a.offerPrice || a.sellingPrice;
-          const priceB = b.offerPrice || b.sellingPrice;
+          const priceA = a.finalPrice || a.sellingPrice;
+          const priceB = b.finalPrice || b.sellingPrice;
           return priceA - priceB;
         });
         break;
       case 'price-high':
         filtered.sort((a, b) => {
-          const priceA = a.offerPrice || a.sellingPrice;
-          const priceB = b.offerPrice || b.sellingPrice;
+          const priceA = a.finalPrice || a.sellingPrice;
+          const priceB = b.finalPrice || b.sellingPrice;
           return priceB - priceA;
         });
         break;
