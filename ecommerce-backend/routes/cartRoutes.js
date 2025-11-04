@@ -8,28 +8,33 @@ const {
   clearCart,
   updateCartItemQuantity,  // NEW METHOD
   applyPromo,
-  removePromo
+  removePromo,
+  // Guest cart methods
+  addToGuestCart,
+  getGuestCart,
+  updateGuestCartItemQuantity,
+  removeGuestItem,
+  clearGuestCart,
+  applyGuestPromo,
+  removeGuestPromo
 } = require('../controllers/cartController');
 
-// Add item to cart
+// Authenticated user routes
 router.post('/cart', authMiddleware, addToCart);
-
-// Get current cart
 router.get('/cart', authMiddleware, getCart);
-
-// Update cart item quantity - NEW ROUTE
 router.put('/cart/item/:itemId', authMiddleware, updateCartItemQuantity);
-
-// Remove item from cart
 router.delete('/cart/item/:itemId', authMiddleware, removeItem);
-
-// Clear entire cart
 router.delete('/cart/clear', authMiddleware, clearCart);
-
-// Apply promo code to cart
 router.post('/cart/apply-promo', authMiddleware, applyPromo);
-
-// Remove promo code from cart
 router.delete('/cart/remove-promo', authMiddleware, removePromo);
+
+// Guest cart routes (no authentication required)
+router.post('/guest/cart', addToGuestCart);
+router.get('/guest/cart', getGuestCart);
+router.put('/guest/cart/item/:itemId', updateGuestCartItemQuantity);
+router.delete('/guest/cart/item/:itemId', removeGuestItem);
+router.delete('/guest/cart/clear', clearGuestCart);
+router.post('/guest/cart/apply-promo', applyGuestPromo);
+router.delete('/guest/cart/remove-promo', removeGuestPromo);
 
 module.exports = router;

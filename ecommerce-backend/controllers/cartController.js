@@ -3,6 +3,32 @@ const Product = require('../models/productModel');
 const PromoCode = require('../models/promoCodeModel');
 const HomePage = require('../models/homepageModel');
 
+// Helper function to get session ID from request
+const getSessionId = (req) => {
+  // Try to get from header first, then from cookie
+  return req.headers['x-session-id'] || req.cookies?.sessionId || req.headers['session-id'];
+};
+
+// Helper function to generate a unique session ID
+const generateSessionId = () => {
+  return 'guest_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+};
+
+// Helper function to find or create cart based on user or session
+const findOrCreateCart = async (userId, sessionId) => {
+  let cart;
+
+  if (userId) {
+    // Authenticated user cart
+    cart = await Cart.findOne({ userId, status: 'active' });
+  } else if (sessionId) {
+    // Guest cart
+    cart = await Cart.findOne({ sessionId, status: 'active' });
+  }
+
+  return cart;
+};
+
 // Helper function to calculate final price (same logic as ProductPage)
 const calculateFinalPrice = (product) => {
   const unitPrice = product.price || 0;
@@ -293,6 +319,320 @@ exports.removePromo = async (req, res) => {
 
   } catch (err) {
     console.error('removePromo error:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// ==================== GUEST CART METHODS ====================
+
+// Add item to guest cart
+exports.addToGuestCart = async (req, res) => {
+  const { productId, quantity } = req.body;
+  let sessionId = getSessionId(req);
+
+  try {
+    const product = await Product.findById(productId);
+    if (!product) return res.status(404).json({ msg: 'Product not found' });
+
+    // Use final price instead of unit price
+    const finalPrice = calculateFinalPrice(product);
+    const itemTotal = finalPrice * quantity;
+
+    let cart = await Cart.findOne({ sessionId, status: 'active' });
+
+    if (!cart) {
+      // Generate new session ID if not provided
+      if (!sessionId) {
+        sessionId = generateSessionId();
+      }
+
+      cart = new Cart({
+        sessionId,
+        items: [{
+          productId,
+          name: product.title,
+          quantity,
+          price: finalPrice,
+          totalPrice: itemTotal
+        }]
+      });
+    } else {
+      const existingItemIndex = cart.items.findIndex(item => item.productId.toString() === productId);
+      if (existingItemIndex > -1) {
+        cart.items[existingItemIndex].quantity += quantity;
+        cart.items[existingItemIndex].totalPrice += itemTotal;
+      } else {
+        cart.items.push({
+          productId,
+          name: product.title,
+          quantity,
+          price: finalPrice,
+          totalPrice: itemTotal
+        });
+      }
+    }
+
+    await cart.save();
+
+    // Return cart with session ID for frontend storage
+    res.status(200).json({
+      cart,
+      sessionId: cart.sessionId
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// Get guest cart
+exports.getGuestCart = async (req, res) => {
+  try {
+    const sessionId = getSessionId(req);
+
+    if (!sessionId) {
+      return res.json({ items: [], total: 0, sessionId: null });
+    }
+
+    const cart = await Cart.findOne({ sessionId, status: 'active' })
+      .populate(
+        'items.productId',
+        'title companyName description price profit sellingPrice offerValue finalPrice image specifications stock thumbnail'
+      );
+
+    if (!cart) {
+      return res.json({ items: [], total: 0, sessionId });
+    }
+
+    res.json({
+      ...cart.toObject(),
+      sessionId: cart.sessionId
+    });
+  } catch (err) {
+    console.error('getGuestCart error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Update guest cart item quantity
+exports.updateGuestCartItemQuantity = async (req, res) => {
+  const { itemId } = req.params;
+  const { quantity } = req.body;
+  const sessionId = getSessionId(req);
+
+  try {
+    if (!quantity || quantity < 1) {
+      return res.status(400).json({ msg: 'Invalid quantity. Must be at least 1.' });
+    }
+
+    if (!sessionId) {
+      return res.status(400).json({ msg: 'Session ID required' });
+    }
+
+    const cart = await Cart.findOne({ sessionId, status: 'active' });
+    if (!cart) {
+      return res.status(404).json({ msg: 'Cart not found' });
+    }
+
+    const itemIndex = cart.items.findIndex(item => item._id.toString() === itemId);
+    if (itemIndex === -1) {
+      return res.status(404).json({ msg: 'Item not found in cart' });
+    }
+
+    const product = await Product.findById(cart.items[itemIndex].productId);
+    if (!product) {
+      return res.status(404).json({ msg: 'Product not found' });
+    }
+
+    if (quantity > product.stock) {
+      return res.status(400).json({
+        msg: `Only ${product.stock} items available in stock`,
+        maxQuantity: product.stock
+      });
+    }
+
+    const finalPrice = calculateFinalPrice(product);
+    cart.items[itemIndex].quantity = quantity;
+    cart.items[itemIndex].price = finalPrice;
+    cart.items[itemIndex].totalPrice = finalPrice * quantity;
+
+    await cart.save();
+
+    const populatedCart = await Cart.findOne({ sessionId, status: 'active' })
+      .populate(
+        'items.productId',
+        'title companyName description price profit sellingPrice offerValue finalPrice image specifications stock thumbnail'
+      );
+
+    res.json({
+      success: true,
+      msg: 'Cart item quantity updated successfully',
+      cart: {
+        ...populatedCart.toObject(),
+        sessionId: populatedCart.sessionId
+      }
+    });
+
+  } catch (err) {
+    console.error('updateGuestCartItemQuantity error:', err);
+    res.status(500).json({ msg: 'Server error while updating cart item quantity' });
+  }
+};
+
+// Remove item from guest cart
+exports.removeGuestItem = async (req, res) => {
+  const { itemId } = req.params;
+  const sessionId = getSessionId(req);
+
+  try {
+    if (!sessionId) {
+      return res.status(400).json({ msg: 'Session ID required' });
+    }
+
+    const cart = await Cart.findOne({ sessionId, status: 'active' });
+    if (!cart) return res.status(404).json({ msg: 'Cart not found' });
+
+    cart.items = cart.items.filter(item => item._id.toString() !== itemId);
+    await cart.save();
+
+    const populatedCart = await Cart.findOne({ sessionId, status: 'active' })
+      .populate(
+        'items.productId',
+        'title companyName description price profit sellingPrice offerValue finalPrice image specifications stock thumbnail'
+      );
+
+    res.json({
+      ...(populatedCart || { items: [], total: 0 }),
+      sessionId
+    });
+  } catch (err) {
+    console.error('removeGuestItem error:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// Clear guest cart
+exports.clearGuestCart = async (req, res) => {
+  const sessionId = getSessionId(req);
+
+  try {
+    if (!sessionId) {
+      return res.status(400).json({ msg: 'Session ID required' });
+    }
+
+    const cart = await Cart.findOne({ sessionId, status: 'active' });
+    if (!cart) return res.status(404).json({ msg: 'Cart not found' });
+
+    cart.items = [];
+    await cart.save();
+    res.json({
+      msg: 'Cart cleared',
+      cart: { ...cart.toObject(), sessionId }
+    });
+  } catch (err) {
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// Apply promo to guest cart
+exports.applyGuestPromo = async (req, res) => {
+  const { promoCode } = req.body;
+  const sessionId = getSessionId(req);
+
+  try {
+    if (!sessionId) {
+      return res.status(400).json({ msg: 'Session ID required' });
+    }
+
+    const homePage = await HomePage.findOne({});
+    if (!homePage || !homePage.promoEnabled) {
+      return res.status(400).json({ msg: 'Promo codes are currently disabled' });
+    }
+
+    const cart = await Cart.findOne({ sessionId, status: 'active' });
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ msg: 'Cart is empty' });
+    }
+
+    const promo = homePage.promoCodes.find(p => p.code.toUpperCase() === promoCode.toUpperCase() && new Date(p.expiryDate) > new Date());
+
+    if (!promo) {
+      return res.status(400).json({ msg: 'Invalid or expired promo code' });
+    }
+
+    const subtotal = cart.items.reduce((total, item) => total + item.totalPrice, 0);
+
+    let discountAmount = 0;
+    if (promo.discountType === 'percentage') {
+      discountAmount = (subtotal * promo.discountValue) / 100;
+    } else {
+      discountAmount = Math.min(promo.discountValue, subtotal);
+    }
+
+    cart.appliedPromo = promo.code;
+    cart.discountAmount = discountAmount;
+    cart.discountType = promo.discountType;
+    await cart.save();
+
+    const populatedCart = await Cart.findOne({ sessionId, status: 'active' })
+      .populate(
+        'items.productId',
+        'title companyName description price profit sellingPrice offerValue finalPrice image specifications stock thumbnail'
+      );
+
+    res.json({
+      success: true,
+      msg: 'Promo code applied successfully',
+      cart: {
+        ...populatedCart.toObject(),
+        sessionId: populatedCart.sessionId
+      },
+      discount: discountAmount,
+      discountType: promo.discountType
+    });
+
+  } catch (err) {
+    console.error('applyGuestPromo error:', err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+// Remove promo from guest cart
+exports.removeGuestPromo = async (req, res) => {
+  const sessionId = getSessionId(req);
+
+  try {
+    if (!sessionId) {
+      return res.status(400).json({ msg: 'Session ID required' });
+    }
+
+    const cart = await Cart.findOne({ sessionId, status: 'active' });
+    if (!cart) {
+      return res.status(404).json({ msg: 'Cart not found' });
+    }
+
+    cart.appliedPromo = null;
+    cart.discountAmount = 0;
+    cart.discountType = null;
+    await cart.save();
+
+    const populatedCart = await Cart.findOne({ sessionId, status: 'active' })
+      .populate(
+        'items.productId',
+        'title companyName description price profit sellingPrice offerValue finalPrice image specifications stock thumbnail'
+      );
+
+    res.json({
+      success: true,
+      msg: 'Promo code removed successfully',
+      cart: {
+        ...populatedCart.toObject(),
+        sessionId: populatedCart.sessionId
+      }
+    });
+
+  } catch (err) {
+    console.error('removeGuestPromo error:', err);
     res.status(500).json({ msg: 'Server error' });
   }
 };

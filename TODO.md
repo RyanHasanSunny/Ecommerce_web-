@@ -1,104 +1,69 @@
-# Update Payment Status Dialog Redesign
+# Guest Cart Implementation TODO
 
-## Tasks
-- [x] Increase dialog size from "sm" to "md" for better visibility
-- [x] Add comprehensive order information section at the top
-- [x] Reorganize form fields into clear sections with proper spacing
-- [x] Add visual indicators showing current vs new values
-- [x] Improve readability with better typography and colors
-- [x] Enhance confirmation dialog with detailed impact information
-- [x] Add tooltips for complex fields
-- [x] Test dialog functionality and visibility
+## Backend Changes
 
-## Information Gathered
-- PaymentStatusDialog component located in OrderList.jsx
-- Current dialog handles payment status, transaction ID, and amount updates
-- Has validation for amount limits and confirmation for total amount changes
-- Uses Material-UI components with Grid layout
+### 1. Modify Cart Model (cartModel.js)
+- [x] Add optional `sessionId` field for guest carts
+- [x] Make `userId` optional for guest carts
+- [x] Add validation to ensure either `userId` or `sessionId` exists
+- [x] Update discountType enum to match controller usage
 
-## Plan
-1. Modify dialog maxWidth to "md"
-2. Add order summary card with customer details, order date, current status
-3. Create separate sections for payment details and amount updates
-4. Add visual diff indicators (current value vs new value)
-5. Improve form field organization and spacing
-6. Enhance confirmation dialog with before/after comparison
-7. Add helpful tooltips and validation messages
+### 2. Update Cart Routes (cartRoutes.js)
+- [x] Create separate routes for guest operations (no auth required)
+- [x] Keep existing authenticated routes
+- [ ] Add middleware to handle session ID from headers/cookies
 
-## Dependent Files
-- frontend/src/admin_panel/pages/OrderList.jsx
+### 3. Update Cart Controller (cartController.js)
+- [x] Modify all methods to handle both authenticated and guest carts
+- [x] Add logic to identify cart by `userId` or `sessionId`
+- [ ] Implement cart merging when guest logs in
+- [x] Update addToCart, getCart, updateCartItemQuantity, removeItem, clearCart, applyPromo, removePromo
 
-## Followup Steps
-- [ ] Test dialog on different screen sizes
-- [ ] Verify all content is visible and readable
-- [ ] Check form validation and submission
-- [ ] Ensure confirmation dialog shows all necessary information
+### 4. Update Order Controller (orderController.js)
+- [ ] Modify placeOrder to accept guest orders
+- [ ] Add validation for guest billing information
+- [ ] Handle guest cart clearing after order placement
 
-## Completed Changes
-- Increased dialog size to "md" for better content visibility
-- Added comprehensive order summary card at the top with customer info, order date, and current statuses
-- Reorganized form fields into three clear sections: Order Summary, Payment Update Details, and Amount Update
-- Added visual indicators showing current values vs new values using chips and helper text
-- Improved typography with better color coding and spacing
-- Enhanced confirmation dialog with before/after comparison cards and detailed impact information
-- Added tooltips for toggle buttons and amount fields
-- Added payment date field for better tracking
-- Improved validation messages and user guidance
+### 5. Update Order Routes (orderRoutes.js)
+- [ ] Add guest order placement route without auth requirement
 
-# Update Product Pricing Logic
+## Frontend Changes
 
-## Tasks
-- [x] Update calculateFinalPrice to return calculateSellingPrice() since discount is now included in sellingPrice
-- [x] Remove separate "Selling Price" and "Final Price" sections in Price Summary, show only "Final Price"
-- [x] Update product preview to show only final price without strike-through or save amount
+### 6. Update AuthContext (AuthContext.jsx)
+- [ ] Add guest cart management in localStorage
+- [ ] Implement cart merging logic when user logs in
+- [ ] Add methods for guest cart operations
 
-## Information Gathered
-- ProductManagement.jsx handles pricing calculations
-- calculateSellingPrice includes unit price + profit + delivery charge - offer value
-- Previously finalPrice was sellingPrice - offerValue, but now sellingPrice already includes discount
+### 7. Update CartPage (CartPage.jsx)
+- [ ] Remove authentication redirect
+- [ ] Add logic to handle both authenticated and guest carts
+- [ ] Update API calls to use appropriate endpoints
 
-## Plan
-1. Modify calculateFinalPrice function to simply return calculateSellingPrice()
-2. Update Price Summary Card to remove the separate selling price display and divider
-3. Simplify preview price display to show only the final price
+### 8. Update ProductCard (ProductCard.jsx)
+- [ ] Add add-to-cart functionality for guests
+- [ ] Handle cart operations without authentication
 
-## Dependent Files
-- frontend/src/admin_panel/pages/ProductManagement.jsx
+### 9. Update API Service (api.jsx)
+- [ ] Add guest cart API methods
+- [ ] Add session ID handling for guest operations
+- [ ] Update existing cart methods to support guests
 
-## Followup Steps
-- [ ] Test pricing calculations with different values
-- [ ] Verify preview shows correct pricing
-- [ ] Check form submission includes correct finalPrice
+### 10. Create Guest Checkout Flow
+- [ ] Create guest checkout page/component
+- [ ] Add billing address collection form
+- [ ] Implement guest order placement
 
-## Completed Changes
-- Updated calculateFinalPrice to return calculateSellingPrice() directly
-- Simplified Price Summary to show only the final price calculation
-- Removed strike-through pricing and save amount from product preview
+## Testing and Validation
 
-# Add Net Profit Display in Product Pricing
+### 11. Test Guest Cart Functionality
+- [ ] Test adding items to cart as guest
+- [ ] Test cart persistence across browser sessions
+- [ ] Test cart merging when logging in
 
-## Tasks
-- [x] Add "Net Profit" line in price summary showing profit - offerValue
-- [x] Display net profit in info color to distinguish from final price
+### 12. Test Guest Checkout
+- [ ] Test guest order placement with billing info
+- [ ] Verify order creation and cart clearing
 
-## Information Gathered
-- Net profit = intended profit - discount (offerValue)
-- Currently profit is fixed input, offerValue reduces selling price
-- Net profit helps track actual profit after discounts
-
-## Plan
-1. Add a line in the Price Summary Card for "Net Profit" = profit - offerValue
-2. Use info color for the net profit display
-3. Position it before the final price divider
-
-## Dependent Files
-- frontend/src/admin_panel/pages/ProductManagement.jsx
-
-## Followup Steps
-- [ ] Test net profit calculation with different offer values
-- [ ] Consider adding promo code support in future if needed
-
-## Completed Changes
-- Added "Net Profit" display in price summary showing profit minus offer value
-- Used info color (blue) to differentiate from final price
-- Positioned before the final price for clear hierarchy
+### 13. Test Authenticated User Functionality
+- [ ] Ensure existing authenticated cart functionality still works
+- [ ] Test cart merging from guest to authenticated user

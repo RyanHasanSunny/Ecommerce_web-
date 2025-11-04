@@ -33,7 +33,14 @@ const cartSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false // Made optional for guest carts
+  },
+
+  sessionId: {
+    type: String,
+    required: false, // For guest carts
+    trim: true,
+    index: true // Add index for better query performance
   },
   
   totalAmount: {
@@ -56,7 +63,7 @@ const cartSchema = new mongoose.Schema({
 
   discountType: {
     type: String,
-    enum: ['percent', 'fixed'],
+    enum: ['percentage', 'fixed'], // Updated to match controller usage
     default: null
   },
 

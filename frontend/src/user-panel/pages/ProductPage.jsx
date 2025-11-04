@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import apiService from "../api/api";
+import apiService, { addToCart, addToGuestCart } from "../api/api";
 import {
   ShoppingCart,
   Heart,
@@ -243,18 +243,24 @@ const ProductPage = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!isAuthenticated()) {
-      navigate("/login");
-      return;
-    }
     setAddingToCart(true);
     try {
-      await apiService.addToCart(product._id, quantity);
+      // Use guest cart API if not authenticated, otherwise use regular cart API
+      if (!isAuthenticated()) {
+        await addToGuestCart(product._id, quantity);
+      } else {
+        await addToCart(product._id, quantity);
+      }
+
       setAddedToCart(true);
-      setTimeout(() => setAddedToCart(false), 3000);
+      setTimeout(() => {
+        setAddedToCart(false);
+        // Reload the window to update cart icon/count
+        window.location.reload();
+      }, 3000);
 
       // Meta Pixel AddToCart event
-      if (window.fbq) {
+      if (window.fbq && pricing) {
         window.fbq('track', 'AddToCart', {
           content_ids: [product._id],
           content_type: 'product',

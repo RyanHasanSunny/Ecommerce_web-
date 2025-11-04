@@ -21,11 +21,16 @@ const calculateDeliveryCharge = (city, subtotal) => {
 
 exports.placeOrder = async (req, res) => {
   try {
-    const { items, shippingAddress, paymentMethod, transactionId, notes, extraCharge = 0, paidAmount, isCOD } = req.body;
-    const userId = req.user.userId;
+    const { items, shippingAddress, paymentMethod, transactionId, notes, extraCharge = 0, paidAmount, isCOD, sessionId } = req.body;
+    const userId = req.user?.userId; // Optional for guest orders
 
-    // Get cart to apply promo discount
-    const cart = await Cart.findOne({ userId, status: 'active' });
+    // Get cart to apply promo discount - support both authenticated and guest carts
+    let cart;
+    if (userId) {
+      cart = await Cart.findOne({ userId, status: 'active' });
+    } else if (sessionId) {
+      cart = await Cart.findOne({ sessionId, status: 'active' });
+    }
     const appliedPromo = cart?.appliedPromo || null;
     const discountAmount = cart?.discountAmount || 0;
     const discountType = cart?.discountType || null;
@@ -154,13 +159,18 @@ exports.placeOrder = async (req, res) => {
     });
 
     await newOrder.save();
-    await User.findByIdAndUpdate(userId, { $push: { orders: newOrder._id } });
+    // Only update user orders if userId exists (not for guest orders)
+    if (userId) {
+      await User.findByIdAndUpdate(userId, { $push: { orders: newOrder._id } });
+    }
 
-    // Clear cart logic (existing code remains same)
+    // Clear cart logic - support both authenticated and guest carts
     if (req.body.fromCart) {
       const orderedProductIds = items.map(item => item.productId);
+      const cartQuery = userId ? { userId, status: 'active' } : { sessionId, status: 'active' };
+
       await Cart.findOneAndUpdate(
-        { userId, status: 'active' },
+        cartQuery,
         {
           $pull: { items: { productId: { $in: orderedProductIds } } },
           $unset: { appliedPromo: 1, discountAmount: 1, discountType: 1 }

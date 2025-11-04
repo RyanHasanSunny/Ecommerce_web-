@@ -208,7 +208,6 @@ const ProfilePage = () => {
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'orders', label: 'Orders', icon: Package },
-    { id: 'addresses', label: 'Addresses', icon: MapPin },
     { id: 'security', label: 'Security', icon: Shield }
   ];
 
@@ -340,16 +339,7 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Account Type
-                    </label>
-                    <div className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg">
-                      <span className="capitalize">{user?.role || 'user'}</span>
-                    </div>
-                  </div>
-                  
+                <div className="space-y-4">               
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Member Since

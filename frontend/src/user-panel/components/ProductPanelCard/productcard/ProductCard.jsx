@@ -16,7 +16,7 @@ import {
   Loader,
   AlertCircle
 } from "lucide-react";
-import apiService from "../../../api/api";
+import apiService, { addToCart, addToGuestCart } from "../../../api/api";
 
 const ProductCard = ({ product, viewMode = 'grid' }) => {
   const navigate = useNavigate();
@@ -25,8 +25,33 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
   const [addingToCart, setAddingToCart] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const handleProductClick = () => {
+  const handleProductClick = (e) => {
+    // Prevent navigation if clicking on add to cart button
+    if (e.target.closest('.add-to-cart-btn')) {
+      e.stopPropagation();
+      return;
+    }
     navigate(`/product/${product._id}`);
+  };
+
+  const handleAddToCart = async (e) => {
+    e.stopPropagation();
+    if (isOutOfStock) return;
+
+    setAddingToCart(true);
+    try {
+      if (isAuthenticated) {
+        await addToCart(product._id, 1);
+      } else {
+        await addToGuestCart(product._id, 1);
+      }
+      // You might want to show a success message or update cart count here
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      // You might want to show an error message here
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   // UPDATED PRICING CALCULATIONS - Match backend logic
@@ -127,6 +152,27 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
 
         {product.stock <= 10 && product.stock > 0 && (
           <p className="text-xs text-orange-500 mt-1">Only {product.stock} left in stock!</p>
+        )}
+
+        {/* Add to Cart Button */}
+        {!isOutOfStock && (
+          <button
+            onClick={handleAddToCart}
+            disabled={addingToCart}
+            className="add-to-cart-btn w-full mt-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+          >
+            {addingToCart ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4" />
+                Add to Cart
+              </>
+            )}
+          </button>
         )}
       </div>
     </div>

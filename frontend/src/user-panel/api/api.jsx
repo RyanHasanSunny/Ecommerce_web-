@@ -158,6 +158,50 @@ async request(endpoint, options = {}) {
     });
   },
 
+  // Guest Cart APIs
+  async addToGuestCart(productId, quantity) {
+    return this.request('/guest/cart', {
+      method: 'POST',
+      body: JSON.stringify({ productId, quantity })
+    });
+  },
+
+  async getGuestCart() {
+    return this.request('/guest/cart');
+  },
+
+  async updateGuestCartItem(itemId, quantity) {
+    return this.request(`/guest/cart/item/${itemId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ quantity })
+    });
+  },
+
+  async removeGuestItem(itemId) {
+    return this.request(`/guest/cart/item/${itemId}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async clearGuestCart() {
+    return this.request('/guest/cart/clear', {
+      method: 'DELETE'
+    });
+  },
+
+  async applyGuestPromo(promoCode) {
+    return this.request('/guest/cart/apply-promo', {
+      method: 'POST',
+      body: JSON.stringify({ promoCode })
+    });
+  },
+
+  async removeGuestPromo() {
+    return this.request('/guest/cart/remove-promo', {
+      method: 'DELETE'
+    });
+  },
+
   async getCart() {
     return this.request('/cart');
   },
@@ -406,6 +450,15 @@ export const getCart = () => apiService.getCart();
 export const updateCartItem = (itemId, quantity) => apiService.updateCartItem(itemId, quantity);
 export const removeFromCart = (itemId) => apiService.removeFromCart(itemId);
 export const clearCart = () => apiService.clearCart();
+
+// Guest Cart exports
+export const addToGuestCart = (productId, quantity) => apiService.addToGuestCart(productId, quantity);
+export const getGuestCart = () => apiService.getGuestCart();
+export const updateGuestCartItem = (itemId, quantity) => apiService.updateGuestCartItem(itemId, quantity);
+export const removeGuestItem = (itemId) => apiService.removeGuestItem(itemId);
+export const clearGuestCart = () => apiService.clearGuestCart();
+export const applyGuestPromo = (promoCode) => apiService.applyGuestPromo(promoCode);
+export const removeGuestPromo = () => apiService.removeGuestPromo();
 
 // Order exports - User
 export const placeOrder = (orderData) => apiService.placeOrder(orderData);

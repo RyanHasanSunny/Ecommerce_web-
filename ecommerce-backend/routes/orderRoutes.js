@@ -16,6 +16,8 @@ const {
 
 // User routes
 router.post('/orders/place', authMiddleware, placeOrder);
+// Guest order placement route without auth requirement
+router.post('/orders/guest/place', placeOrder);
 router.get('/orders/my', authMiddleware, getUserOrders);
 router.get('/orders/my/:orderId', authMiddleware, getUserOrderById);
 
