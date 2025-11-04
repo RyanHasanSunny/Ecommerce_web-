@@ -393,7 +393,7 @@ const ProductPage = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1  lg:grid-cols-2 gap-12">
           {/* Images */}
           <div className="flex flex-col  space-y-14">

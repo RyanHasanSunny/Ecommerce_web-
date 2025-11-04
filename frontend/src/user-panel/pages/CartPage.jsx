@@ -265,7 +265,7 @@ const CartPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container max-w-7xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
               <Loader className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
@@ -280,15 +280,8 @@ const CartPage = () => {
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto px-4 py-8">
+        <div className="container max-w-7xl mx-auto px-4 py-8">
           <div className="flex items-center mb-8">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-              <span className="text-sm md:text-base">Back</span>
-            </button>
             <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">Shopping Cart</h1>
           </div>
 
@@ -313,16 +306,10 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen item-center bg-gray-50">
-      <div className="container mx-auto px-4 py-6 md:py-8">
+      <div className="container max-w-7xl mx-auto px-4 py-6 md:py-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 md:mb-8 gap-4">
           <div className="flex items-center">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
-            >
-              <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-              <span className="text-sm md:text-base">Back</span>
-            </button>
+           
             <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">Shopping Cart</h1>
           </div>
           <span className="text-gray-600 text-sm md:text-base">({cartItems.length} items)</span>

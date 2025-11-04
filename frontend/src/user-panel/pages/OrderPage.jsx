@@ -516,12 +516,11 @@ const OrdersPage = () => {
                                 Rate & Review
                               </button>
                             )}
-                            
+
                             {['pending', 'confirmed'].includes(order.status || 'pending') && (
-                              <button className="flex items-center text-sm text-red-600 hover:text-red-700 font-medium">
-                                <XCircle className="w-4 h-4 mr-1" />
-                                Cancel Order
-                              </button>
+                              <div className="text-sm text-gray-600">
+                                <p>If you need to cancel your order, please contact support.</p>
+                              </div>
                             )}
                           </div>
 

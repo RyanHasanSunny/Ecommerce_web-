@@ -21,7 +21,10 @@ import {
   Mail,
   Copy,
   AlertCircle,
-  Loader
+  Loader,
+  Facebook,
+  MessageCircle,
+  Info
 } from 'lucide-react';
 
 const OrderDetailPage = () => {
@@ -32,6 +35,8 @@ const OrderDetailPage = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [contactInfo, setContactInfo] = useState(null);
+  const [contactLoading, setContactLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -40,6 +45,7 @@ const OrderDetailPage = () => {
     }
     if (orderId) {
       fetchOrderDetail();
+      fetchContactInfo();
     }
   }, [orderId, isAuthenticated, navigate]);
 
@@ -48,10 +54,10 @@ const OrderDetailPage = () => {
       setLoading(true);
       setError('');
       console.log('Fetching order with ID:', orderId);
-      
+
       const response = await apiService.getUserOrderById(orderId);
       console.log('Order API response:', response);
-      
+
       // Handle different response structures
       let orderData = null;
       if (response.order) {
@@ -61,11 +67,11 @@ const OrderDetailPage = () => {
       } else if (response._id || response.orderId) {
         orderData = response;
       }
-      
+
       if (!orderData) {
         throw new Error('Order data not found in response');
       }
-      
+
       setOrder(orderData);
     } catch (err) {
       console.error('Error fetching order:', err);
@@ -73,6 +79,24 @@ const OrderDetailPage = () => {
       setOrder(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchContactInfo = async () => {
+    try {
+      setContactLoading(true);
+      const response = await apiService.getHomePage();
+      console.log('Contact info response:', response);
+      setContactInfo(response.contactInfo);
+    } catch (err) {
+      console.error('Error fetching contact info:', err);
+      // Set default contact info if API fails
+      setContactInfo({
+        email: 'support@example.com',
+        contactNumber: '+1234567890'
+      });
+    } finally {
+      setContactLoading(false);
     }
   };
 
@@ -248,6 +272,7 @@ const OrderDetailPage = () => {
   const statusConfig = getStatusConfig(order?.status || 'pending');
   const StatusIcon = statusConfig.icon;
   const customerInfo = getCustomerInfo(order?.shippingAddress, order?.customerName);
+  const allSocialContacts = contactInfo?.socialContacts || [];
 
   const orderSteps = [
     { name: 'Order Placed', status: 'completed' },
@@ -259,9 +284,9 @@ const OrderDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container flex flex-col mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center mb-8">
+        <div className="flex flex-col items-start gap-6 mb-8">
           <button
             onClick={() => navigate('/orders')}
             className="flex items-center text-gray-600 hover:text-gray-800 mr-4"
@@ -305,13 +330,7 @@ const OrderDetailPage = () => {
                     <Copy className="w-4 h-4 mr-1" />
                     Copy ID
                   </button>
-                  <button
-                    onClick={downloadInvoice}
-                    className="flex items-center px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    <Download className="w-4 h-4 mr-1" />
-                    Invoice
-                  </button>
+                 
                 </div>
               </div>
 
@@ -547,21 +566,81 @@ const OrderDetailPage = () => {
                   </button>
                 )}
 
-                {['pending', 'confirmed'].includes(order?.status) && (
+                {/* {['pending', 'confirmed'].includes(order?.status) && (
                   <button className="w-full flex items-center justify-center px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
                     <XCircle className="w-4 h-4 mr-2" />
                     Cancel Order
                   </button>
-                )}
+                )} */}
               </div>
 
               {/* Need Help */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="font-medium text-gray-900 mb-3">Need Help?</h3>
                 <div className="space-y-2 text-sm text-gray-600">
-    
+                  <p>If you need to cancel your order, please contact our support team.</p>
+                  
+                   {/* Contact Information Section */}
+                <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Info className="w-5 h-5 text-blue-600" />
+                    <h3 className="font-semibold text-blue-900">For more information</h3>
+                  </div>
+                  
+                  {contactLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader className="w-5 h-5 animate-spin text-blue-600" />
+                      <span className="ml-2 text-blue-600">Loading contact options...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {contactInfo?.email && (
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Mail className="w-4 h-4 mr-2 text-blue-600" />
+                          <span>{contactInfo.email}</span>
+                        </div>
+                      )}
+                      
+                      {contactInfo?.contactNumber && (
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Phone className="w-4 h-4 mr-2 text-blue-600" />
+                          <span>{contactInfo.contactNumber}</span>
+                        </div>
+                      )}
+
+                      {allSocialContacts.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-700 font-medium">Contact us directly:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {allSocialContacts.map((social, index) => {
+                              const Icon = social.icon;
+                              return (
+                                <a
+                                  key={index}
+                                  href={social.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`flex items-center justify-center px-3 py-2 rounded-lg font-medium text-white text-sm transition-colors duration-200 ${social.bgColor} ${social.hoverColor}`}
+                                >
+                                  <Icon className="w-4 h-4 mr-1" />
+                                  {social.platform}
+                                </a>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {(!contactInfo || (allSocialContacts.length === 0 && !contactInfo.email && !contactInfo.contactNumber)) && (
+                        <div className="text-center py-4">
+                          <p className="text-gray-500 text-sm">Contact information will be available soon.</p>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
                 </div>
+              </div>
               </div>
             </div>
 

@@ -144,11 +144,11 @@ const Header = () => {
   ];
 
   return (
-    <header className={`top-0 z-10 transition-all duration-300 ${
+    <header className={`flex flex-col items-center top-0  z-10 transition-all duration-300 ${
       isScrolled ? 'bg-white/95 backdrop-blur-md ' : 'bg-white '
     }`}>
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm py-2 px-4 text-center">
+      <div className=" w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm py-2 px-4 text-center">
         <div className="flex items-center justify-center gap-2">
           <MapPin className="w-4 h-4" />
           <span>{topHeaderText}</span>
@@ -156,7 +156,7 @@ const Header = () => {
       </div>
 
       {/* Main Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="px-4 sm:px-6 lg:px-0 w-full max-w-7xl">
         <div className="flex items-center justify-between h-16">
           {/* Mobile: Menu Button (Left) */}
           <div className="lg:hidden">
@@ -335,7 +335,7 @@ const Header = () => {
 
       {/* Mobile Search Bar - Always Visible */}
       <div className="lg:hidden bg-white border-t border-gray-200 px-4 py-3">
-        <div className="max-w-7xl mx-auto">
+        <div className="mx-auto">
           <form onSubmit={handleSearch} className="relative">
             <input
               type="text"
@@ -352,7 +352,7 @@ const Header = () => {
       {/* Desktop Search Bar - Appears below main header only when toggled */}
       {(showDesktopSearch || searchQuery.trim()) && (
         <div className="hidden lg:block bg-white border-t border-gray-200 px-4 py-3">
-          <div className="max-w-7xl mx-auto">
+          <div className="mx-auto">
             <form onSubmit={handleSearch} className="relative">
               <input
                 type="text"

@@ -292,7 +292,7 @@ const ProductList = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container max-w-7xl mx-auto px-4 py-8">
         <div className="flex gap-8">
           {/* Filters Sidebar */}
         {/* Filters Sidebar (desktop) */}

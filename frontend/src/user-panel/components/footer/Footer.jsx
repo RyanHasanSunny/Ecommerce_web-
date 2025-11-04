@@ -145,7 +145,7 @@ const Footer = () => {
       </div>
 
       {/* Main Footer Content */}
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
         <div className="flex flex-wrap justify-between gap-8">
           {/* Company Info */}
           <div className="lg:col-span-2 w-full lg:w-1/3">
@@ -200,7 +200,7 @@ const Footer = () => {
 
       {/* Bottom Bar */}
       <div className="border-t border-gray-200 bg-gray-50">
-        <div className="container mx-auto px-4 py-6">
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
           <div className="flex flex-col md:flex-row items-center justify-center">
             <div className="flex flex-col md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-6 mb-4 md:mb-0">
               <p className="text-gray-600 text-sm">

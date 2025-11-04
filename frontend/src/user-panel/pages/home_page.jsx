@@ -51,7 +51,7 @@ const HomePage = () => {
 
       {/* Welcome Banner */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-10">
-        <div className=" mx-auto px-4 text-center">
+        <div className="max-w-7xl mx-auto px-4 text-center">
           <div className="flex items-center justify-center mb-6">
             <Sparkles className="w-8 h-8 mr-3" />
             <h1 className="text-[20px] md:text-[20px] font-bold">
@@ -67,7 +67,7 @@ const HomePage = () => {
 
       {/* Categories Section */}
       <section className="py-10 bg-gray-50">
-        <div className="container flex flex-col mx-auto  px-4">
+        <div className="container flex flex-col max-w-7xl mx-auto  px-4">
           <div className="text-center mb-5">
             <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-6">
               Shop by Category
@@ -96,7 +96,7 @@ const HomePage = () => {
       
       {/* Featured Products Section */}
       <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
+        <div className="container max-w-7xl mx-auto px-4">
           <FeaturedProducts
             title="Featured Products"
             subtitle="Discover our handpicked selection of amazing products"
@@ -109,7 +109,7 @@ const HomePage = () => {
       {/* Special Offers Section - Show only if enabled */}
       {homePageData?.offerPanel?.isEnabled && (
         <section className="py-20 bg-gradient-to-r from-orange-500 to-red-600 text-white">
-          <div className="container mx-auto px-4 text-center">
+          <div className="container max-w-7xl mx-auto px-4 text-center">
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm mb-6">
               <Gift className="w-5 h-5 mr-2" />
               <span className="text-sm font-medium">Limited Time Offer</span>
