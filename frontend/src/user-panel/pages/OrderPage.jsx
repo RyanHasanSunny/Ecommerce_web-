@@ -95,12 +95,13 @@ const OrdersPage = () => {
 
     // Search filter
     if (searchTerm) {
+      const query = searchTerm.toLowerCase();
       filtered = filtered.filter(order => 
-        order.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order._id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        order.items?.some(item => 
-          item?.product?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item?.productId?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+        getOrderDisplayNumber(order).toLowerCase().includes(query) ||
+        String(getOrderRouteId(order) || '').toLowerCase().includes(query) ||
+        getOrderItems(order).some(item => 
+          item?.product?.title?.toLowerCase().includes(query) ||
+          item?.productId?.title?.toLowerCase().includes(query)
         )
       );
     }
@@ -192,6 +193,25 @@ const OrdersPage = () => {
     }
   };
 
+  const getOrderRouteId = (order) => {
+    return order?._id ?? order?.id ?? order?.orderId ?? order?.orderNumber ?? order?.order_number;
+  };
+
+  const getOrderDisplayNumber = (order) => {
+    const orderNumber = order?.orderId || order?.orderNumber || order?.order_number;
+    if (orderNumber) return String(orderNumber);
+
+    const routeId = getOrderRouteId(order);
+    if (routeId === null || routeId === undefined || routeId === '') return 'N/A';
+
+    const idText = String(routeId);
+    return idText.length > 8 ? idText.slice(-8) : idText;
+  };
+
+  const getOrderItems = (order) => {
+    return Array.isArray(order?.items) ? order.items : [];
+  };
+
   // Helper function to format shipping address
   const formatShippingAddress = (shippingAddress) => {
     if (!shippingAddress) return 'N/A';
@@ -226,7 +246,7 @@ const OrdersPage = () => {
   const handleReorder = async (order) => {
     try {
       // Add all items from the order back to cart
-      for (const item of order.items || []) {
+      for (const item of getOrderItems(order)) {
         const product = getProductFromItem(item);
         if (product?._id) {
           await apiService.addToCart(product._id, item.quantity || 1);
@@ -371,15 +391,17 @@ const OrdersPage = () => {
                 filteredOrders.map((order) => {
                   const statusConfig = getStatusConfig(order.status || 'pending');
                   const StatusIcon = statusConfig.icon;
+                  const orderRouteId = getOrderRouteId(order);
+                  const orderItems = getOrderItems(order);
 
                   return (
-                    <div key={order._id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div key={orderRouteId || order.orderNumber || order.order_number} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                       {/* Order Header */}
                       <div className="p-6 border-b border-gray-200">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-4">
                             <h3 className="text-lg font-semibold text-gray-900">
-                              Order #{order.orderId || order._id?.slice(-8) || 'N/A'}
+                              Order #{getOrderDisplayNumber(order)}
                             </h3>
                             <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${statusConfig.color}`}>
                               <StatusIcon className="w-4 h-4 mr-1" />
@@ -389,7 +411,8 @@ const OrdersPage = () => {
                           
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => navigate(`/order/${order._id}`)}
+                              onClick={() => navigate(`/order/${orderRouteId}`)}
+                              disabled={!orderRouteId}
                               className="flex items-center px-3 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium"
                             >
                               <Eye className="w-4 h-4 mr-1" />
@@ -407,7 +430,8 @@ const OrdersPage = () => {
                             )}
                             
                             <button
-                              onClick={() => downloadInvoice(order._id)}
+                              onClick={() => downloadInvoice(orderRouteId)}
+                              disabled={!orderRouteId}
                               className="flex items-center px-3 py-2 text-gray-600 hover:text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-sm font-medium"
                             >
                               <Download className="w-4 h-4 mr-1" />
@@ -430,7 +454,7 @@ const OrdersPage = () => {
                           </div>
                           <div>
                             <span className="text-gray-500">Items:</span>
-                            <p className="font-medium text-gray-900">{order.items?.length || 0} items</p>
+                            <p className="font-medium text-gray-900">{orderItems.length} items</p>
                           </div>
                           <div>
                             <span className="text-gray-500">Payment:</span>
@@ -453,7 +477,7 @@ const OrdersPage = () => {
                       <div className="p-6">
                         <h4 className="text-sm font-medium text-gray-700 mb-3">Order Items</h4>
                         <div className="space-y-3">
-                          {order.items?.slice(0, 3).map((item, index) => {
+                          {orderItems.slice(0, 3).map((item, index) => {
                             const product = getProductFromItem(item);
                             
                             return (
@@ -483,12 +507,13 @@ const OrdersPage = () => {
                             );
                           })}
                           
-                          {(order.items?.length || 0) > 3 && (
+                          {orderItems.length > 3 && (
                             <button
-                              onClick={() => navigate(`/order/${order._id}`)}
+                              onClick={() => navigate(`/order/${orderRouteId}`)}
+                              disabled={!orderRouteId}
                               className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
                             >
-                              View all {order.items?.length} items
+                              View all {orderItems.length} items
                               <ChevronRight className="w-4 h-4 ml-1" />
                             </button>
                           )}

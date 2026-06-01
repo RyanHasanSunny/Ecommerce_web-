@@ -62,13 +62,18 @@ const ContactUs = () => {
           <div className="mb-4">
             <h2 className="text-xl font-semibold mb-2">Social Links</h2>
             <ul className="list-disc list-inside">
-              {contactInfo.socialLinks.map((link, index) => (
-                <li key={index}>
-                  <a href={link.url} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                    {link.platform}
-                  </a>
-                </li>
-              ))}
+              {contactInfo.socialLinks.map((link, index) => {
+                const label = link.platform || link.socialMedia || link.name || 'Social';
+                const url = link.url || link.contactLink || link.socialmediaLink || link.value || '#';
+
+                return (
+                  <li key={index}>
+                    <a href={url} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                      {label}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
@@ -76,13 +81,18 @@ const ContactUs = () => {
           <div className="mb-4">
             <h2 className="text-xl font-semibold mb-2">Social Media Contact</h2>
             <ul className="list-disc list-inside">
-              {contactInfo.socialmediaContact.map((social, index) => (
-                <li key={index}>
-                  <a href={social.socialmediaLink} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-                    {social.socialMedia}
-                  </a>
-                </li>
-              ))}
+              {contactInfo.socialmediaContact.map((social, index) => {
+                const label = social.socialMedia || social.platform || social.name || 'Social';
+                const url = social.socialmediaLink || social.url || social.contactLink || social.value || '#';
+
+                return (
+                  <li key={index}>
+                    <a href={url} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+                      {label}
+                    </a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

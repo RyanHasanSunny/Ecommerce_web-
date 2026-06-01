@@ -3,12 +3,44 @@ import { ChevronDown, ChevronRight, Plus, Trash2, Save, Image, Share2, Info, Pho
 import { CreditCard } from 'lucide-react';
 
 // Mock API service - replace with your actual API
+const normalizeHomePage = (data = {}) => ({
+  ...data,
+  heroPanel: data.heroPanel || data.hero_panel || [],
+  slidingText: data.slidingText || data.sliding_text || [],
+  topHeaderText: data.topHeaderText || data.top_header_text || '',
+  offerPanel: data.offerPanel || data.offer_panel || {
+    title: '',
+    description: '',
+    isEnabled: true
+  },
+  contactInfo: {
+    email: '',
+    contactNumber: '',
+    socialLinks: [],
+    location: '',
+    ...(data.contactInfo || data.contact_info || {}),
+  },
+  paymentInfo: {
+    method: [],
+    ...(data.paymentInfo || data.payment_info || {}),
+  },
+  termsAndConditions: data.termsAndConditions || {
+    title: 'Terms and Conditions',
+    content: data.terms_content || ''
+  },
+  privacyPolicy: data.privacyPolicy || {
+    title: 'Privacy Policy',
+    content: data.privacy_content || ''
+  },
+  promoEnabled: data.promoEnabled ?? data.promo_enabled ?? false,
+});
+
 const apiService = {
   baseURL: '/api',
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
-    const headers = { ...(options.headers || {}) };
+    const headers = { Accept: 'application/json', ...(options.headers || {}) };
 
     if (options.body && !(options.body instanceof FormData)) {
       headers['Content-Type'] = 'application/json';
@@ -16,7 +48,7 @@ const apiService = {
 
     const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
     if (token) {
-      headers['x-auth-token'] = token;
+      headers.Authorization = `Bearer ${token}`;
     }
 
     const config = {
@@ -37,27 +69,47 @@ const apiService = {
   },
 
   async getHomePage() {
-    return this.request('/homepagedata');
+    return normalizeHomePage(await this.request('/homepage'));
   },
 
   async updateHomePage(homePageData) {
-    return this.request('/homepagedata', {
-      method: 'POST',
-      body: JSON.stringify(homePageData)
-    });
+    return normalizeHomePage(await this.request('/homepage', {
+      method: 'PUT',
+      body: JSON.stringify({
+        hero_panel: homePageData.heroPanel,
+        sliding_text: homePageData.slidingText,
+        top_header_text: homePageData.topHeaderText,
+        offer_panel: homePageData.offerPanel,
+        contact_info: homePageData.contactInfo,
+        payment_info: homePageData.paymentInfo,
+        terms_content: homePageData.termsAndConditions?.content,
+        privacy_content: homePageData.privacyPolicy?.content,
+        promo_enabled: homePageData.promoEnabled
+      })
+    }));
   },
 
   async uploadMultipleImages(imageFiles) {
-    const formData = new FormData();
-    imageFiles.forEach(file => {
-      formData.append('images', file);
-    });
+    const images = [];
+    for (const file of imageFiles) {
+      const formData = new FormData();
+      formData.append('image', file);
+      const uploaded = await this.request('/uploads', {
+        method: 'POST',
+        body: formData,
+        headers: {}
+      });
+      images.push({
+        originalName: uploaded.image?.original_name || file.name,
+        mainImage: {
+          url: uploaded.url,
+          fileName: uploaded.image?.id,
+          size: uploaded.image?.size
+        }
+      });
+    }
 
-    return this.request('/upload/multiple', {
-      method: 'POST',
-      body: formData,
-      headers: {}
-    });
+    return { success: true, data: { images } };
   }
 };
 
@@ -560,9 +612,7 @@ const HomepageManagement = () => {
     setSaving(true);
     try {
       const response = await apiService.updateHomePage(homePageData);
-      if (response.success || response.msg) {
-        showAlert('Homepage data updated successfully!', 'success');
-      }
+      showAlert('Homepage data updated successfully!', 'success');
     } catch (error) {
       console.error('Error updating homepage:', error);
       showAlert('Failed to update homepage data: ' + error.message, 'error');

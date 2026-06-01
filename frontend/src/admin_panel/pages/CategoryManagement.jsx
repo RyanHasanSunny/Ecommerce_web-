@@ -243,15 +243,23 @@ const CategoryList = () => {
       const list = Array.isArray(data) ? data : data.categories;
       setCategories(list || []);
       
-      // Fetch product counts for each category
+      // Fetch products once and count direct category products. Parent categories
+      // also include products from their child categories.
+      const products = await getProducts({ per_page: 1000 });
       const counts = {};
       for (const category of list || []) {
-        try {
-          const products = await getProducts({ category: category._id });
-          counts[category._id] = products.products?.length || 0;
-        } catch (err) {
-          counts[category._id] = 0;
-        }
+        const childIds = (list || [])
+          .filter((item) => {
+            const parentId = item.parentCategory?._id || item.parentCategory || item.parent_id;
+            return String(parentId || '') === String(category._id);
+          })
+          .map((item) => String(item._id));
+
+        counts[category._id] = (products || []).filter((product) => {
+          const productCategoryId = product.category?._id || product.categoryId || product.category_id;
+          return String(productCategoryId || '') === String(category._id) ||
+            childIds.includes(String(productCategoryId || ''));
+        }).length;
       }
       setProductCounts(counts);
     } catch (err) {
@@ -268,7 +276,7 @@ const CategoryList = () => {
   useEffect(() => {
     let filtered = categories.filter((category) =>
       category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      category.description.toLowerCase().includes(searchTerm.toLowerCase())
+      (category.description || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     if (filterType === "parent") {

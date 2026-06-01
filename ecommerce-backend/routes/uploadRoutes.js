@@ -7,7 +7,7 @@ const {
   updateImage,
   deleteImage,
   listImages,
-  getPresignedUrl,
+  healthCheck,
   handleMulterError
 } = require('../controllers/imageUploadController');
 const authMiddleware = require('../middleware/authMiddleware');
@@ -27,31 +27,8 @@ router.delete('/:fileName', authMiddleware, deleteImage);
 // List images with pagination
 router.get('/list', listImages);
 
-// Get presigned URL for private images
-router.get('/presigned/:fileName', getPresignedUrl);
-
-// Health check for S3 connection
-router.get('/health', async (req, res) => {
-  try {
-    const { testS3Connection } = require('../config/awsConfig');
-    const isConnected = await testS3Connection();
-    
-    res.json({
-      success: true,
-      s3Connected: isConnected,
-      timestamp: new Date().toISOString(),
-      bucketName: process.env.AWS_S3_BUCKET_NAME,
-      region: process.env.AWS_REGION
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: 'Health check failed',
-      message: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
+// Health check for local storage
+router.get('/health', healthCheck);
 
 // Test upload endpoint (for development/testing)
 router.post('/test', upload.single('testImage'), (req, res) => {

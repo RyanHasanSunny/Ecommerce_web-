@@ -155,7 +155,11 @@ const ProductPage = () => {
     if (!contactInfo?.socialLinks) return [];
     
     return contactInfo.socialLinks.map(link => {
-      const platform = link.platform.toLowerCase();
+      const platformName = link.platform || link.socialMedia || link.name;
+      const url = link.contactLink || link.url || link.socialmediaLink || link.value;
+      if (!platformName || !url) return null;
+
+      const platform = platformName.toLowerCase();
       let icon, bgColor, hoverColor;
       
       switch (platform) {
@@ -187,13 +191,13 @@ const ProductPage = () => {
       }
 
       return {
-        platform: link.platform,
-        url: link.contactLink,
+        platform: platformName,
+        url,
         icon,
         bgColor,
         hoverColor
       };
-    });
+    }).filter(Boolean);
   };
 
   // Get additional social media contacts
@@ -201,7 +205,11 @@ const ProductPage = () => {
     if (!contactInfo?.socialmediaContact) return [];
     
     return contactInfo.socialmediaContact.map(social => {
-      const platform = social.socialMedia.toLowerCase();
+      const platformName = social.socialMedia || social.platform || social.name;
+      const url = social.socialmediaLink || social.url || social.contactLink || social.value;
+      if (!platformName || !url) return null;
+
+      const platform = platformName.toLowerCase();
       let icon, bgColor, hoverColor;
       
       switch (platform) {
@@ -233,13 +241,13 @@ const ProductPage = () => {
       }
 
       return {
-        platform: social.socialMedia,
-        url: social.socialmediaLink,
+        platform: platformName,
+        url,
         icon,
         bgColor,
         hoverColor
       };
-    });
+    }).filter(Boolean);
   };
 
   const handleAddToCart = async () => {

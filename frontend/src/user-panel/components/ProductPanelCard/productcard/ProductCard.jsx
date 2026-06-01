@@ -40,7 +40,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
 
     setAddingToCart(true);
     try {
-      if (isAuthenticated) {
+      if (isAuthenticated()) {
         await addToCart(product._id, 1);
       } else {
         await addToGuestCart(product._id, 1);
@@ -82,6 +82,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
 
   const pricing = getPricing();
   const isOutOfStock = product.stock === 0;
+  const thumbnailSrc = !imageError && product.thumbnail ? product.thumbnail : '/placeholder-product.jpg';
   const truncateWords = (str = "", n = 8) => {
     const words = str.trim().split(/\s+/);
     return words.length > n ? words.slice(0, n).join(" ") + "…" : str;
@@ -95,7 +96,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
       {/* Image */}
       <div className="relative aspect-square overflow-hidden">
         <img
-          src={imageError ? '/placeholder-product.jpg' : product.thumbnail}
+          src={thumbnailSrc}
           alt={product.title}
           className="w-full h-auto object-cover transition-transform duration-300"
           onError={() => setImageError(true)}

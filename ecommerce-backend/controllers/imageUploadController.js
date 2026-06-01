@@ -1,23 +1,33 @@
 const multer = require('multer');
-const multerS3 = require('multer-s3');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
-const { s3, generatePresignedUrl } = require('../config/awsConfig');
-const { Upload } = require('@aws-sdk/lib-storage');
-const {
-  HeadObjectCommand,
-  DeleteObjectCommand,
-  ListObjectsV2Command,
-  PutObjectCommand
-} = require('@aws-sdk/client-s3');
 
-// Configure multer for memory storage (we'll process images before uploading)
-const storage = multer.memoryStorage();
+// Create upload directories if they don't exist
+const uploadDir = path.join(__dirname, '../public/uploads');
+const productsDir = path.join(uploadDir, 'products');
+const thumbsDir = path.join(productsDir, 'thumbnails');
+
+[uploadDir, productsDir, thumbsDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
+// Configure multer for local disk storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, productsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${uuidv4()}${path.extname(file.originalname).toLowerCase()}`;
+    cb(null, uniqueName);
+  }
+});
 
 // File filter function
 const fileFilter = (req, file, cb) => {
-  // Check file type
   const allowedTypes = /jpeg|jpg|png|gif|webp/;
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
   const mimetype = allowedTypes.test(file.mimetype);
@@ -39,18 +49,18 @@ const upload = multer({
   fileFilter: fileFilter
 });
 
-// Helper function to optimize and upload image to S3
-const optimizeAndUploadImage = async (buffer, originalname, folder = 'products') => {
+// Helper function to optimize and save image locally
+const optimizeAndSaveImage = async (filePath, originalname) => {
   try {
-    // Generate unique filename
     const fileExtension = path.extname(originalname).toLowerCase();
-    const fileName = `${folder}/${uuidv4()}${fileExtension}`;
+    const fileName = `${uuidv4()}${fileExtension}`;
+    const mainImagePath = path.join(productsDir, fileName);
     
-    // Optimize image using Sharp
+    // Optimize main image
     let optimizedBuffer;
     
     if (fileExtension === '.png') {
-      optimizedBuffer = await sharp(buffer)
+      optimizedBuffer = await sharp(filePath)
         .resize(1200, 1200, { 
           fit: 'inside', 
           withoutEnlargement: true 
@@ -61,7 +71,7 @@ const optimizeAndUploadImage = async (buffer, originalname, folder = 'products')
         })
         .toBuffer();
     } else {
-      optimizedBuffer = await sharp(buffer)
+      optimizedBuffer = await sharp(filePath)
         .resize(1200, 1200, { 
           fit: 'inside', 
           withoutEnlargement: true 
@@ -73,8 +83,14 @@ const optimizeAndUploadImage = async (buffer, originalname, folder = 'products')
         .toBuffer();
     }
 
-    // Create thumbnail
-    const thumbnailBuffer = await sharp(buffer)
+    // Save optimized main image
+    fs.writeFileSync(mainImagePath, optimizedBuffer);
+
+    // Create and save thumbnail
+    const thumbnailName = `${uuidv4()}.jpg`;
+    const thumbnailPath = path.join(thumbsDir, thumbnailName);
+    
+    const thumbnailBuffer = await sharp(filePath)
       .resize(300, 300, { 
         fit: 'cover',
         position: 'center'
@@ -83,63 +99,35 @@ const optimizeAndUploadImage = async (buffer, originalname, folder = 'products')
         quality: 80 
       })
       .toBuffer();
+    
+    fs.writeFileSync(thumbnailPath, thumbnailBuffer);
 
-    const thumbnailFileName = `${folder}/thumbnails/${uuidv4()}.jpg`;
+    // Generate URLs
+    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8080}`;
+    const mainImageUrl = `${baseUrl}/uploads/products/${fileName}`;
+    const thumbnailUrl = `${baseUrl}/uploads/products/thumbnails/${thumbnailName}`;
 
-    // Upload main image to S3
-    const uploadParams = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: fileName,
-      Body: optimizedBuffer,
-      ContentType: fileExtension === '.png' ? 'image/png' : 'image/jpeg',
-      ACL: 'public-read', // Make images publicly accessible
-      Metadata: {
-        originalName: originalname,
-        uploadedAt: new Date().toISOString()
-      }
-    };
-
-    const mainUpload = new Upload({
-      client: s3,
-      params: uploadParams
-    });
-    const mainImageResult = await mainUpload.done();
-
-    // Upload thumbnail to S3
-    const thumbnailParams = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: thumbnailFileName,
-      Body: thumbnailBuffer,
-      ContentType: 'image/jpeg',
-      ACL: 'public-read',
-      Metadata: {
-        originalName: `thumb_${originalname}`,
-        uploadedAt: new Date().toISOString()
-      }
-    };
-
-    const thumbnailUpload = new Upload({
-      client: s3,
-      params: thumbnailParams
-    });
-    const thumbnailResult = await thumbnailUpload.done();
+    // Delete original uploaded file
+    fs.unlinkSync(filePath);
 
     return {
       success: true,
       mainImage: {
         fileName: fileName,
-        url: mainImageResult.Location,
+        url: mainImageUrl,
+        path: mainImagePath,
         size: optimizedBuffer.length
       },
       thumbnail: {
-        fileName: thumbnailFileName,
-        url: thumbnailResult.Location,
+        fileName: thumbnailName,
+        url: thumbnailUrl,
+        path: thumbnailPath,
         size: thumbnailBuffer.length
       }
     };
 
   } catch (error) {
-    console.error('Error optimizing and uploading image:', error);
+    console.error('Error optimizing and saving image:', error);
     throw error;
   }
 };
@@ -154,11 +142,7 @@ const uploadSingleImage = async (req, res) => {
       });
     }
 
-    const result = await optimizeAndUploadImage(
-      req.file.buffer,
-      req.file.originalname,
-      'products/single'
-    );
+    const result = await optimizeAndSaveImage(req.file.path, req.file.originalname);
 
     res.status(200).json({
       success: true,
@@ -173,6 +157,10 @@ const uploadSingleImage = async (req, res) => {
 
   } catch (error) {
     console.error('Single image upload error:', error);
+    // Clean up file if upload failed
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
     res.status(500).json({
       success: false,
       message: 'Failed to upload image',
@@ -198,12 +186,8 @@ const uploadMultipleImages = async (req, res) => {
       });
     }
 
-    const uploadPromises = req.files.map((file, index) => 
-      optimizeAndUploadImage(
-        file.buffer,
-        file.originalname,
-        'products/multiple'
-      )
+    const uploadPromises = req.files.map(file => 
+      optimizeAndSaveImage(file.path, file.originalname)
     );
 
     const results = await Promise.all(uploadPromises);
@@ -226,6 +210,14 @@ const uploadMultipleImages = async (req, res) => {
 
   } catch (error) {
     console.error('Multiple images upload error:', error);
+    // Clean up files if upload failed
+    if (req.files) {
+      req.files.forEach(file => {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path);
+        }
+      });
+    }
     res.status(500).json({
       success: false,
       message: 'Failed to upload images',
@@ -234,7 +226,7 @@ const uploadMultipleImages = async (req, res) => {
   }
 };
 
-// Delete image from S3
+// Delete image from local storage
 const deleteImage = async (req, res) => {
   try {
     const { fileName } = req.params;
@@ -246,43 +238,25 @@ const deleteImage = async (req, res) => {
       });
     }
 
-    // Check if file exists
-    const headCommand = new HeadObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: fileName
-    });
+    // Sanitize fileName to prevent directory traversal
+    const sanitizedFileName = path.basename(fileName);
+    const imagePath = path.join(productsDir, sanitizedFileName);
 
-    try {
-      await s3.send(headCommand);
-    } catch (error) {
-      if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
-        return res.status(404).json({
-          success: false,
-          message: 'Image not found'
-        });
-      }
-      throw error;
+    // Check if file exists
+    if (!fs.existsSync(imagePath)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Image not found'
+      });
     }
 
     // Delete the image
-    const deleteCommand = new DeleteObjectCommand({
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: fileName
-    });
+    fs.unlinkSync(imagePath);
 
-    await s3.send(deleteCommand);
-
-    // Also try to delete thumbnail if it exists
-    const thumbnailKey = fileName.replace(/^products\//, 'products/thumbnails/').replace(/\.[^/.]+$/, '.jpg');
-    try {
-      const thumbnailDeleteCommand = new DeleteObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: thumbnailKey
-      });
-      await s3.send(thumbnailDeleteCommand);
-    } catch (thumbnailError) {
-      // Thumbnail deletion failed, but that's okay
-      console.log('Thumbnail deletion failed (might not exist):', thumbnailError.message);
+    // Try to delete thumbnail if it exists
+    const thumbnailPath = path.join(thumbsDir, `thumb_${sanitizedFileName}`);
+    if (fs.existsSync(thumbnailPath)) {
+      fs.unlinkSync(thumbnailPath);
     }
 
     res.status(200).json({
@@ -324,29 +298,14 @@ const updateImage = async (req, res) => {
     }
 
     // Upload new image first
-    const newImageResult = await optimizeAndUploadImage(
-      req.file.buffer,
-      req.file.originalname,
-      'products/updated'
-    );
+    const newImageResult = await optimizeAndSaveImage(req.file.path, req.file.originalname);
 
     // Delete old image
-    try {
-      const deleteCommand = new DeleteObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: oldFileName
-      });
-      await s3.send(deleteCommand);
-
-      // Try to delete old thumbnail
-      const oldThumbnailKey = oldFileName.replace(/^products\//, 'products/thumbnails/').replace(/\.[^/.]+$/, '.jpg');
-      const thumbnailDeleteCommand = new DeleteObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: oldThumbnailKey
-      });
-      await s3.send(thumbnailDeleteCommand);
-    } catch (deleteError) {
-      console.log('Old image deletion warning:', deleteError.message);
+    const sanitizedFileName = path.basename(oldFileName);
+    const oldImagePath = path.join(productsDir, sanitizedFileName);
+    
+    if (fs.existsSync(oldImagePath)) {
+      fs.unlinkSync(oldImagePath);
     }
 
     res.status(200).json({
@@ -365,6 +324,9 @@ const updateImage = async (req, res) => {
 
   } catch (error) {
     console.error('Update image error:', error);
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
     res.status(500).json({
       success: false,
       message: 'Failed to update image',
@@ -376,36 +338,34 @@ const updateImage = async (req, res) => {
 // List images with pagination
 const listImages = async (req, res) => {
   try {
-    const { prefix = 'products/', maxKeys = 50, continuationToken } = req.query;
+    const { maxKeys = 50 } = req.query;
 
-    const params = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Prefix: prefix,
-      MaxKeys: parseInt(maxKeys)
-    };
+    // Read files from products directory
+    const files = fs.readdirSync(productsDir);
+    const imageFiles = files
+      .filter(file => /\.(jpeg|jpg|png|gif|webp)$/i.test(file))
+      .slice(0, parseInt(maxKeys));
 
-    if (continuationToken) {
-      params.ContinuationToken = continuationToken;
-    }
-
-    const command = new ListObjectsV2Command(params);
-    const result = await s3.send(command);
-
-    const images = result.Contents.map(item => ({
-      fileName: item.Key,
-      size: item.Size,
-      lastModified: item.LastModified,
-      url: `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${item.Key}`
-    }));
+    const images = imageFiles.map(file => {
+      const filePath = path.join(productsDir, file);
+      const stats = fs.statSync(filePath);
+      const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8080}`;
+      
+      return {
+        fileName: file,
+        size: stats.size,
+        lastModified: stats.mtime,
+        url: `${baseUrl}/uploads/products/${file}`
+      };
+    });
 
     res.status(200).json({
       success: true,
       message: 'Images retrieved successfully',
       data: {
         images: images,
-        totalCount: result.KeyCount,
-        isTruncated: result.IsTruncated,
-        continuationToken: result.NextContinuationToken || null
+        totalCount: imageFiles.length,
+        isTruncated: imageFiles.length >= parseInt(maxKeys)
       }
     });
 
@@ -419,38 +379,25 @@ const listImages = async (req, res) => {
   }
 };
 
-// Get presigned URL for private images
-const getPresignedUrl = async (req, res) => {
+// Health check for local storage
+const healthCheck = async (req, res) => {
   try {
-    const { fileName } = req.params;
-    const { expires = 3600 } = req.query; // Default 1 hour
-
-    if (!fileName) {
-      return res.status(400).json({
-        success: false,
-        message: 'File name is required'
-      });
-    }
-
-    const presignedUrl = generatePresignedUrl(fileName, parseInt(expires));
-
-    res.status(200).json({
+    const stats = fs.statSync(productsDir);
+    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 8080}`;
+    
+    res.json({
       success: true,
-      message: 'Presigned URL generated successfully',
-      data: {
-        fileName: fileName,
-        presignedUrl: presignedUrl,
-        expiresIn: parseInt(expires),
-        generatedAt: new Date().toISOString()
-      }
+      storage: 'local',
+      uploadPath: productsDir,
+      accessible: true,
+      baseUrl: baseUrl,
+      timestamp: new Date().toISOString()
     });
-
   } catch (error) {
-    console.error('Get presigned URL error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to generate presigned URL',
-      error: error.message
+      error: 'Storage health check failed',
+      message: error.message
     });
   }
 };
@@ -499,6 +446,6 @@ module.exports = {
   updateImage,
   deleteImage,
   listImages,
-  getPresignedUrl,
+  healthCheck,
   handleMulterError
 };

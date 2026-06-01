@@ -7,6 +7,9 @@ const cors = require('cors');
 const color = require('colors');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
 const connectDB = require('./config/db');
 const { createServer } = require('http');
 
@@ -35,10 +38,52 @@ process.on('unhandledRejection', (err, promise) => {
 const app = express();
 const httpServer = createServer(app);
 
+// Security: Add Helmet for HTTP security headers
+app.use(helmet());
+
+// Security: Enforce HTTPS in production
+if (process.env.NODE_ENV === 'production') {
+  app.use((req, res, next) => {
+    if (req.header('x-forwarded-proto') !== 'https') {
+      res.redirect(`https://${req.header('host')}${req.url}`);
+    } else {
+      next();
+    }
+  });
+}
+
+// Security: Request size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Serve static files from public/uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 // Middleware
-app.use(express.json());
 app.use(cookieParser());
-app.use(morgan('dev'));
+app.use(morgan('combined')); // Use 'combined' instead of 'dev' for production-ready logging
+
+// Rate limiting: General API rate limit
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per windowMs
+  message: { msg: 'Too many requests, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Rate limiting: Strict auth rate limit
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per windowMs
+  message: { msg: 'Too many login attempts, please try again later' },
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// Apply general rate limiter to all API requests
+app.use('/api/', apiLimiter);
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -81,7 +126,7 @@ app.get('/', (req, res) => {
 
 // Mount your routes
 app.use('/api/auth',      require('./routes/authRoutes'));
-app.use('/api/user',      require('./routes/userRoutes'));  // NEW ROUTE
+app.use('/api/user',      require('./routes/userRoutes'));
 app.use('/api',           require('./routes/categoryRoutes'));
 app.use('/api',           require('./routes/productRoutes'));
 app.use('/api',           require('./routes/statsRoutes'));
@@ -91,16 +136,27 @@ app.use('/api/upload',    require('./routes/uploadRoutes'));
 app.use('/api',           require('./routes/HomeRoutes'));
 app.use('/api/promos',    require('./routes/promoRoutes'));
 
-// Error handling middleware
+// Error handling middleware (must be last)
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    msg: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
+  const status = err.status || 500;
+  const message = err.message || 'Internal Server Error';
+  
+  // Log error internally (don't expose details to client)
+  console.error(`[${new Date().toISOString()}] Error (${status}):`, message);
+  
+  // Send generic error response in production, detailed in development
+  const response = {
+    msg: status === 404 ? 'Resource not found' : 'Something went wrong'
+  };
+  
+  if (process.env.NODE_ENV === 'development') {
+    response.error = message;
+  }
+  
+  res.status(status).json(response);
 });
 
-// Handle 404
+// Handle 404 - must be after all other routes
 app.use((req, res) => {
   res.status(404).json({ msg: 'Route not found' });
 });
@@ -111,3 +167,5 @@ const PORT = process.env.PORT || 8080;
 httpServer.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`.cyan.bold);
 });
+
+module.exports = { app, authLimiter };

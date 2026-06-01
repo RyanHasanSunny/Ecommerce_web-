@@ -15,9 +15,10 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const { token, role } = await loginUser(email, password);
+      const { token, role, user } = await loginUser(email, password);
+      const isAdmin = role === 'admin' || user?.roles?.some?.((item) => item.name === 'admin');
 
-      if (role === 'admin') {
+      if (isAdmin) {
         localStorage.setItem('adminToken', token);
         navigate('/admin/dashboard');
       } else {

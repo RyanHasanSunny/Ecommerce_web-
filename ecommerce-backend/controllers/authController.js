@@ -8,15 +8,20 @@ const User   = require('../models/userModel');
 exports.registerUser = async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
-    if (await User.findOne({ email })) {
-      return res.status(400).json({ msg: 'User already exists' });
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ msg: 'Email already registered' });
     }
-    const newUser = new User({ name, email, password, role });
+
+    // Create new user
+    const newUser = new User({ name, email, password, role: role || 'user' });
     await newUser.save();
-    res.status(201).json({ msg: 'User registered successfully' });
+    
+    res.status(201).json({ msg: 'User registered successfully. Please login.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Registration error:', err.message);
+    res.status(500).json({ msg: 'Registration failed. Please try again.' });
   }
 };
 
@@ -24,72 +29,47 @@ exports.registerUser = async (req, res) => {
 // @desc    Authenticate user & get token
 // @access  Public
 exports.loginUser = async (req, res) => {
-  console.log('Login attempt:', { email: req.body.email, rememberMe: req.body.rememberMe });
-
   const { email, password, rememberMe } = req.body;
 
-  // Validate required fields
-  if (!email || !password) {
-    console.log('Login validation failed: Missing email or password');
-    return res.status(400).json({ msg: 'Email and password are required' });
-  }
-
   try {
-    console.log('Looking up user by email:', email);
+    // Find user
     const user = await User.findOne({ email });
     if (!user) {
-      console.log('User not found:', email);
-      return res.status(400).json({ msg: 'User does not exist' });
+      return res.status(401).json({ msg: 'Invalid email or password' });
     }
 
-    console.log('User found, comparing passwords');
+    // Verify password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log('Password mismatch for user:', email);
-      return res.status(400).json({ msg: 'Invalid credentials' });
+      return res.status(401).json({ msg: 'Invalid email or password' });
     }
 
-    console.log('Password match, generating JWT token');
-
-    // Check if JWT_SECRET is available
+    // Generate JWT token
     if (!process.env.JWT_SECRET) {
-      console.error('JWT_SECRET not found in environment variables');
+      console.error('JWT_SECRET not configured');
       return res.status(500).json({ msg: 'Server configuration error' });
     }
 
-    // Set token expiry based on remember me preference
-    const expiresIn = rememberMe ? '365d' : '1h'; // 1 year if remember me, 1 hour otherwise
-
+    const expiresIn = rememberMe ? '365d' : '1h';
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn }
     );
 
-    console.log('JWT token generated successfully');
-
-    // Set httpOnly cookie
+    // Set secure HTTP-only cookie
     const cookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax', // 'lax' for development cross-origin
-      maxAge: rememberMe ? 365 * 24 * 60 * 60 * 1000 : 1 * 60 * 60 * 1000 // 1 year or 1 hour
+      sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+      maxAge: rememberMe ? 365 * 24 * 60 * 60 * 1000 : 1 * 60 * 60 * 1000
     };
 
-    console.log('Setting cookie with options:', {
-      httpOnly: cookieOptions.httpOnly,
-      secure: cookieOptions.secure,
-      sameSite: cookieOptions.sameSite,
-      maxAge: cookieOptions.maxAge
-    });
-
     res.cookie('token', token, cookieOptions);
-    console.log('Login successful for user:', email);
-    res.json({ role: user.role });
+    res.json({ msg: 'Login successful', role: user.role });
   } catch (err) {
-    console.error('Login error:', err);
-    console.error('Error stack:', err.stack);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Login error:', err.message);
+    res.status(500).json({ msg: 'Login failed. Please try again.' });
   }
 };
 
@@ -101,8 +81,8 @@ exports.logoutUser = async (req, res) => {
     res.clearCookie('token');
     res.json({ msg: 'Logged out successfully' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Logout error:', err.message);
+    res.status(500).json({ msg: 'Logout failed' });
   }
 };
 
@@ -112,11 +92,13 @@ exports.logoutUser = async (req, res) => {
 exports.getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
-    if (!user) return res.status(404).json({ msg: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
     res.json(user);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Profile fetch error:', err.message);
+    res.status(500).json({ msg: 'Failed to fetch profile' });
   }
 };
 
@@ -125,26 +107,27 @@ exports.getUserProfile = async (req, res) => {
 // @access  Private
 exports.updatePassword = async (req, res) => {
   const { currentPassword, newPassword } = req.body;
-  if (!currentPassword || !newPassword) {
-    return res.status(400).json({ msg: 'Please provide currentPassword and newPassword' });
-  }
 
   try {
     const user = await User.findById(req.user.userId);
-    if (!user) return res.status(404).json({ msg: 'User not found' });
-
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ msg: 'Current password is incorrect' });
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
     }
 
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ msg: 'Current password is incorrect' });
+    }
+
+    // Update password (will be hashed by pre-save hook)
     user.password = newPassword;
     await user.save();
 
     res.json({ msg: 'Password updated successfully' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Password update error:', err.message);
+    res.status(500).json({ msg: 'Failed to update password' });
   }
 };
 
@@ -154,9 +137,10 @@ exports.updatePassword = async (req, res) => {
 exports.getUserAddresses = async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('addresses');
-    if (!user) return res.status(404).json({ msg: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
     
-    // Return addresses as an array with proper structure
     const formattedAddresses = user.addresses.map((addr, index) => ({
       id: index,
       address: addr
@@ -164,8 +148,8 @@ exports.getUserAddresses = async (req, res) => {
     
     res.json(formattedAddresses);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Address fetch error:', err.message);
+    res.status(500).json({ msg: 'Failed to fetch addresses' });
   }
 };
 
@@ -174,19 +158,16 @@ exports.getUserAddresses = async (req, res) => {
 // @access  Private
 exports.addAddress = async (req, res) => {
   const { address } = req.body;
-  if (!address) {
-    return res.status(400).json({ msg: 'Address is required' });
-  }
 
   try {
     const user = await User.findById(req.user.userId);
-    if (!user) return res.status(404).json({ msg: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
 
-    // Add address to user's addresses array
     user.addresses.push(address);
     await user.save();
 
-    // Return the newly added address with an id
     const newAddress = {
       id: user.addresses.length - 1,
       address: address
@@ -194,8 +175,8 @@ exports.addAddress = async (req, res) => {
 
     res.json(newAddress);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Address add error:', err.message);
+    res.status(500).json({ msg: 'Failed to add address' });
   }
 };
 
@@ -204,30 +185,30 @@ exports.addAddress = async (req, res) => {
 // @access  Public
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
+  
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ msg: 'User with this email does not exist' });
+      // Don't reveal if email exists (security best practice)
+      return res.json({ msg: 'If email exists, password reset link will be sent' });
     }
 
-    // Generate reset token
     const crypto = require('crypto');
     const resetToken = crypto.randomBytes(32).toString('hex');
-
-    // Hash token and save to user
     const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
     user.resetPasswordToken = hashedToken;
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await user.save();
 
-    // For now, log the reset link (replace with email sending)
+    // TODO: Send email with reset link
     const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
-    console.log('Password reset link:', resetUrl);
+    console.log('Password reset URL:', resetUrl);
 
-    res.json({ msg: 'Password reset link sent to your email' });
+    res.json({ msg: 'If email exists, password reset link will be sent' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Forgot password error:', err.message);
+    res.status(500).json({ msg: 'Failed to process password reset' });
   }
 };
 
@@ -238,7 +219,6 @@ exports.resetPassword = async (req, res) => {
   const { token, password } = req.body;
 
   try {
-    // Hash the token
     const crypto = require('crypto');
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -248,18 +228,17 @@ exports.resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({ msg: 'Invalid or expired token' });
+      return res.status(400).json({ msg: 'Invalid or expired reset token' });
     }
 
-    // Update password
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    res.json({ msg: 'Password reset successful' });
+    res.json({ msg: 'Password reset successful. Please login with your new password.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: 'Server error' });
+    console.error('Reset password error:', err.message);
+    res.status(500).json({ msg: 'Failed to reset password' });
   }
 };

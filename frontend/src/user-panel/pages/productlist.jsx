@@ -499,7 +499,7 @@ const ProductList = () => {
                 type="radio"
                 name="category"
                 value={category._id}
-                checked={filters.category === category.__id}
+                checked={filters.category === category._id}
                 onChange={(e) => handleFilterChange('category', e.target.value)}
                 className="sr-only"
               />

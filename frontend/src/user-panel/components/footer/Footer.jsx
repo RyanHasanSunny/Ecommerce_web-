@@ -104,14 +104,18 @@ const Footer = () => {
   
   // Process social links from backend
   const socialLinks = contactInfo?.socialLinks?.map(link => {
-    const socialData = socialIconMap[link.platform.toLowerCase()] || socialIconMap.facebook;
+    const platformName = link.platform || link.socialMedia || link.name;
+    const href = link.url || link.contactLink || link.socialmediaLink || link.value;
+    if (!platformName || !href) return null;
+
+    const socialData = socialIconMap[platformName.toLowerCase()] || socialIconMap.facebook;
     return {
-      name: link.platform,
+      name: platformName,
       icon: socialData.icon,
-      href: link.url,
+      href,
       color: socialData.color
     };
-  }) || [
+  }).filter(Boolean) || [
     { name: 'Facebook', icon: Facebook, href: 'https://facebook.com', color: 'hover:text-blue-600' },
     { name: 'Twitter', icon: Twitter, href: 'https://twitter.com', color: 'hover:text-blue-400' },
     { name: 'Instagram', icon: Instagram, href: 'https://instagram.com', color: 'hover:text-pink-600' },

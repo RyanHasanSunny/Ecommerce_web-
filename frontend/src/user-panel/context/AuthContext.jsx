@@ -67,6 +67,11 @@ export const AuthProvider = ({ children }) => {
       try {
         dispatch({ type: 'SET_LOADING', payload: true });
 
+        if (!localStorage.getItem('token') && !localStorage.getItem('adminToken')) {
+          dispatch({ type: 'LOGOUT' });
+          return;
+        }
+
         // Check if user is authenticated by trying to get user profile
         // Cookies will be sent automatically with credentials: 'include'
         const userData = await apiService.getUserProfile();
@@ -101,7 +106,10 @@ export const AuthProvider = ({ children }) => {
 
       const response = await apiService.login(email, password, rememberMe);
 
-      // Cookie is set server-side, no need to store locally
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+      }
+
       // Get user profile to confirm authentication
       const userData = await apiService.getUserProfile();
 
@@ -141,6 +149,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     }
+    localStorage.removeItem('token');
     dispatch({ type: 'LOGOUT' });
   }, []);
 
